@@ -79,10 +79,6 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 .sheet-list .nm { flex: 1; min-width: 0; }
 @keyframes sheetup { from { transform: translateY(40px); opacity: .6; } to { transform: none; opacity: 1; } }
 @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
-.quick { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: -4px; }
-.quick:empty { display: none; }
-.quick button { height: 36px; min-width: 0; padding: 0 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--chip); color: var(--fg); font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left; }
-.quick button.on { background: var(--accent); color: var(--accent-fg); border-color: transparent; }
 .catwrap::after { content: "▾"; position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; font-size: 18px; }
 .row2 { display: flex; gap: 8px; }
 .comment { flex: 1; min-width: 0; height: 46px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 0 12px; outline: none; }
@@ -119,6 +115,8 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 .recent-list button { width: 100%; display: grid; grid-template-columns: 44px 1fr auto; gap: 8px; font-size: 14px; align-items: baseline; border: 0; background: transparent; padding: 6px 4px; border-radius: 8px; text-align: left; }
 .recent-list button:active { background: var(--chip); }
 .recent-list button.editing { background: var(--chip); }
+.recent-list button.queued { opacity: .75; }
+.recent-list button.queued .d { color: var(--warn); }
 .recent-list .d { color: var(--muted); font-variant-numeric: tabular-nums; }
 .recent-list .c { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .recent-list .a { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
@@ -134,6 +132,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 .save .spin { display: inline-block; width: 18px; height: 18px; border: 3px solid rgba(255,255,255,.35); border-top-color: #fff; border-radius: 50%; animation: ptrspin .8s linear infinite; vertical-align: -3px; margin-right: 10px; }
 .save.busy { opacity: .9; }
 .save.done { background: var(--plus) !important; color: #fff; transition: background .2s; }
+.save.hold { background: var(--warn) !important; color: #fff; transition: background .2s; }
 @media (prefers-reduced-motion: reduce) { .catwrap.shake { animation: none; } }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 10px; font-size: 14px; }
 .card .line { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
@@ -197,7 +196,6 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   <div class="catwrap" id="catwrap">
     <button id="cat" class="catsel" type="button" aria-haspopup="dialog">Категория…</button>
   </div>
-  <div class="quick" id="quick" aria-label="Частые категории"></div>
   <div class="ferr" id="errCat" hidden>Выбери категорию</div>
 
   <div class="row2">
@@ -233,7 +231,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "16"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "17"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Взял у Family Cash", "Чаевые", "Дал Насте"]; // шаблоны комментария под полем (его слово 27.10.2026): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -241,7 +239,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     ver: $("ver"), btnUpdate: $("btnUpdate"), connState: $("connState"), queueCount: $("queueCount"), btnFlush: $("btnFlush"), btnCats: $("btnCats"), btnReset: $("btnReset"),
     editBar: $("editBar"), editText: $("editText"), btnDelete: $("btnDelete"), btnCancel: $("btnCancel"),
     segMinus: $("segMinus"), segPlus: $("segPlus"), signMark: $("signMark"), amount: $("amount"), btnCur: $("btnCur"), catwrap: $("catwrap"), cat: $("cat"), comment: $("comment"),
-    btnClear: $("btnClear"), errAmount: $("errAmount"), errCat: $("errCat"), amountRow: document.querySelector(".amount-row"), tpl: $("tpl"), quick: $("quick"), sheet: $("sheet"), sheetBack: $("sheetBack"), sheetClose: $("sheetClose"), sheetList: $("sheetList"), dToday: $("dToday"), dYest: $("dYest"), dOther: $("dOther"), dOtherText: $("dOtherText"), dateInput: $("dateInput"), status: $("status"), btnRecent: $("btnRecent"), recentCount: $("recentCount"),
+    btnClear: $("btnClear"), errAmount: $("errAmount"), errCat: $("errCat"), amountRow: document.querySelector(".amount-row"), tpl: $("tpl"), sheet: $("sheet"), sheetBack: $("sheetBack"), sheetClose: $("sheetClose"), sheetList: $("sheetList"), dToday: $("dToday"), dYest: $("dYest"), dOther: $("dOther"), dOtherText: $("dOtherText"), dateInput: $("dateInput"), status: $("status"), btnRecent: $("btnRecent"), recentCount: $("recentCount"),
     app: $("app"), ptr: $("ptr"), recentHint: $("recentHint"), recentList: $("recentList"), btnSave: $("btnSave") };
 
   function ls(key, value) {
@@ -293,28 +291,17 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   // кнопка «Записать» сама показывает ход: кольцо и «Записываю…», пока запись идёт в базу, потом «Записано ✓» (его слово 27.10.2026)
   function renderSave() {
     var a = parseAmount(el.amount.value), verb = state.edit ? "Сохранить изменения" : "Записать";
-    el.btnSave.classList.toggle("done", state.flash); el.btnSave.classList.toggle("busy", !state.flash && state.inflight > 0 && !state.edit);
-    if (state.flash) { el.btnSave.textContent = "Записано ✓"; return; }
+    el.btnSave.classList.toggle("done", state.flash === "done"); el.btnSave.classList.toggle("hold", state.flash === "hold");
+    el.btnSave.classList.toggle("busy", !state.flash && state.inflight > 0 && !state.edit);
+    if (state.flash) { el.btnSave.textContent = state.flash === "done" ? "Записано ✓" : "Сохранено на телефоне ⏳"; return; }
     if (state.inflight > 0 && !state.edit) { el.btnSave.textContent = ""; var sp = document.createElement("i"); sp.className = "spin"; el.btnSave.appendChild(sp); el.btnSave.appendChild(document.createTextNode("Записываю…")); return; }
     el.btnSave.textContent = state.edit ? verb : (a ? verb + " " + money(state.sign === "-" ? -a : a, state.cur) : verb);
   }
-  function flashDone() { state.flash = true; renderSave(); setTimeout(function () { state.flash = false; renderSave(); }, 1300); }
-  // четыре быстрые кнопки под списком: самые частые категории по последним записям, остаток — случайные (его слово
-  // 27.10.2026: «пока их нет — рандомно»); случайный набор выбирается один раз на запуск, чтобы кнопки не прыгали
-  var quickRand = null;
-  function quickPick() {
-    if (!state.cats.length) return [];
-    var n = {}; state.recent.forEach(function (r) { if (r.category && state.cats.indexOf(r.category) >= 0) n[r.category] = (n[r.category] || 0) + 1; });
-    var top = Object.keys(n).sort(function (a, b) { return n[b] - n[a] || state.cats.indexOf(a) - state.cats.indexOf(b); }).slice(0, 4);
-    if (!quickRand || quickRand.length !== state.cats.length) { quickRand = state.cats.slice(); for (var i = quickRand.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = quickRand[i]; quickRand[i] = quickRand[j]; quickRand[j] = t; } }
-    quickRand.forEach(function (c) { if (top.length < 4 && top.indexOf(c) < 0) top.push(c); });
-    return top;
-  }
+  function flashDone(kind) { state.flash = kind || "done"; renderSave(); setTimeout(function () { state.flash = false; renderSave(); }, kind === "hold" ? 1800 : 1300); }
   function catSplit(name) { // «Mark 👶» → {em: "👶", nm: "Mark"}
     var m = /^(.*?)\s*([\p{Extended_Pictographic}\uFE0F\u200D\p{Emoji_Modifier}]+)$/u.exec(name);
     return m ? { em: m[2], nm: m[1] } : { em: "", nm: name };
   }
-  function catParts(name) { var c = catSplit(name); return c.em ? c.em + " " + c.nm : c.nm; } // эмодзи вперёд: при обрезке остаются видны
   function pickCat(c) {
     state.cat = c; markErr("cat", false); sheetClose(); renderCats();
   }
@@ -334,19 +321,10 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     var on = el.sheetList.querySelector("button.on"); if (on && on.scrollIntoView) on.scrollIntoView({ block: "center" });
   }
   function sheetClose() { el.sheet.hidden = true; }
-  function renderQuick() {
-    el.quick.textContent = "";
-    quickPick().forEach(function (c) {
-      var b = document.createElement("button"); b.type = "button"; b.textContent = catParts(c); b.title = c; b.className = state.cat === c ? "on" : "";
-      b.addEventListener("click", function () { pickCat(c); });
-      el.quick.appendChild(b);
-    });
-  }
   function renderCats() {
     if (state.cat && state.cats.indexOf(state.cat) < 0) state.cat = "";
     el.cat.textContent = state.cat || (state.cats.length ? "Категория…" : (token() ? "Категории появятся после связи с базой" : "Сначала введи код доступа"));
     el.cat.classList.toggle("set", !!state.cat);
-    renderQuick();
   }
   function dateChip(btn, word, iso, on) {
     btn.textContent = ""; btn.appendChild(document.createTextNode(word + " "));
@@ -368,9 +346,10 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   // шапка: итог текущего месяца по валютам (его слово 27.10.2026) — с сервера (init.month), пока нет — по последним записям
   function monthName() { return new Intl.DateTimeFormat("ru-RU", { month: "long" }).format(new Date()); }
   function monthSums() {
-    if (state.month) return state.month;
     var m = todayStr().slice(0, 7), sums = {};
-    state.recent.forEach(function (r) { if (String(r.booking_date).slice(0, 7) === m) sums[r.currency] = (sums[r.currency] || 0) + Number(r.amount); });
+    if (state.month) { Object.keys(state.month).forEach(function (k) { sums[k] = Number(state.month[k]) || 0; }); }
+    else state.recent.forEach(function (r) { if (String(r.booking_date).slice(0, 7) === m) sums[r.currency] = (sums[r.currency] || 0) + Number(r.amount); });
+    state.queue.forEach(function (q) { if (String(q.date).slice(0, 7) === m) sums[q.cur] = (sums[q.cur] || 0) + (q.sign === "-" ? -q.amount : q.amount); }); // ещё не отправленные — тоже
     return sums;
   }
   function refreshMonth() { // после правки или удаления — точный итог с сервера, без смены текста статуса
@@ -380,8 +359,18 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   function renderRecent() {
     var sums = monthSums(), keys = Object.keys(sums).filter(function (k) { return sums[k]; });
     el.today.textContent = keys.length ? monthName() + " " + keys.map(function (k) { return money(sums[k], k); }).join(" · ") : "";
-    el.recentCount.textContent = state.recent.length ? "(" + Math.min(state.recent.length, 10) + ")" : "";
+    el.recentCount.textContent = (state.recent.length || state.queue.length) ? "(" + (Math.min(state.recent.length, 10) + state.queue.length) + ")" : "";
     el.recentList.innerHTML = "";
+    state.queue.slice().reverse().forEach(function (q) { // не отправленные — сверху, с часами; править нельзя, пока не ушли
+      var li = document.createElement("li"), b = document.createElement("button"), n = q.sign === "-" ? -q.amount : q.amount;
+      b.type = "button"; b.className = "queued";
+      var d = document.createElement("span"); d.className = "d"; d.textContent = "⏳";
+      var c = document.createElement("span"); c.className = "c"; c.textContent = (q.comment ? q.comment + " · " : "") + (q.cat || "");
+      var a = document.createElement("span"); a.className = "a " + (n < 0 ? "minus" : "plus"); a.textContent = money(n, q.cur);
+      b.appendChild(d); b.appendChild(c); b.appendChild(a);
+      b.addEventListener("click", function () { setStatus("Ещё не отправлено: появится связь — уйдёт само. Исправить можно после отправки.", "warn"); flushQueue(); });
+      li.appendChild(b); el.recentList.appendChild(li);
+    });
     state.recent.slice(0, 10).forEach(function (r) {
       var li = document.createElement("li"), b = document.createElement("button"), n = Number(r.amount);
       b.type = "button"; if (state.edit && state.edit.id === r.id) b.className = "editing";
@@ -444,7 +433,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
       if (names.length) { state.cats = names; ls("cash_cats", names); if (state.cat && names.indexOf(state.cat) < 0) state.cat = ""; renderCats(); }
       state.recent = j.recent || []; ls("cash_recent", state.recent.slice(0, 40));
       if (j.month) { state.month = j.month; ls("cash_month", state.month); }
-      renderRecent(); renderQuick();
+      renderRecent();
       connected(true); el.setup.hidden = true;
       if (!state.queue.length) setStatus("", "");
       return true;
@@ -455,8 +444,8 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
       return false;
     });
   }
-  function enqueue(en) { state.queue.push(en); ls("cash_queue", state.queue); renderQueue(); }
-  function dequeue(id) { state.queue = state.queue.filter(function (q) { return q.id !== id; }); ls("cash_queue", state.queue); renderQueue(); }
+  function enqueue(en) { state.queue.push(en); ls("cash_queue", state.queue); renderQueue(); renderRecent(); }
+  function dequeue(id) { state.queue = state.queue.filter(function (q) { return q.id !== id; }); ls("cash_queue", state.queue); renderQueue(); renderRecent(); }
   function send(en) {
     setStatus("Записываю…", ""); state.inflight++; renderSave();
     return api("add", { id: en.id, sign: en.sign, amount: en.amount, currency: en.cur, category: en.cat, comment: en.comment, date: en.date }).then(function (j) {
@@ -472,7 +461,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
       state.inflight--; flashDone();
       return true;
     }).catch(function (e) {
-      state.inflight--; renderSave();
+      state.inflight--; if (e.code === "network") flashDone("hold"); else renderSave();
       if (e.code === "bad") { dequeue(en.id); setStatus(explain(e), "err"); return true; } // база отвергла навсегда: в очереди не держим
       if (e.code === "unauthorized") { token(null); showSetup("Код не подошёл"); }
       if (e.code === "network") connected(false);
@@ -493,7 +482,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 
   // ---------- form ----------
   function resetForm() { markErr("amount", false); markErr("cat", false); el.amount.value = ""; el.comment.value = ""; renderTpl(); state.cat = ""; state.date = todayStr(); state.edit = null; renderCats(); renderDate(); renderEdit(); }
-  function commit(en) { enqueue(en); if (navigator.onLine !== false) send(en); }
+  function commit(en) { enqueue(en); if (navigator.onLine !== false) send(en); else flashDone("hold"); }
   function markErr(field, on) {
     if (field === "amount") { el.errAmount.hidden = !on; el.amountRow.classList.toggle("err", on); }
     else { el.errCat.hidden = !on; el.cat.classList.toggle("err", on); }
