@@ -55,14 +55,12 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 .seg-btn.on.minus { background: var(--surface); color: var(--minus); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
 .seg-btn.on.plus { background: var(--surface); color: var(--plus); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
 .field { display: flex; flex-direction: column; gap: 6px; }
-.amount-row { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 6px 8px 6px 16px; }
+.amount-row { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 6px 10px 6px 14px; }
+.sign { font-size: 34px; font-weight: 600; color: var(--minus); width: 24px; text-align: center; }
+.sign.plus { color: var(--plus); }
 .amount { flex: 1; min-width: 0; border: 0; background: transparent; font-size: 40px; font-weight: 700; font-variant-numeric: tabular-nums; padding: 4px 0; outline: none; }
-.amount.minus { color: var(--minus); }
-.amount.plus { color: var(--plus); }
 .amount::placeholder { color: var(--line); }
-.curseg { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; background: var(--chip); padding: 3px; border-radius: 12px; } /* валюта — мини-переключатель, как расход/приход */
-.curseg button { height: 38px; min-width: 52px; padding: 0 10px; border: 0; border-radius: 9px; background: transparent; color: var(--muted); font-weight: 600; font-size: 14px; letter-spacing: .04em; }
-.curseg button.on { background: var(--surface); color: var(--fg); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.cur { height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--chip); font-weight: 600; font-size: 14px; letter-spacing: .04em; } /* касание переключает EUR ↔ USD */
 .catwrap { position: relative; }
 .catwrap.shake { animation: shake .3s linear; }
 @keyframes shake { 25% { transform: translateX(-4px) } 75% { transform: translateX(4px) } }
@@ -130,7 +128,9 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 .recent-list .a.plus { color: var(--plus); }
 .more-btn { width: 100%; height: 44px; margin-top: 4px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--accent); font-size: 14px; font-weight: 600; }
 .savebar { padding-top: 2px; } /* кнопка записи сразу под комментарием (его слово 27.10.2026) */
-.save { width: 100%; height: 54px; border: 0; border-radius: 16px; background: var(--accent); color: var(--accent-fg); font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; } /* всегда цвет акцента: красный — только для удаления и ошибок */
+.save { width: 100%; height: 54px; border: 0; border-radius: 16px; background: var(--accent); color: var(--accent-fg); font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.save.minus { background: var(--minus); color: #fff; } /* цвет кнопки по знаку — как было (его слово 27.10.2026) */
+.save.plus { background: var(--plus); color: #fff; }
 .save.edit { background: var(--edit); color: var(--edit-fg); }
 .save:disabled { opacity: .6; }
 @media (prefers-reduced-motion: reduce) { .catwrap.shake, .sheet-back, .sheet-body, .recent-list button.new, .ptr.spin svg { animation: none; } }
@@ -188,8 +188,9 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 
   <div class="field">
     <div class="amount-row">
-      <input id="amount" class="amount minus" type="text" inputmode="decimal" placeholder="0" autocomplete="off" enterkeyhint="done" aria-label="Сумма">
-      <div class="curseg" id="curseg" role="group" aria-label="Валюта"><button type="button" data-cur="EUR" class="on" aria-pressed="true">EUR</button><button type="button" data-cur="USD" aria-pressed="false">USD</button></div>
+      <span class="sign" id="signMark">−</span>
+      <input id="amount" class="amount" type="text" inputmode="decimal" placeholder="0" autocomplete="off" enterkeyhint="done" aria-label="Сумма">
+      <button class="cur" id="btnCur" type="button" aria-label="Валюта, касание переключает">EUR</button>
     </div>
     <div class="ferr" id="errAmount" hidden>Введи сумму</div>
   </div>
@@ -209,7 +210,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     <div class="tpl" id="tpl" aria-label="Шаблоны комментария"></div>
   </div>
 
-  <div class="savebar"><button class="save" id="btnSave" type="button">Записать</button></div>
+  <div class="savebar"><button class="save minus" id="btnSave" type="button">Записать</button></div>
 
   <div class="status" id="status"></div>
 
@@ -233,14 +234,14 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "31"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "32"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Взял у Family Cash", "Чаевые", "Дал Насте"]; // шаблоны комментария под полем (его слово 27.10.2026): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
   var el = { today: $("today"), setup: $("setup"), tokenInput: $("tokenInput"), setupMsg: $("setupMsg"), btnToken: $("btnToken"), more: $("more"), btnMore: $("btnMore"),
     ver: $("ver"), btnUpdate: $("btnUpdate"), connState: $("connState"), queueCount: $("queueCount"), btnFlush: $("btnFlush"), btnCats: $("btnCats"), btnReset: $("btnReset"),
     editBar: $("editBar"), editText: $("editText"), btnDelete: $("btnDelete"), btnCancel: $("btnCancel"),
-    segMinus: $("segMinus"), segPlus: $("segPlus"), amount: $("amount"), curseg: $("curseg"), catwrap: $("catwrap"), cat: $("cat"), comment: $("comment"),
+    segMinus: $("segMinus"), segPlus: $("segPlus"), signMark: $("signMark"), amount: $("amount"), btnCur: $("btnCur"), catwrap: $("catwrap"), cat: $("cat"), comment: $("comment"),
     btnClear: $("btnClear"), errAmount: $("errAmount"), errCat: $("errCat"), amountRow: document.querySelector(".amount-row"), tpl: $("tpl"), sheet: $("sheet"), sheetBack: $("sheetBack"), sheetClose: $("sheetClose"), sheetList: $("sheetList"), dToday: $("dToday"), dYest: $("dYest"), dOther: $("dOther"), dOtherText: $("dOtherText"), dateInput: $("dateInput"), status: $("status"), recentCount: $("recentCount"),
     app: $("app"), ptr: $("ptr"), recentList: $("recentList"), btnMoreRecent: $("btnMoreRecent"), btnSave: $("btnSave") };
 
@@ -284,15 +285,13 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 
   // ---------- render ----------
   function setStatus(text, kind) { el.status.textContent = text || ""; el.status.className = "status" + (kind ? " " + kind : ""); }
-  function renderSign() { // знак виден в переключателе и цвете суммы; кнопка всегда в цвете акцента
+  function renderSign() {
     el.segMinus.classList.toggle("on", state.sign === "-"); el.segPlus.classList.toggle("on", state.sign === "+");
-    el.amount.classList.toggle("minus", state.sign === "-"); el.amount.classList.toggle("plus", state.sign === "+");
-    el.btnSave.classList.toggle("edit", !!state.edit);
+    el.signMark.textContent = state.sign === "-" ? "−" : "+"; el.signMark.classList.toggle("plus", state.sign === "+");
+    el.btnSave.className = "save " + (state.sign === "-" ? "minus" : "plus") + (state.edit ? " edit" : "");
     renderSave();
   }
-  function renderCur() {
-    Array.prototype.forEach.call(el.curseg.querySelectorAll("button"), function (b) { var on = b.getAttribute("data-cur") === state.cur; b.classList.toggle("on", on); b.setAttribute("aria-pressed", on ? "true" : "false"); });
-  }
+  function renderCur() { el.btnCur.textContent = state.cur; }
   function renderSave() {
     var a = parseAmount(el.amount.value), verb = state.edit ? "Сохранить изменения" : "Записать";
     el.btnSave.textContent = state.edit ? verb : (a ? verb + " " + money(state.sign === "-" ? -a : a, state.cur) : verb);
@@ -554,10 +553,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 
   el.segMinus.addEventListener("click", function () { state.sign = "-"; if (!state.edit) { prefs.sign = "-"; ls("cash_prefs", prefs); } renderSign(); });
   el.segPlus.addEventListener("click", function () { state.sign = "+"; if (!state.edit) { prefs.sign = "+"; ls("cash_prefs", prefs); } renderSign(); });
-  el.curseg.addEventListener("click", function (e) {
-    var b = e.target.closest ? e.target.closest("button[data-cur]") : null; if (!b) return;
-    state.cur = b.getAttribute("data-cur"); if (!state.edit) { prefs.cur = state.cur; ls("cash_prefs", prefs); } renderCur(); renderSave();
-  });
+  el.btnCur.addEventListener("click", function () { state.cur = CURS[(CURS.indexOf(state.cur) + 1) % CURS.length]; if (!state.edit) { prefs.cur = state.cur; ls("cash_prefs", prefs); } renderCur(); renderSave(); });
   el.amount.addEventListener("input", function () { if (parseAmount(el.amount.value)) markErr("amount", false); renderSave(); });
   el.amount.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); el.amount.blur(); } });
   el.cat.addEventListener("click", sheetOpen);
