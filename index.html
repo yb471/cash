@@ -3,21 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Наличные</title>
+<title>Cash YB</title>
 <meta name="description" content="Расходы и приходы наличными: сумма, категория, комментарий — в базу и таблицу операций">
 <meta name="theme-color" content="#0E6F6A" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0F1316" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Наличные">
+<meta name="apple-mobile-web-app-title" content="Cash YB">
 <meta name="format-detection" content="telephone=no">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <style>
-/* layout: one phone screen top to bottom — sign toggle, amount with currency, category grid, comment and date, sticky save;
-   the toast with undo sits above the save bar */
+/* layout: one phone screen top to bottom — edit bar (only while editing), sign toggle, amount with currency, category
+   dropdown, comment and date, sticky save; the toast with undo sits above the save bar */
 :root {
   --bg: #F2F4F6; --surface: #FFFFFF; --fg: #14181C; --muted: #6A737D; --line: #D9DFE5;
   --accent: #0E6F6A; --accent-fg: #FFFFFF; --minus: #C9403A; --plus: #1E8E5A;
@@ -32,7 +32,7 @@
 html, body { height: 100%; margin: 0; }
 body { background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 16px; line-height: 1.3; -webkit-text-size-adjust: 100%; overscroll-behavior-y: none; }
 * { box-sizing: border-box; }
-button, input { font: inherit; color: inherit; }
+button, input, select { font: inherit; color: inherit; }
 button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 [hidden] { display: none !important; }
@@ -43,6 +43,10 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 .brand { font-weight: 700; font-size: 17px; letter-spacing: .01em; }
 .today { margin-left: auto; color: var(--muted); font-variant-numeric: tabular-nums; font-size: 14px; white-space: nowrap; }
 .gear { width: 36px; height: 36px; border: 0; background: transparent; border-radius: 10px; font-size: 20px; color: var(--muted); }
+.editbar { display: flex; align-items: center; gap: 8px; background: var(--chip); border-radius: 12px; padding: 8px 8px 8px 12px; font-size: 14px; }
+.editbar span { flex: 1; min-width: 0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.editbar button { height: 34px; padding: 0 10px; border: 0; border-radius: 9px; background: var(--surface); font-size: 14px; font-weight: 600; }
+.editbar button.danger { color: var(--minus); }
 .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: var(--chip); padding: 4px; border-radius: 14px; }
 .seg-btn { height: 44px; border: 0; border-radius: 10px; background: transparent; color: var(--muted); font-weight: 600; font-size: 16px; }
 .seg-btn.on.minus { background: var(--surface); color: var(--minus); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
@@ -53,14 +57,12 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 .amount { flex: 1; min-width: 0; border: 0; background: transparent; font-size: 40px; font-weight: 700; font-variant-numeric: tabular-nums; padding: 4px 0; outline: none; }
 .amount::placeholder { color: var(--line); }
 .cur { height: 40px; padding: 0 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--chip); font-weight: 600; font-size: 14px; letter-spacing: .04em; }
-.cats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.cats.shake { animation: shake .3s linear; }
+.catwrap { position: relative; }
+.catwrap.shake { animation: shake .3s linear; }
 @keyframes shake { 25% { transform: translateX(-4px) } 75% { transform: translateX(4px) } }
-.chip { min-height: 46px; padding: 8px 12px; border: 1px solid transparent; border-radius: 12px; background: var(--chip); color: var(--chip-fg); text-align: left; font-size: 15px; line-height: 1.2; display: flex; align-items: center; gap: 6px; }
-.chip .em { font-size: 18px; flex: none; }
-.chip .nm { min-width: 0; overflow-wrap: anywhere; }
-.chip.on { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); font-weight: 600; }
-.cats-empty { grid-column: 1 / -1; color: var(--muted); font-size: 14px; padding: 8px 2px; }
+.catsel { width: 100%; height: 50px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 0 40px 0 12px; font-size: 16px; appearance: none; -webkit-appearance: none; color: var(--muted); }
+.catsel.set { color: var(--fg); font-weight: 600; }
+.catwrap::after { content: "▾"; position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; font-size: 18px; }
 .row2 { display: flex; gap: 8px; }
 .comment { flex: 1; min-width: 0; height: 46px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 0 12px; outline: none; }
 .comment:focus { border-color: var(--accent); }
@@ -72,25 +74,29 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 .status.err { color: var(--minus); }
 .recent { border-top: 1px solid var(--line); padding-top: 6px; }
 .recent-toggle { border: 0; background: transparent; color: var(--muted); font-size: 14px; padding: 6px 0; display: flex; gap: 6px; align-items: center; width: 100%; text-align: left; }
-.recent-list { list-style: none; margin: 0; padding: 0 0 6px; display: flex; flex-direction: column; gap: 4px; }
-.recent-list li { display: grid; grid-template-columns: 44px 1fr auto; gap: 8px; font-size: 14px; align-items: baseline; }
+.recent-list { list-style: none; margin: 0; padding: 0 0 6px; display: flex; flex-direction: column; gap: 2px; }
+.recent-list button { width: 100%; display: grid; grid-template-columns: 44px 1fr auto; gap: 8px; font-size: 14px; align-items: baseline; border: 0; background: transparent; padding: 6px 4px; border-radius: 8px; text-align: left; }
+.recent-list button:active { background: var(--chip); }
+.recent-list button.editing { background: var(--chip); }
 .recent-list .d { color: var(--muted); font-variant-numeric: tabular-nums; }
 .recent-list .c { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .recent-list .a { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
 .recent-list .a.minus { color: var(--minus); }
 .recent-list .a.plus { color: var(--plus); }
+.recent-hint { font-size: 12px; color: var(--muted); padding: 0 4px 6px; }
 .spacer { flex: 1; }
 .savebar { position: sticky; bottom: 0; background: linear-gradient(to top, var(--bg) 70%, transparent); padding-top: 10px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
 .save { width: 100%; height: 54px; border: 0; border-radius: 16px; background: var(--accent); color: var(--accent-fg); font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .save.minus { background: var(--minus); color: #fff; }
 .save.plus { background: var(--plus); color: #fff; }
+.save:disabled { opacity: .6; }
 .toast { position: fixed; left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(80px + env(safe-area-inset-bottom, 0px));
   max-width: 488px; margin: 0 auto; background: var(--toast); color: var(--toast-fg); border-radius: 14px; padding: 12px 12px 12px 14px; display: flex; align-items: center; gap: 10px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,.25); z-index: 5; }
 .toast span { flex: 1; min-width: 0; font-size: 15px; font-weight: 600; }
 .toast button { border: 0; background: transparent; color: var(--accent); font-weight: 700; font-size: 15px; padding: 6px 8px; }
 .toast .bar { position: absolute; left: 0; bottom: 0; height: 3px; background: var(--accent); width: 100%; transform-origin: left; animation: drain 5s linear forwards; }
 @keyframes drain { to { transform: scaleX(0) } }
-@media (prefers-reduced-motion: reduce) { .toast .bar { animation: none; } .cats.shake { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .toast .bar { animation: none; } .catwrap.shake { animation: none; } }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 10px; font-size: 14px; }
 .card .line { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
 .card button { height: 36px; padding: 0 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--chip); font-size: 14px; }
@@ -104,14 +110,14 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 <body>
 <div class="app" id="app">
   <header class="top">
-    <div class="brand">Наличные</div>
+    <div class="brand">Cash YB</div>
     <div class="today" id="today"></div>
     <button class="gear" id="btnMore" type="button" aria-label="Ещё">⋯</button>
   </header>
 
   <section class="card" id="setup" hidden>
     <h2>Код доступа</h2>
-    <p>Один раз: вставь код из документа «Наличные — вход» в папке «claude» на Диске. Код останется на этом телефоне.</p>
+    <p>Один раз: вставь код доступа. Он останется на этом телефоне. Новый код выдаёт Claude в чате Architekt YB.</p>
     <input id="tokenInput" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="48 знаков" aria-label="Код доступа">
     <div class="line"><span id="setupMsg"></span><button class="primary" id="btnToken" type="button">Сохранить</button></div>
   </section>
@@ -124,6 +130,12 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     <div class="line"><a href="https://docs.google.com/spreadsheets/d/1cKYM1-z92p6Q14BxznyrYuXFfWDnJfb1w0Dj51CcAhk/edit#gid=1765023070" target="_blank" rel="noopener">Открыть вкладку YB Cash</a></div>
   </section>
 
+  <div class="editbar" id="editBar" hidden>
+    <span id="editText">Правка</span>
+    <button class="danger" id="btnDelete" type="button">Удалить</button>
+    <button id="btnCancel" type="button">Отмена</button>
+  </div>
+
   <div class="seg" role="group" aria-label="Расход или приход">
     <button class="seg-btn minus on" id="segMinus" type="button">− Расход</button>
     <button class="seg-btn plus" id="segPlus" type="button">+ Приход</button>
@@ -135,7 +147,9 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     <button class="cur" id="btnCur" type="button" aria-label="Валюта">EUR</button>
   </div>
 
-  <div class="cats" id="cats" aria-label="Категория"></div>
+  <div class="catwrap" id="catwrap">
+    <select id="cat" class="catsel" aria-label="Категория"><option value="">Категория…</option></select>
+  </div>
 
   <div class="row2">
     <input id="comment" class="comment" type="text" placeholder="Комментарий" list="recentComments" maxlength="200" autocomplete="off" enterkeyhint="done">
@@ -148,6 +162,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 
   <section class="recent">
     <button class="recent-toggle" id="btnRecent" type="button">Последние <span id="recentCount"></span></button>
+    <div class="recent-hint" id="recentHint" hidden>Нажми запись, чтобы исправить или удалить</div>
     <ul class="recent-list" id="recentList" hidden></ul>
   </section>
 
@@ -165,9 +180,10 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   var $ = function (id) { return document.getElementById(id); };
   var el = { today: $("today"), setup: $("setup"), tokenInput: $("tokenInput"), setupMsg: $("setupMsg"), btnToken: $("btnToken"), more: $("more"), btnMore: $("btnMore"),
     connState: $("connState"), queueCount: $("queueCount"), btnFlush: $("btnFlush"), btnCats: $("btnCats"), btnReset: $("btnReset"),
-    segMinus: $("segMinus"), segPlus: $("segPlus"), signMark: $("signMark"), amount: $("amount"), btnCur: $("btnCur"), cats: $("cats"), comment: $("comment"),
+    editBar: $("editBar"), editText: $("editText"), btnDelete: $("btnDelete"), btnCancel: $("btnCancel"),
+    segMinus: $("segMinus"), segPlus: $("segPlus"), signMark: $("signMark"), amount: $("amount"), btnCur: $("btnCur"), catwrap: $("catwrap"), cat: $("cat"), comment: $("comment"),
     datalist: $("recentComments"), btnDate: $("btnDate"), dateInput: $("dateInput"), status: $("status"), btnRecent: $("btnRecent"), recentCount: $("recentCount"),
-    recentList: $("recentList"), btnSave: $("btnSave"), toast: $("toast"), toastText: $("toastText"), btnUndo: $("btnUndo"), toastBar: $("toastBar") };
+    recentHint: $("recentHint"), recentList: $("recentList"), btnSave: $("btnSave"), toast: $("toast"), toastText: $("toastText"), btnUndo: $("btnUndo"), toastBar: $("toastBar") };
 
   function ls(key, value) {
     try { if (value === undefined) { var v = localStorage.getItem(key); return v ? JSON.parse(v) : null; } if (value === null) localStorage.removeItem(key); else localStorage.setItem(key, JSON.stringify(value)); } catch (e) { return null; }
@@ -192,10 +208,12 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     var m = String(name).match(/^(.*?)\s*((?:\p{Extended_Pictographic}|\p{Emoji_Modifier}|‍|️)+)$/u);
     return m ? { nm: m[1], em: m[2] } : { nm: String(name), em: "" };
   }
+  function dmy(iso) { return String(iso || "").slice(8, 10) + "." + String(iso || "").slice(5, 7); }
 
   var prefs = ls("cash_prefs") || {};
-  var state = { sign: prefs.sign === "+" ? "+" : "-", cur: CURS.indexOf(prefs.cur) >= 0 ? prefs.cur : "EUR", cat: null, date: todayStr(),
-    cats: ls("cash_cats") || [], recent: ls("cash_recent") || [], queue: ls("cash_queue") || [], pending: null, pendTimer: null, sending: false, online: null };
+  var state = { sign: prefs.sign === "+" ? "+" : "-", cur: CURS.indexOf(prefs.cur) >= 0 ? prefs.cur : "EUR", cat: "", date: todayStr(),
+    cats: ls("cash_cats") || [], recent: ls("cash_recent") || [], queue: ls("cash_queue") || [], pending: null, pendTimer: null, sending: false,
+    edit: null, armed: null, busy: false };
 
   // ---------- access code: once from the sign-in link (#t=…) or typed, then kept on this phone ----------
   function token(v) { if (v === undefined) return ls("cash_token"); ls("cash_token", v); }
@@ -214,39 +232,43 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     renderSave();
   }
   function renderSave() {
-    var a = parseAmount(el.amount.value);
-    el.btnSave.textContent = a ? "Записать " + money(state.sign === "-" ? -a : a, state.cur) : "Записать";
+    var a = parseAmount(el.amount.value), verb = state.edit ? "Сохранить" : "Записать";
+    el.btnSave.textContent = a ? verb + " " + money(state.sign === "-" ? -a : a, state.cur) : verb;
   }
   function renderCats() {
-    el.cats.innerHTML = "";
-    if (!state.cats.length) { var p = document.createElement("div"); p.className = "cats-empty"; p.textContent = token() ? "Категории появятся после связи с базой" : "Сначала введи код доступа"; el.cats.appendChild(p); return; }
-    state.cats.forEach(function (name) {
-      var b = document.createElement("button"); b.type = "button"; b.className = "chip" + (state.cat === name ? " on" : ""); b.setAttribute("aria-pressed", state.cat === name ? "true" : "false");
-      var parts = emojiSplit(name);
-      var em = document.createElement("span"); em.className = "em"; em.textContent = parts.em;
-      var nm = document.createElement("span"); nm.className = "nm"; nm.textContent = parts.nm;
-      if (parts.em) b.appendChild(em); b.appendChild(nm);
-      b.addEventListener("click", function () { state.cat = state.cat === name ? null : name; renderCats(); renderComments(); });
-      el.cats.appendChild(b);
-    });
+    var sel = el.cat;
+    sel.innerHTML = "";
+    var o0 = document.createElement("option"); o0.value = ""; o0.textContent = state.cats.length ? "Категория…" : (token() ? "Категории появятся после связи с базой" : "Сначала введи код доступа");
+    sel.appendChild(o0);
+    state.cats.forEach(function (name) { var o = document.createElement("option"); o.value = name; o.textContent = name; sel.appendChild(o); });
+    sel.value = state.cats.indexOf(state.cat) >= 0 ? state.cat : "";
+    sel.classList.toggle("set", !!sel.value);
   }
   function renderDate() {
-    var t = todayStr(), y = todayStr(-1), label = state.date === t ? "Сегодня" : state.date === y ? "Вчера" : state.date.slice(8, 10) + "." + state.date.slice(5, 7);
+    var t = todayStr(), y = todayStr(-1), label = state.date === t ? "Сегодня" : state.date === y ? "Вчера" : dmy(state.date);
     el.btnDate.textContent = label; el.btnDate.classList.toggle("set", state.date !== t); el.dateInput.value = state.date;
+  }
+  function renderEdit() {
+    el.editBar.hidden = !state.edit;
+    if (state.edit) { el.editText.textContent = "Правка записи от " + dmy(state.edit.booking_date); el.btnDelete.textContent = "Удалить"; state.armed = null; }
+    renderSave(); renderRecent();
   }
   function renderRecent() {
     var t = todayStr(), sums = {};
     state.recent.forEach(function (r) { if (r.booking_date === t) sums[r.currency] = (sums[r.currency] || 0) + Number(r.amount); });
     var keys = Object.keys(sums);
     el.today.textContent = keys.length ? "сегодня " + keys.map(function (k) { return money(sums[k], k); }).join(" · ") : "";
-    el.recentCount.textContent = state.recent.length ? "(" + Math.min(state.recent.length, 8) + ")" : "";
+    el.recentCount.textContent = state.recent.length ? "(" + Math.min(state.recent.length, 10) + ")" : "";
     el.recentList.innerHTML = "";
-    state.recent.slice(0, 8).forEach(function (r) {
-      var li = document.createElement("li"), n = Number(r.amount);
-      var d = document.createElement("span"); d.className = "d"; d.textContent = String(r.booking_date || "").slice(8, 10) + "." + String(r.booking_date || "").slice(5, 7);
+    state.recent.slice(0, 10).forEach(function (r) {
+      var li = document.createElement("li"), b = document.createElement("button"), n = Number(r.amount);
+      b.type = "button"; if (state.edit && state.edit.id === r.id) b.className = "editing";
+      var d = document.createElement("span"); d.className = "d"; d.textContent = dmy(r.booking_date);
       var c = document.createElement("span"); c.className = "c"; c.textContent = (r.counterparty ? r.counterparty + " · " : "") + (r.category || "");
       var a = document.createElement("span"); a.className = "a " + (n < 0 ? "minus" : "plus"); a.textContent = money(n, r.currency);
-      li.appendChild(d); li.appendChild(c); li.appendChild(a); el.recentList.appendChild(li);
+      b.appendChild(d); b.appendChild(c); b.appendChild(a);
+      b.addEventListener("click", function () { editStart(r); });
+      li.appendChild(b); el.recentList.appendChild(li);
     });
     renderComments();
   }
@@ -261,7 +283,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     el.btnFlush.hidden = !state.queue.length;
     if (state.queue.length) setStatus("Не отправлено: " + state.queue.length + ". Появится связь — отправлю.", "warn");
   }
-  function renderAll() { renderSign(); el.btnCur.textContent = state.cur; renderCats(); renderDate(); renderRecent(); renderQueue(); }
+  function renderAll() { renderSign(); el.btnCur.textContent = state.cur; renderCats(); renderDate(); renderEdit(); renderQueue(); }
 
   // ---------- the function in Supabase ----------
   function api(action, payload) {
@@ -274,7 +296,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
         if (tm) clearTimeout(tm);
         return r.text().then(function (txt) {
           var j = {}; try { j = txt ? JSON.parse(txt) : {}; } catch (e) { j = { error: txt.slice(0, 160) }; }
-          if (!r.ok) throw { code: r.status === 401 ? "unauthorized" : r.status === 429 ? "rate" : r.status === 400 ? "bad" : "server", message: j.error || ("HTTP " + r.status) };
+          if (!r.ok) throw { code: r.status === 401 ? "unauthorized" : r.status === 429 ? "rate" : r.status === 400 ? "bad" : r.status === 404 ? "gone" : "server", message: j.error || ("HTTP " + r.status) };
           return j;
         });
       }, function (e) { if (tm) clearTimeout(tm); throw { code: "network", message: String(e && e.message || e) }; });
@@ -286,14 +308,15 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     if (c === "network") return "Нет связи с базой";
     if (c === "rate") return "Слишком много попыток, подожди 10 минут";
     if (c === "bad") return "Не принято: " + (e.message || "");
+    if (c === "gone") return "Записи уже нет";
     return "Ошибка базы: " + (e && e.message || "");
   }
-  function connected(ok) { state.online = ok; el.connState.textContent = ok ? "есть" : "нет"; }
+  function connected(ok) { el.connState.textContent = ok ? "есть" : "нет"; }
   function refreshInit() {
     if (!token()) { showSetup(""); renderCats(); return Promise.resolve(false); }
     return api("init").then(function (j) {
       var names = (j.categories || []).filter(Boolean);
-      if (names.length) { state.cats = names; ls("cash_cats", names); if (state.cat && names.indexOf(state.cat) < 0) state.cat = null; renderCats(); }
+      if (names.length) { state.cats = names; ls("cash_cats", names); if (state.cat && names.indexOf(state.cat) < 0) state.cat = ""; renderCats(); }
       state.recent = j.recent || []; ls("cash_recent", state.recent.slice(0, 40)); renderRecent();
       connected(true); el.setup.hidden = true;
       if (!state.queue.length) setStatus("", "");
@@ -337,20 +360,26 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   }
 
   // ---------- form ----------
-  function resetForm() { el.amount.value = ""; el.comment.value = ""; state.cat = null; state.date = todayStr(); renderCats(); renderDate(); renderSave(); el.amount.focus(); }
+  function resetForm() { el.amount.value = ""; el.comment.value = ""; state.cat = ""; state.date = todayStr(); state.edit = null; renderCats(); renderDate(); renderEdit(); el.amount.focus(); }
   function toastShow(text) { el.toastText.textContent = text; el.toast.hidden = false; var b = el.toastBar; b.style.animation = "none"; void b.offsetWidth; b.style.animation = ""; }
   function toastHide() { el.toast.hidden = true; }
   function commit(en) { enqueue(en); if (navigator.onLine !== false) send(en); }
-  function onSave() {
+  function readForm() {
     var a = parseAmount(el.amount.value);
-    if (!token()) { showSetup(""); return; }
-    if (!a) { el.amount.focus(); setStatus("Введи сумму", "warn"); return; }
-    if (!state.cat) { el.cats.classList.remove("shake"); void el.cats.offsetWidth; el.cats.classList.add("shake"); setStatus("Выбери категорию", "warn"); return; }
+    if (!token()) { showSetup(""); return null; }
+    if (!a) { el.amount.focus(); setStatus("Введи сумму", "warn"); return null; }
+    if (!state.cat) { el.catwrap.classList.remove("shake"); void el.catwrap.offsetWidth; el.catwrap.classList.add("shake"); setStatus("Выбери категорию", "warn"); return null; }
+    return { sign: state.sign, amount: a, cur: state.cur, cat: state.cat, comment: el.comment.value.trim().slice(0, 200), date: state.date };
+  }
+  function onSave() {
+    if (state.busy) return;
+    var f = readForm(); if (!f) return;
+    if (state.edit) { saveEdit(f); return; }
     if (state.pending) { clearTimeout(state.pendTimer); var prev = state.pending; state.pending = null; toastHide(); commit(prev); }
-    var en = { id: uuid(), sign: state.sign, amount: a, cur: state.cur, cat: state.cat, comment: el.comment.value.trim().slice(0, 200), date: state.date };
+    var en = Object.assign({ id: uuid() }, f);
     if (navigator.vibrate) { try { navigator.vibrate(12); } catch (e) { /* no haptics */ } }
     state.pending = en;
-    toastShow(money(en.sign === "-" ? -a : a, en.cur) + " · " + emojiSplit(en.cat).nm);
+    toastShow(money(en.sign === "-" ? -en.amount : en.amount, en.cur) + " · " + emojiSplit(en.cat).nm);
     setStatus("", "");
     state.pendTimer = setTimeout(function () { state.pending = null; toastHide(); commit(en); }, 5000);
     resetForm();
@@ -363,17 +392,61 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     renderAll(); setStatus("Отменено", ""); el.amount.focus();
   }
 
-  el.segMinus.addEventListener("click", function () { state.sign = "-"; prefs.sign = "-"; ls("cash_prefs", prefs); renderSign(); });
-  el.segPlus.addEventListener("click", function () { state.sign = "+"; prefs.sign = "+"; ls("cash_prefs", prefs); renderSign(); });
-  el.btnCur.addEventListener("click", function () { state.cur = CURS[(CURS.indexOf(state.cur) + 1) % CURS.length]; prefs.cur = state.cur; ls("cash_prefs", prefs); el.btnCur.textContent = state.cur; renderSave(); });
+  // ---------- editing an earlier entry ----------
+  function editStart(r) {
+    if (state.pending) { clearTimeout(state.pendTimer); var prev = state.pending; state.pending = null; toastHide(); commit(prev); }
+    var n = Number(r.amount);
+    state.edit = { id: r.id, booking_date: r.booking_date };
+    state.sign = n < 0 ? "-" : "+"; state.cur = CURS.indexOf(r.currency) >= 0 ? r.currency : "EUR"; state.cat = r.category || ""; state.date = r.booking_date || todayStr();
+    el.amount.value = String(Math.abs(n)).replace(".", ","); el.comment.value = r.counterparty || "";
+    renderSign(); el.btnCur.textContent = state.cur; renderCats(); renderDate(); renderEdit();
+    setStatus("", ""); window.scrollTo({ top: 0, behavior: "smooth" }); el.amount.focus();
+  }
+  function editCancel() { resetForm(); setStatus("", ""); }
+  function saveEdit(f) {
+    var id = state.edit.id;
+    state.busy = true; el.btnSave.disabled = true; setStatus("Сохраняю…", "");
+    api("update", { id: id, sign: f.sign, amount: f.amount, currency: f.cur, category: f.cat, comment: f.comment, date: f.date }).then(function (j) {
+      state.recent = state.recent.map(function (r) { return r.id === id ? { id: id, booking_date: f.date, amount: f.sign === "-" ? -f.amount : f.amount, currency: f.cur, category: f.cat, counterparty: f.comment } : r; });
+      ls("cash_recent", state.recent.slice(0, 40));
+      resetForm(); connected(true);
+      setStatus(j.sheet ? "Изменено ✓ · в таблице ✓" : "Изменено ✓ · таблица обновится при следующей правке", j.sheet ? "" : "warn");
+    }).catch(function (e) {
+      if (e.code === "unauthorized") { token(null); showSetup("Код не подошёл"); }
+      if (e.code === "gone") { state.recent = state.recent.filter(function (r) { return r.id !== id; }); ls("cash_recent", state.recent); resetForm(); }
+      setStatus(explain(e), e.code === "network" ? "warn" : "err");
+    }).then(function () { state.busy = false; el.btnSave.disabled = false; });
+  }
+  function onDelete() {
+    if (!state.edit || state.busy) return;
+    var id = state.edit.id;
+    if (state.armed !== id) { state.armed = id; el.btnDelete.textContent = "Точно удалить?"; setTimeout(function () { if (state.armed === id) { state.armed = null; el.btnDelete.textContent = "Удалить"; } }, 4000); return; }
+    state.armed = null; state.busy = true; el.btnSave.disabled = true; setStatus("Удаляю…", "");
+    api("delete", { id: id }).then(function (j) {
+      state.recent = state.recent.filter(function (r) { return r.id !== id; }); ls("cash_recent", state.recent.slice(0, 40));
+      resetForm(); connected(true);
+      setStatus(j.sheet ? "Удалено ✓ · из таблицы тоже" : "Удалено из базы ✓ · строку в таблице убери руками", j.sheet ? "" : "warn");
+    }).catch(function (e) {
+      if (e.code === "unauthorized") { token(null); showSetup("Код не подошёл"); }
+      if (e.code === "gone") { state.recent = state.recent.filter(function (r) { return r.id !== id; }); ls("cash_recent", state.recent); resetForm(); }
+      setStatus(explain(e), e.code === "network" ? "warn" : "err"); el.btnDelete.textContent = "Удалить";
+    }).then(function () { state.busy = false; el.btnSave.disabled = false; });
+  }
+
+  el.segMinus.addEventListener("click", function () { state.sign = "-"; if (!state.edit) { prefs.sign = "-"; ls("cash_prefs", prefs); } renderSign(); });
+  el.segPlus.addEventListener("click", function () { state.sign = "+"; if (!state.edit) { prefs.sign = "+"; ls("cash_prefs", prefs); } renderSign(); });
+  el.btnCur.addEventListener("click", function () { state.cur = CURS[(CURS.indexOf(state.cur) + 1) % CURS.length]; if (!state.edit) { prefs.cur = state.cur; ls("cash_prefs", prefs); } el.btnCur.textContent = state.cur; renderSave(); });
   el.amount.addEventListener("input", renderSave);
   el.amount.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); el.amount.blur(); } });
+  el.cat.addEventListener("change", function () { state.cat = el.cat.value; el.cat.classList.toggle("set", !!state.cat); renderComments(); });
   el.comment.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); onSave(); } });
   el.btnDate.addEventListener("click", function () { var d = el.dateInput; d.value = state.date; if (d.showPicker) { try { d.showPicker(); return; } catch (e) { /* fall through */ } } d.focus(); d.click(); });
   el.dateInput.addEventListener("change", function () { if (/^\d{4}-\d{2}-\d{2}$/.test(el.dateInput.value) && el.dateInput.value <= todayStr(1)) state.date = el.dateInput.value; renderDate(); });
   el.btnSave.addEventListener("click", onSave);
   el.btnUndo.addEventListener("click", onUndo);
-  el.btnRecent.addEventListener("click", function () { el.recentList.hidden = !el.recentList.hidden; if (!el.recentList.hidden) refreshInit(); });
+  el.btnDelete.addEventListener("click", onDelete);
+  el.btnCancel.addEventListener("click", editCancel);
+  el.btnRecent.addEventListener("click", function () { var open = el.recentList.hidden; el.recentList.hidden = !open; el.recentHint.hidden = !open; if (open) refreshInit(); });
   el.btnMore.addEventListener("click", function () { el.more.hidden = !el.more.hidden; });
   el.btnCats.addEventListener("click", function () { el.btnCats.disabled = true; refreshInit().then(function () { el.btnCats.disabled = false; }); });
   el.btnReset.addEventListener("click", function () { el.more.hidden = true; showSetup(""); });
@@ -386,7 +459,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   el.btnFlush.addEventListener("click", flushQueue);
   window.addEventListener("online", flushQueue);
   window.addEventListener("pagehide", function () { if (state.pending) { clearTimeout(state.pendTimer); enqueue(state.pending); state.pending = null; } });
-  document.addEventListener("visibilitychange", function () { if (!document.hidden && token()) { refreshInit(); flushQueue(); } });
+  document.addEventListener("visibilitychange", function () { if (!document.hidden && token() && !state.edit) { refreshInit(); flushQueue(); } });
 
   renderAll();
   if (token()) { el.amount.focus(); refreshInit().then(flushQueue); } else { showSetup(""); }
