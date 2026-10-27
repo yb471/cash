@@ -132,6 +132,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     <div class="line"><span>Не отправлено</span><span><span id="queueCount">0</span> <button id="btnFlush" type="button" hidden>Отправить</button></span></div>
     <div class="line"><span>Категории</span><button id="btnCats" type="button">Обновить список</button></div>
     <div class="line"><span>Код доступа</span><button id="btnReset" type="button">Ввести заново</button></div>
+    <div class="line"><span>Версия <span id="ver"></span></span><button id="btnUpdate" type="button">Проверить обновление</button></div>
     <div class="line"><a href="https://docs.google.com/spreadsheets/d/1cKYM1-z92p6Q14BxznyrYuXFfWDnJfb1w0Dj51CcAhk/edit#gid=1765023070" target="_blank" rel="noopener">Открыть вкладку YB Cash</a></div>
   </section>
 
@@ -186,10 +187,11 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
+  var APP_VERSION = "6"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
   var el = { today: $("today"), setup: $("setup"), tokenInput: $("tokenInput"), setupMsg: $("setupMsg"), btnToken: $("btnToken"), more: $("more"), btnMore: $("btnMore"),
-    connState: $("connState"), queueCount: $("queueCount"), btnFlush: $("btnFlush"), btnCats: $("btnCats"), btnReset: $("btnReset"),
+    ver: $("ver"), btnUpdate: $("btnUpdate"), connState: $("connState"), queueCount: $("queueCount"), btnFlush: $("btnFlush"), btnCats: $("btnCats"), btnReset: $("btnReset"),
     editBar: $("editBar"), editText: $("editText"), btnDelete: $("btnDelete"), btnCancel: $("btnCancel"),
     segMinus: $("segMinus"), segPlus: $("segPlus"), signMark: $("signMark"), amount: $("amount"), btnCur: $("btnCur"), catwrap: $("catwrap"), cat: $("cat"), comment: $("comment"),
     datalist: $("recentComments"), dToday: $("dToday"), dYest: $("dYest"), dOther: $("dOther"), dateInput: $("dateInput"), status: $("status"), btnRecent: $("btnRecent"), recentCount: $("recentCount"),
@@ -468,6 +470,11 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   el.btnCancel.addEventListener("click", editCancel);
   el.btnRecent.addEventListener("click", function () { var open = el.recentList.hidden; el.recentList.hidden = !open; el.recentHint.hidden = !open; if (open) refreshInit(); });
   el.btnMore.addEventListener("click", function () { el.more.hidden = !el.more.hidden; });
+  el.ver.textContent = APP_VERSION;
+  el.btnUpdate.addEventListener("click", function () {
+    el.btnUpdate.disabled = true; el.btnUpdate.textContent = "Проверяю…";
+    swUpdate().then(function () { setTimeout(function () { el.btnUpdate.disabled = false; el.btnUpdate.textContent = "Проверить обновление"; }, 1500); });
+  });
   el.btnCats.addEventListener("click", function () { el.btnCats.disabled = true; refreshInit().then(function () { el.btnCats.disabled = false; }); });
   el.btnReset.addEventListener("click", function () { el.more.hidden = true; showSetup(""); });
   el.btnToken.addEventListener("click", function () {
