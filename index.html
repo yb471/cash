@@ -106,10 +106,11 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 .visually-hidden { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 .ferr { color: var(--minus); font-size: 13px; font-weight: 600; margin-top: -6px; padding-left: 4px; }
 .amount-row.err, .catsel.err { border-color: var(--minus); }
-.status { min-height: 18px; font-size: 13px; color: var(--muted); }
+.status { font-size: 13px; color: var(--muted); }
+.status:empty { display: none; }
 .status.warn { color: var(--warn); }
 .status.err { color: var(--minus); }
-.recent { border-top: 1px solid var(--line); padding-top: 6px; }
+.recent { border-top: 1px solid var(--line); padding-top: 4px; margin-top: 2px; }
 .recent-head { color: var(--muted); font-size: 14px; padding: 6px 0; display: flex; gap: 6px; align-items: center; }
 .recent-list { list-style: none; margin: 0; padding: 0 0 6px; display: flex; flex-direction: column; gap: 2px; }
 .recent-list button { width: 100%; display: grid; grid-template-columns: 44px auto 1fr; gap: 8px; font-size: 14px; align-items: baseline; border: 0; background: transparent; padding: 6px 4px; border-radius: 8px; text-align: left; } /* дата, сумма, текст (его слово 27.10.2026) */
@@ -230,7 +231,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "22"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "23"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Взял у Family Cash", "Чаевые", "Дал Насте"]; // шаблоны комментария под полем (его слово 27.10.2026): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
