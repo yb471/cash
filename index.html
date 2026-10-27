@@ -128,7 +128,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 .recent-list .a.minus { color: var(--minus); }
 .recent-list .a.plus { color: var(--plus); }
 .more-btn { width: 100%; height: 44px; margin-top: 4px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--accent); font-size: calc(14 * var(--u)); font-weight: 600; }
-.savebar { padding-top: 2px; } /* кнопка записи сразу под комментарием (его слово 27.10.2026) */
+.savebar { padding-top: 10px; } /* кнопка записи под комментарием, воздух сверху как снизу (его слово 27.10.2026) */
 .save { width: 100%; height: 54px; border: 0; border-radius: 16px; background: var(--accent); color: var(--accent-fg); font-size: calc(18 * var(--u)); font-weight: 700; font-variant-numeric: tabular-nums; }
 .save.minus { background: var(--minus); color: #fff; } /* цвет кнопки по знаку — как было (его слово 27.10.2026) */
 .save.plus { background: var(--plus); color: #fff; }
@@ -235,7 +235,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "34"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "35"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Взял у Family Cash", "Чаевые", "Дал Насте"]; // шаблоны комментария под полем (его слово 27.10.2026): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
