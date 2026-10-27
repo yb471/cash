@@ -113,13 +113,15 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 .recent { border-top: 1px solid var(--line); padding-top: 4px; margin-top: 2px; }
 .recent-head { color: var(--muted); font-size: 14px; padding: 6px 0; display: flex; gap: 6px; align-items: center; }
 .recent-list { list-style: none; margin: 0; padding: 0 0 6px; display: flex; flex-direction: column; gap: 2px; }
-.recent-list button { width: 100%; display: grid; grid-template-columns: 44px 1fr auto; gap: 8px; font-size: 14px; align-items: baseline; border: 0; background: transparent; padding: 6px 4px; border-radius: 8px; text-align: left; } /* дата, текст, сумма в конце (его слово 27.10.2026) */
+.recent-list button { width: 100%; display: grid; grid-template-columns: 44px 1fr auto; gap: 8px; font-size: 14px; align-items: start; border: 0; background: transparent; padding: 6px 4px; border-radius: 8px; text-align: left; } /* дата, категория и комментарий, сумма в конце (его слово 27.10.2026) */
 .recent-list button:active { background: var(--chip); }
 .recent-list button.editing { background: var(--chip); }
 .recent-list button.queued { opacity: .75; }
 .recent-list button.queued .d { color: var(--warn); }
 .recent-list .d { color: var(--muted); font-variant-numeric: tabular-nums; }
-.recent-list .c { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.recent-list .c { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.recent-list .c span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.recent-list .c .sub { color: var(--muted); font-size: 13px; }
 .recent-list .a { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
 .recent-list .a.minus { color: var(--minus); }
 .recent-list .a.plus { color: var(--plus); }
@@ -230,7 +232,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "26"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "27"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Взял у Family Cash", "Чаевые", "Дал Насте"]; // шаблоны комментария под полем (его слово 27.10.2026): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -350,6 +352,12 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     if (!token()) return;
     api("init").then(function (j) { if (j.month) { state.month = j.month; ls("cash_month", state.month); renderRecent(); } }).catch(function () { /* покажем при следующем обновлении */ });
   }
+  function twoLines(cat, comment) { // категория, под ней комментарий приглушённо; без комментария — прочерк
+    var c = document.createElement("span"), top = document.createElement("span"), sub = document.createElement("span");
+    c.className = "c"; top.textContent = cat || "—"; sub.className = "sub"; sub.textContent = comment || "—";
+    c.appendChild(top); c.appendChild(sub);
+    return c;
+  }
   function renderRecent() {
     var sums = monthSums(), keys = Object.keys(sums).filter(function (k) { return sums[k]; });
     el.today.textContent = keys.length ? monthName() + " " + keys.map(function (k) { return money(sums[k], k); }).join(" · ") : "";
@@ -360,7 +368,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
       var li = document.createElement("li"), b = document.createElement("button"), n = q.sign === "-" ? -q.amount : q.amount;
       b.type = "button"; b.className = "queued";
       var d = document.createElement("span"); d.className = "d"; d.textContent = "⏳";
-      var c = document.createElement("span"); c.className = "c"; c.textContent = (q.comment ? q.comment + " · " : "") + (q.cat || "");
+      var c = twoLines(q.cat, q.comment);
       var a = document.createElement("span"); a.className = "a " + (n < 0 ? "minus" : "plus"); a.textContent = money(n, q.cur);
       b.appendChild(d); b.appendChild(c); b.appendChild(a);
       b.addEventListener("click", function () { setStatus("Ещё не отправлено: появится связь — уйдёт само. Исправить можно после отправки.", "warn"); flushQueue(); });
@@ -370,7 +378,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
       var li = document.createElement("li"), b = document.createElement("button"), n = Number(r.amount);
       b.type = "button"; if (state.edit && state.edit.id === r.id) b.className = "editing";
       var d = document.createElement("span"); d.className = "d"; d.textContent = dmy(r.booking_date);
-      var c = document.createElement("span"); c.className = "c"; c.textContent = (r.counterparty ? r.counterparty + " · " : "") + (r.category || "");
+      var c = twoLines(r.category, r.counterparty);
       var a = document.createElement("span"); a.className = "a " + (n < 0 ? "minus" : "plus"); a.textContent = money(n, r.currency);
       b.appendChild(d); b.appendChild(c); b.appendChild(a);
       b.addEventListener("click", function () { editStart(r); });
