@@ -112,7 +112,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 .recent { border-top: 1px solid var(--line); padding-top: 6px; }
 .recent-head { color: var(--muted); font-size: 14px; padding: 6px 0; display: flex; gap: 6px; align-items: center; }
 .recent-list { list-style: none; margin: 0; padding: 0 0 6px; display: flex; flex-direction: column; gap: 2px; }
-.recent-list button { width: 100%; display: grid; grid-template-columns: 44px 1fr auto; gap: 8px; font-size: 14px; align-items: baseline; border: 0; background: transparent; padding: 6px 4px; border-radius: 8px; text-align: left; }
+.recent-list button { width: 100%; display: grid; grid-template-columns: 44px auto 1fr; gap: 8px; font-size: 14px; align-items: baseline; border: 0; background: transparent; padding: 6px 4px; border-radius: 8px; text-align: left; } /* дата, сумма, текст (его слово 27.10.2026) */
 .recent-list button:active { background: var(--chip); }
 .recent-list button.editing { background: var(--chip); }
 .recent-list button.queued { opacity: .75; }
@@ -172,6 +172,12 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     <button id="btnCancel" type="button">Отмена</button>
   </div>
 
+  <div class="dates" role="group" aria-label="Дата">
+    <button class="date-btn on" id="dToday" type="button">Сегодня</button>
+    <button class="date-btn" id="dYest" type="button">Вчера</button>
+    <label class="date-btn" id="dOther"><span id="dOtherText">Другая…</span><input id="dateInput" type="date" class="date-input" aria-label="Другая дата"></label>
+  </div>
+
   <div class="seg" role="group" aria-label="Расход или приход">
     <button class="seg-btn minus on" id="segMinus" type="button">− Расход</button>
     <button class="seg-btn plus" id="segPlus" type="button">+ Приход</button>
@@ -184,11 +190,6 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   </div>
   <div class="ferr" id="errAmount" hidden>Введи сумму</div>
 
-  <div class="dates" role="group" aria-label="Дата">
-    <button class="date-btn on" id="dToday" type="button">Сегодня</button>
-    <button class="date-btn" id="dYest" type="button">Вчера</button>
-    <label class="date-btn" id="dOther"><span id="dOtherText">Другая…</span><input id="dateInput" type="date" class="date-input" aria-label="Другая дата"></label>
-  </div>
 
   <div class="catwrap" id="catwrap">
     <button id="cat" class="catsel" type="button" aria-haspopup="dialog">Категория…</button>
@@ -229,7 +230,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "21"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "22"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Взял у Family Cash", "Чаевые", "Дал Насте"]; // шаблоны комментария под полем (его слово 27.10.2026): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -361,7 +362,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
       var d = document.createElement("span"); d.className = "d"; d.textContent = "⏳";
       var c = document.createElement("span"); c.className = "c"; c.textContent = (q.comment ? q.comment + " · " : "") + (q.cat || "");
       var a = document.createElement("span"); a.className = "a " + (n < 0 ? "minus" : "plus"); a.textContent = money(n, q.cur);
-      b.appendChild(d); b.appendChild(c); b.appendChild(a);
+      b.appendChild(d); b.appendChild(a); b.appendChild(c);
       b.addEventListener("click", function () { setStatus("Ещё не отправлено: появится связь — уйдёт само. Исправить можно после отправки.", "warn"); flushQueue(); });
       li.appendChild(b); el.recentList.appendChild(li);
     });
@@ -371,7 +372,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
       var d = document.createElement("span"); d.className = "d"; d.textContent = dmy(r.booking_date);
       var c = document.createElement("span"); c.className = "c"; c.textContent = (r.counterparty ? r.counterparty + " · " : "") + (r.category || "");
       var a = document.createElement("span"); a.className = "a " + (n < 0 ? "minus" : "plus"); a.textContent = money(n, r.currency);
-      b.appendChild(d); b.appendChild(c); b.appendChild(a);
+      b.appendChild(d); b.appendChild(a); b.appendChild(c);
       b.addEventListener("click", function () { editStart(r); });
       li.appendChild(b); el.recentList.appendChild(li);
     });
