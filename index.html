@@ -122,6 +122,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 .recent-list .a { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
 .recent-list .a.minus { color: var(--minus); }
 .recent-list .a.plus { color: var(--plus); }
+.more-btn { width: 100%; height: 40px; margin-top: 4px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--accent); font-size: 14px; font-weight: 600; }
 .recent-hint { font-size: 12px; color: var(--muted); padding: 0 4px 6px; }
 .spacer { flex: 1; }
 .savebar { padding-top: 2px; } /* кнопка записи сразу под комментарием (его слово 27.10.2026) */
@@ -210,6 +211,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     <div class="recent-head">Последние <span id="recentCount"></span></div>
     <div class="recent-hint" id="recentHint">Нажми запись, чтобы исправить или удалить</div>
     <ul class="recent-list" id="recentList"></ul>
+    <button class="more-btn" id="btnMoreRecent" type="button" hidden>Показать ещё</button>
   </section>
 
   <div class="spacer"></div>
@@ -227,7 +229,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "20"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "21"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Взял у Family Cash", "Чаевые", "Дал Насте"]; // шаблоны комментария под полем (его слово 27.10.2026): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -236,7 +238,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     editBar: $("editBar"), editText: $("editText"), btnDelete: $("btnDelete"), btnCancel: $("btnCancel"),
     segMinus: $("segMinus"), segPlus: $("segPlus"), signMark: $("signMark"), amount: $("amount"), btnCur: $("btnCur"), catwrap: $("catwrap"), cat: $("cat"), comment: $("comment"),
     btnClear: $("btnClear"), errAmount: $("errAmount"), errCat: $("errCat"), amountRow: document.querySelector(".amount-row"), tpl: $("tpl"), sheet: $("sheet"), sheetBack: $("sheetBack"), sheetClose: $("sheetClose"), sheetList: $("sheetList"), dToday: $("dToday"), dYest: $("dYest"), dOther: $("dOther"), dOtherText: $("dOtherText"), dateInput: $("dateInput"), status: $("status"), recentCount: $("recentCount"),
-    app: $("app"), ptr: $("ptr"), recentHint: $("recentHint"), recentList: $("recentList"), btnSave: $("btnSave") };
+    app: $("app"), ptr: $("ptr"), recentHint: $("recentHint"), recentList: $("recentList"), btnMoreRecent: $("btnMoreRecent"), btnSave: $("btnSave") };
 
   function ls(key, value) {
     try { if (value === undefined) { var v = localStorage.getItem(key); return v ? JSON.parse(v) : null; } if (value === null) localStorage.removeItem(key); else localStorage.setItem(key, JSON.stringify(value)); } catch (e) { return null; }
@@ -265,7 +267,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 
   var prefs = ls("cash_prefs") || {};
   var state = { sign: prefs.sign === "+" ? "+" : "-", cur: CURS.indexOf(prefs.cur) >= 0 ? prefs.cur : "EUR", cat: "", date: todayStr(),
-    cats: ls("cash_cats") || [], recent: ls("cash_recent") || [], month: ls("cash_month") || null, queue: ls("cash_queue") || [], sending: false,
+    cats: ls("cash_cats") || [], recent: ls("cash_recent") || [], month: ls("cash_month") || null, queue: ls("cash_queue") || [], shown: 10, sending: false,
     edit: null, armed: null, busy: false };
 
   // ---------- access code: once from the sign-in link (#t=…) or typed, then kept on this phone ----------
@@ -350,7 +352,8 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   function renderRecent() {
     var sums = monthSums(), keys = Object.keys(sums).filter(function (k) { return sums[k]; });
     el.today.textContent = keys.length ? monthName() + " " + keys.map(function (k) { return money(sums[k], k); }).join(" · ") : "";
-    el.recentCount.textContent = (state.recent.length || state.queue.length) ? "(" + (Math.min(state.recent.length, 10) + state.queue.length) + ")" : "";
+    el.recentCount.textContent = (state.recent.length || state.queue.length) ? "(" + (state.recent.length + state.queue.length) + ")" : "";
+    el.btnMoreRecent.hidden = state.recent.length <= state.shown;
     el.recentList.innerHTML = "";
     state.queue.slice().reverse().forEach(function (q) { // не отправленные — сверху, с часами; править нельзя, пока не ушли
       var li = document.createElement("li"), b = document.createElement("button"), n = q.sign === "-" ? -q.amount : q.amount;
@@ -362,7 +365,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
       b.addEventListener("click", function () { setStatus("Ещё не отправлено: появится связь — уйдёт само. Исправить можно после отправки.", "warn"); flushQueue(); });
       li.appendChild(b); el.recentList.appendChild(li);
     });
-    state.recent.slice(0, 10).forEach(function (r) {
+    state.recent.slice(0, state.shown).forEach(function (r) {
       var li = document.createElement("li"), b = document.createElement("button"), n = Number(r.amount);
       b.type = "button"; if (state.edit && state.edit.id === r.id) b.className = "editing";
       var d = document.createElement("span"); d.className = "d"; d.textContent = dmy(r.booking_date);
@@ -422,7 +425,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     return api("init").then(function (j) {
       var names = (j.categories || []).filter(Boolean);
       if (names.length) { state.cats = names; ls("cash_cats", names); if (state.cat && names.indexOf(state.cat) < 0) state.cat = ""; renderCats(); }
-      state.recent = j.recent || []; ls("cash_recent", state.recent.slice(0, 40));
+      state.recent = j.recent || []; ls("cash_recent", state.recent);
       if (j.month) { state.month = j.month; ls("cash_month", state.month); }
       renderRecent();
       connected(true); el.setup.hidden = true;
@@ -444,7 +447,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
       if (!j.duplicate && j.id && !state.recent.some(function (r) { return r.id === j.id; })) {
         var signed = en.sign === "-" ? -en.amount : en.amount;
         state.recent.unshift({ id: j.id, booking_date: en.date, amount: signed, currency: en.cur, category: en.cat, counterparty: en.comment });
-        ls("cash_recent", state.recent.slice(0, 40));
+        ls("cash_recent", state.recent);
         if (state.month && String(en.date).slice(0, 7) === todayStr().slice(0, 7)) { state.month[en.cur] = Math.round(((state.month[en.cur] || 0) + signed) * 100) / 100; ls("cash_month", state.month); }
         renderRecent();
       }
@@ -510,7 +513,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     state.busy = true; el.btnSave.disabled = true; setStatus("Сохраняю…", "");
     api("update", { id: id, sign: f.sign, amount: f.amount, currency: f.cur, category: f.cat, comment: f.comment, date: f.date }).then(function (j) {
       state.recent = state.recent.map(function (r) { return r.id === id ? { id: id, booking_date: f.date, amount: f.sign === "-" ? -f.amount : f.amount, currency: f.cur, category: f.cat, counterparty: f.comment } : r; });
-      ls("cash_recent", state.recent.slice(0, 40));
+      ls("cash_recent", state.recent);
       resetForm(); connected(true); refreshMonth();
       setStatus(j.sheet ? "" : "Таблица обновится при следующей правке", j.sheet ? "" : "warn");
     }).catch(function (e) {
@@ -525,7 +528,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     if (state.armed !== id) { state.armed = id; el.btnDelete.textContent = "Точно удалить?"; setTimeout(function () { if (state.armed === id) { state.armed = null; el.btnDelete.textContent = "Удалить"; } }, 4000); return; }
     state.armed = null; state.busy = true; el.btnSave.disabled = true; setStatus("Удаляю…", "");
     api("delete", { id: id }).then(function (j) {
-      state.recent = state.recent.filter(function (r) { return r.id !== id; }); ls("cash_recent", state.recent.slice(0, 40));
+      state.recent = state.recent.filter(function (r) { return r.id !== id; }); ls("cash_recent", state.recent);
       resetForm(); connected(true); refreshMonth();
       setStatus(j.sheet ? "" : "Строку в таблице убери руками", j.sheet ? "" : "warn");
     }).catch(function (e) {
@@ -543,6 +546,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   el.cat.addEventListener("click", sheetOpen);
   el.sheetBack.addEventListener("click", sheetClose);
   el.sheetClose.addEventListener("click", sheetClose);
+  el.btnMoreRecent.addEventListener("click", function () { state.shown += 10; renderRecent(); }); // по 10 за раз (его слово 27.10.2026)
   document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !el.sheet.hidden) sheetClose(); });
   el.comment.addEventListener("input", renderTpl);
   el.btnClear.addEventListener("pointerdown", function (e) { e.preventDefault(); }); // не ронять клавиатуру, если она открыта
