@@ -16,8 +16,8 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <style>
-/* layout: one phone screen top to bottom — edit bar (only while editing), sign toggle, amount with currency, category
-   dropdown, comment and date, sticky save; the save button itself shows progress and success */
+/* один экран телефона сверху вниз: дата, расход/приход, сумма с валютой, категория, комментарий с шаблонами, кнопка,
+   последние записи. Поле и его подсказка живут в одной группе .field — без отрицательных отступов */
 :root {
   --bg: #F2F4F6; --surface: #FFFFFF; --fg: #14181C; --muted: #6A737D; --line: #D9DFE5;
   --accent: #0E6F6A; --accent-fg: #FFFFFF; --minus: #C9403A; --plus: #1E8E5A;
@@ -32,7 +32,7 @@
 html, body { height: 100%; margin: 0; }
 body { background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 16px; line-height: 1.3; -webkit-text-size-adjust: 100%; overscroll-behavior-y: none; }
 * { box-sizing: border-box; }
-button, input, select { font: inherit; color: inherit; }
+button, input { font: inherit; color: inherit; }
 button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 [hidden] { display: none !important; }
@@ -42,25 +42,27 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 .top { display: flex; align-items: center; gap: 10px; min-height: 36px; }
 .brand { font-weight: 700; font-size: 17px; letter-spacing: .01em; }
 .today { margin-left: auto; color: var(--muted); font-variant-numeric: tabular-nums; font-size: 14px; white-space: nowrap; }
-.gear { width: 36px; height: 36px; border: 0; background: transparent; border-radius: 10px; font-size: 20px; color: var(--muted); }
+.gear { width: 44px; height: 44px; margin-right: -8px; border: 0; background: transparent; border-radius: 10px; font-size: 20px; color: var(--muted); }
 .editbar { display: flex; align-items: center; gap: 8px; background: var(--edit); color: var(--edit-fg); border-radius: 14px; padding: 10px 8px 10px 14px; font-size: 15px; box-shadow: 0 4px 14px rgba(242,194,27,.35); }
 .editbar span { flex: 1; min-width: 0; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .app.editing .amount-row, .app.editing .catsel, .app.editing .comment { border-color: var(--edit); border-width: 2px; }
 .app.editing .dates, .app.editing .seg { box-shadow: inset 0 0 0 2px var(--edit); }
 .app.editing .recent { display: none; }
-.save.edit { background: var(--edit) !important; color: var(--edit-fg) !important; }
-.editbar button { height: 36px; padding: 0 12px; border: 0; border-radius: 10px; background: rgba(255,255,255,.92); color: #14181C; font-size: 14px; font-weight: 700; }
+.editbar button { height: 44px; padding: 0 12px; border: 0; border-radius: 10px; background: rgba(255,255,255,.92); color: #14181C; font-size: 14px; font-weight: 700; }
 .editbar button.danger { color: var(--minus); }
 .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: var(--chip); padding: 4px; border-radius: 14px; }
 .seg-btn { height: 44px; border: 0; border-radius: 10px; background: transparent; color: var(--muted); font-weight: 600; font-size: 16px; }
 .seg-btn.on.minus { background: var(--surface); color: var(--minus); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
 .seg-btn.on.plus { background: var(--surface); color: var(--plus); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
-.amount-row { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 6px 10px 6px 14px; }
-.sign { font-size: 34px; font-weight: 600; color: var(--minus); width: 24px; text-align: center; }
-.sign.plus { color: var(--plus); }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.amount-row { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 6px 8px 6px 16px; }
 .amount { flex: 1; min-width: 0; border: 0; background: transparent; font-size: 40px; font-weight: 700; font-variant-numeric: tabular-nums; padding: 4px 0; outline: none; }
+.amount.minus { color: var(--minus); }
+.amount.plus { color: var(--plus); }
 .amount::placeholder { color: var(--line); }
-.cur { height: 40px; padding: 0 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--chip); font-weight: 600; font-size: 14px; letter-spacing: .04em; }
+.curseg { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; background: var(--chip); padding: 3px; border-radius: 12px; } /* валюта — мини-переключатель, как расход/приход */
+.curseg button { height: 38px; min-width: 52px; padding: 0 10px; border: 0; border-radius: 9px; background: transparent; color: var(--muted); font-weight: 600; font-size: 14px; letter-spacing: .04em; }
+.curseg button.on { background: var(--surface); color: var(--fg); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
 .catwrap { position: relative; }
 .catwrap.shake { animation: shake .3s linear; }
 @keyframes shake { 25% { transform: translateX(-4px) } 75% { transform: translateX(4px) } }
@@ -71,7 +73,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 .sheet-body { position: absolute; left: 0; right: 0; bottom: 0; max-height: 86%; overflow-y: auto; -webkit-overflow-scrolling: touch; background: var(--surface); border-radius: 20px 20px 0 0;
   padding: 6px 10px calc(14px + env(safe-area-inset-bottom, 0px)); box-shadow: 0 -8px 30px rgba(0,0,0,.18); animation: sheetup .24s cubic-bezier(.2,.8,.2,1); }
 .sheet-head { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between; padding: 10px 6px 8px 14px; background: var(--surface); font-weight: 700; font-size: 17px; }
-.sheet-head button { height: 36px; padding: 0 14px; border: 0; border-radius: 999px; background: var(--chip); color: var(--fg); font-size: 15px; font-weight: 600; }
+.sheet-head button { height: 44px; padding: 0 16px; border: 0; border-radius: 999px; background: var(--chip); color: var(--fg); font-size: 15px; font-weight: 600; }
 .sheet-list { list-style: none; margin: 0; padding: 0; }
 .sheet-list button { width: 100%; min-height: 52px; display: flex; align-items: center; gap: 12px; padding: 6px 10px; border: 0; border-radius: 12px; background: transparent; color: var(--fg); font-size: 17px; text-align: left; }
 .sheet-list button:active { background: var(--chip); }
@@ -81,15 +83,13 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 @keyframes sheetup { from { transform: translateY(40px); opacity: .6; } to { transform: none; opacity: 1; } }
 @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
 .catwrap::after { content: "▾"; position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; font-size: 18px; }
-.row2 { display: flex; gap: 8px; }
-.comment { flex: 1; min-width: 0; height: 46px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 0 12px; outline: none; }
+.cwrap { position: relative; }
+.comment { width: 100%; height: 46px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 0 48px 0 12px; outline: none; }
 .comment:focus { border-color: var(--accent); }
-.cwrap { position: relative; flex: 1; min-width: 0; }
-.cwrap .comment { width: 100%; box-sizing: border-box; padding-right: 44px; }
-.clear { position: absolute; right: 7px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; border: 0; border-radius: 50%; background: var(--chip); color: var(--muted); font-size: 20px; line-height: 32px; padding: 0; text-align: center; }
-.clear:active { background: var(--line); }
-.tpl { display: flex; flex-wrap: wrap; gap: 6px; margin-top: -4px; }
-.tpl button { height: 32px; padding: 0 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--chip); color: var(--fg); font-size: 13px; font-weight: 600; white-space: nowrap; }
+.clear { position: absolute; right: 2px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border: 0; border-radius: 50%; background: transparent; color: var(--muted); font-size: 22px; line-height: 44px; padding: 0; text-align: center; }
+.clear:active { color: var(--fg); }
+.tpl { display: flex; flex-wrap: wrap; gap: 6px; }
+.tpl button { height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: 999px; background: var(--chip); color: var(--fg); font-size: 13px; font-weight: 600; white-space: nowrap; }
 .tpl button.on { background: var(--accent); color: var(--accent-fg); border-color: transparent; }
 .dates { display: grid; grid-template-columns: 1.25fr 1fr 1fr; gap: 6px; background: var(--chip); padding: 4px; border-radius: 14px; }
 .date-btn { position: relative; display: flex; align-items: center; justify-content: center; height: 40px; border: 0; border-radius: 10px; background: transparent; color: var(--muted); font-weight: 600; font-size: 14px; white-space: nowrap; padding: 0 4px; overflow: hidden; }
@@ -104,8 +104,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 .ptr.spin svg { animation: ptrspin .8s linear infinite; }
 .ptr.spin circle { stroke-dashoffset: 16; }
 @keyframes ptrspin { to { transform: rotate(360deg); } }
-.visually-hidden { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
-.ferr { color: var(--minus); font-size: 13px; font-weight: 600; margin-top: -6px; padding-left: 4px; }
+.ferr { color: var(--minus); font-size: 13px; font-weight: 600; padding-left: 4px; }
 .amount-row.err, .catsel.err { border-color: var(--minus); }
 .status { font-size: 13px; color: var(--muted); }
 .status:empty { display: none; }
@@ -113,11 +112,13 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 .status.err { color: var(--minus); }
 .recent { border-top: 1px solid var(--line); padding-top: 6px; margin-top: 10px; } /* чуть больше воздуха после кнопки (его слово 27.10.2026) */
 .recent-head { color: var(--muted); font-size: 14px; padding: 6px 0; display: flex; gap: 6px; align-items: center; }
-.recent-hint { font-size: 12px; color: var(--muted); padding: 0 4px 6px; }
+.recent-hint { font-size: 13px; color: var(--muted); padding: 0 4px 6px; }
 .recent-list { list-style: none; margin: 0; padding: 0 0 6px; display: flex; flex-direction: column; gap: 2px; }
 .recent-list button { width: 100%; display: grid; grid-template-columns: 44px 1fr auto; gap: 8px; font-size: 14px; align-items: start; border: 0; background: transparent; padding: 6px 4px; border-radius: 8px; text-align: left; } /* дата, категория и комментарий, сумма в конце (его слово 27.10.2026) */
 .recent-list button:active { background: var(--chip); }
 .recent-list button.editing { background: var(--chip); }
+.recent-list button.new { animation: rowin 1.2s ease-out; } /* новая запись подсвечивается на секунду */
+@keyframes rowin { from { background: var(--chip); } to { background: transparent; } }
 .recent-list button.queued { opacity: .75; }
 .recent-list button.queued .d { color: var(--warn); }
 .recent-list .d { color: var(--muted); font-variant-numeric: tabular-nums; }
@@ -127,14 +128,12 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 .recent-list .a { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
 .recent-list .a.minus { color: var(--minus); }
 .recent-list .a.plus { color: var(--plus); }
-.more-btn { width: 100%; height: 40px; margin-top: 4px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--accent); font-size: 14px; font-weight: 600; }
-.spacer { flex: 1; }
+.more-btn { width: 100%; height: 44px; margin-top: 4px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--accent); font-size: 14px; font-weight: 600; }
 .savebar { padding-top: 2px; } /* кнопка записи сразу под комментарием (его слово 27.10.2026) */
-.save { width: 100%; height: 54px; border: 0; border-radius: 16px; background: var(--accent); color: var(--accent-fg); font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
-.save.minus { background: var(--minus); color: #fff; }
-.save.plus { background: var(--plus); color: #fff; }
+.save { width: 100%; height: 54px; border: 0; border-radius: 16px; background: var(--accent); color: var(--accent-fg); font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; } /* всегда цвет акцента: красный — только для удаления и ошибок */
+.save.edit { background: var(--edit); color: var(--edit-fg); }
 .save:disabled { opacity: .6; }
-@media (prefers-reduced-motion: reduce) { .catwrap.shake { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .catwrap.shake, .sheet-back, .sheet-body, .recent-list button.new, .ptr.spin svg { animation: none; } }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 10px; font-size: 14px; }
 .card .line { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
 .card button { height: 36px; padding: 0 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--chip); font-size: 14px; }
@@ -151,7 +150,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   <header class="top">
     <div class="brand">Cash YB</div>
     <div class="today" id="today"></div>
-    <button class="gear" id="btnMore" type="button" aria-label="Ещё">⋯</button>
+    <button class="gear" id="btnMore" type="button" aria-label="Меню">⋯</button>
   </header>
 
   <section class="card" id="setup" hidden>
@@ -187,28 +186,30 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     <button class="seg-btn plus" id="segPlus" type="button">+ Приход</button>
   </div>
 
-  <div class="amount-row">
-    <span class="sign" id="signMark">−</span>
-    <input id="amount" class="amount" type="text" inputmode="decimal" placeholder="0" autocomplete="off" enterkeyhint="done" aria-label="Сумма">
-    <button class="cur" id="btnCur" type="button" aria-label="Валюта">EUR</button>
+  <div class="field">
+    <div class="amount-row">
+      <input id="amount" class="amount minus" type="text" inputmode="decimal" placeholder="0" autocomplete="off" enterkeyhint="done" aria-label="Сумма">
+      <div class="curseg" id="curseg" role="group" aria-label="Валюта"><button type="button" data-cur="EUR" class="on" aria-pressed="true">EUR</button><button type="button" data-cur="USD" aria-pressed="false">USD</button></div>
+    </div>
+    <div class="ferr" id="errAmount" hidden>Введи сумму</div>
   </div>
-  <div class="ferr" id="errAmount" hidden>Введи сумму</div>
 
-
-  <div class="catwrap" id="catwrap">
-    <button id="cat" class="catsel" type="button" aria-haspopup="dialog">Категория…</button>
+  <div class="field">
+    <div class="catwrap" id="catwrap">
+      <button id="cat" class="catsel" type="button" aria-haspopup="dialog">Категория…</button>
+    </div>
+    <div class="ferr" id="errCat" hidden>Выбери категорию</div>
   </div>
-  <div class="ferr" id="errCat" hidden>Выбери категорию</div>
 
-  <div class="row2">
+  <div class="field">
     <div class="cwrap">
       <input id="comment" class="comment" type="text" placeholder="Комментарий" maxlength="200" autocomplete="off" enterkeyhint="done">
       <button class="clear" id="btnClear" type="button" aria-label="Очистить комментарий" hidden>×</button>
     </div>
+    <div class="tpl" id="tpl" aria-label="Шаблоны комментария"></div>
   </div>
-  <div class="tpl" id="tpl" aria-label="Шаблоны комментария"></div>
 
-  <div class="savebar"><button class="save minus" id="btnSave" type="button">Записать</button></div>
+  <div class="savebar"><button class="save" id="btnSave" type="button">Записать</button></div>
 
   <div class="status" id="status"></div>
 
@@ -218,8 +219,6 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     <ul class="recent-list" id="recentList"></ul>
     <button class="more-btn" id="btnMoreRecent" type="button" hidden>Показать ещё</button>
   </section>
-
-  <div class="spacer"></div>
 </div>
 
 <div class="sheet" id="sheet" hidden>
@@ -234,14 +233,14 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "30"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "31"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Взял у Family Cash", "Чаевые", "Дал Насте"]; // шаблоны комментария под полем (его слово 27.10.2026): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
   var el = { today: $("today"), setup: $("setup"), tokenInput: $("tokenInput"), setupMsg: $("setupMsg"), btnToken: $("btnToken"), more: $("more"), btnMore: $("btnMore"),
     ver: $("ver"), btnUpdate: $("btnUpdate"), connState: $("connState"), queueCount: $("queueCount"), btnFlush: $("btnFlush"), btnCats: $("btnCats"), btnReset: $("btnReset"),
     editBar: $("editBar"), editText: $("editText"), btnDelete: $("btnDelete"), btnCancel: $("btnCancel"),
-    segMinus: $("segMinus"), segPlus: $("segPlus"), signMark: $("signMark"), amount: $("amount"), btnCur: $("btnCur"), catwrap: $("catwrap"), cat: $("cat"), comment: $("comment"),
+    segMinus: $("segMinus"), segPlus: $("segPlus"), amount: $("amount"), curseg: $("curseg"), catwrap: $("catwrap"), cat: $("cat"), comment: $("comment"),
     btnClear: $("btnClear"), errAmount: $("errAmount"), errCat: $("errCat"), amountRow: document.querySelector(".amount-row"), tpl: $("tpl"), sheet: $("sheet"), sheetBack: $("sheetBack"), sheetClose: $("sheetClose"), sheetList: $("sheetList"), dToday: $("dToday"), dYest: $("dYest"), dOther: $("dOther"), dOtherText: $("dOtherText"), dateInput: $("dateInput"), status: $("status"), recentCount: $("recentCount"),
     app: $("app"), ptr: $("ptr"), recentList: $("recentList"), btnMoreRecent: $("btnMoreRecent"), btnSave: $("btnSave") };
 
@@ -273,7 +272,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   var prefs = ls("cash_prefs") || {};
   var state = { sign: prefs.sign === "+" ? "+" : "-", cur: CURS.indexOf(prefs.cur) >= 0 ? prefs.cur : "EUR", cat: "", date: todayStr(),
     cats: ls("cash_cats") || [], recent: ls("cash_recent") || [], month: ls("cash_month") || null, queue: ls("cash_queue") || [], shown: 10, sending: false,
-    edit: null, armed: null, busy: false };
+    edit: null, armed: null, busy: false, flash: null }; // flash — только что записанная строка, подсвечивается секунду
 
   // ---------- access code: once from the sign-in link (#t=…) or typed, then kept on this phone ----------
   function token(v) { if (v === undefined) return ls("cash_token"); ls("cash_token", v); }
@@ -285,13 +284,15 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 
   // ---------- render ----------
   function setStatus(text, kind) { el.status.textContent = text || ""; el.status.className = "status" + (kind ? " " + kind : ""); }
-  function renderSign() {
+  function renderSign() { // знак виден в переключателе и цвете суммы; кнопка всегда в цвете акцента
     el.segMinus.classList.toggle("on", state.sign === "-"); el.segPlus.classList.toggle("on", state.sign === "+");
-    el.signMark.textContent = state.sign === "-" ? "−" : "+"; el.signMark.classList.toggle("plus", state.sign === "+");
-    el.btnSave.className = "save " + (state.sign === "-" ? "minus" : "plus") + (state.edit ? " edit" : "");
+    el.amount.classList.toggle("minus", state.sign === "-"); el.amount.classList.toggle("plus", state.sign === "+");
+    el.btnSave.classList.toggle("edit", !!state.edit);
     renderSave();
   }
-  // кнопка «Записать» сама показывает ход: кольцо и «Записываю…», пока запись идёт в базу, потом «Записано ✓» (его слово 27.10.2026)
+  function renderCur() {
+    Array.prototype.forEach.call(el.curseg.querySelectorAll("button"), function (b) { var on = b.getAttribute("data-cur") === state.cur; b.classList.toggle("on", on); b.setAttribute("aria-pressed", on ? "true" : "false"); });
+  }
   function renderSave() {
     var a = parseAmount(el.amount.value), verb = state.edit ? "Сохранить изменения" : "Записать";
     el.btnSave.textContent = state.edit ? verb : (a ? verb + " " + money(state.sign === "-" ? -a : a, state.cur) : verb);
@@ -366,9 +367,10 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     el.recentCount.textContent = (state.recent.length || state.queue.length) ? "(" + (state.recent.length + state.queue.length) + ")" : "";
     el.btnMoreRecent.hidden = state.recent.length <= state.shown;
     el.recentList.innerHTML = "";
+    var fl = state.flash && Date.now() < state.flash.until ? state.flash : null;
     state.queue.slice().reverse().forEach(function (q) { // не отправленные — сверху, с часами; править нельзя, пока не ушли
       var li = document.createElement("li"), b = document.createElement("button"), n = q.sign === "-" ? -q.amount : q.amount;
-      b.type = "button"; b.className = "queued";
+      b.type = "button"; b.className = "queued" + (fl && fl.uid === q.id ? " new" : "");
       var d = document.createElement("span"); d.className = "d"; d.textContent = "⏳";
       var c = twoLines(q.cat, q.comment);
       var a = document.createElement("span"); a.className = "a " + (n < 0 ? "minus" : "plus"); a.textContent = money(n, q.cur);
@@ -378,7 +380,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     });
     state.recent.slice(0, state.shown).forEach(function (r) {
       var li = document.createElement("li"), b = document.createElement("button"), n = Number(r.amount);
-      b.type = "button"; if (state.edit && state.edit.id === r.id) b.className = "editing";
+      b.type = "button"; b.className = (state.edit && state.edit.id === r.id ? "editing" : "") + (fl && fl.dbId === r.id ? " new" : "");
       var d = document.createElement("span"); d.className = "d"; d.textContent = dmy(r.booking_date);
       var c = twoLines(r.category, r.counterparty);
       var a = document.createElement("span"); a.className = "a " + (n < 0 ? "minus" : "plus"); a.textContent = money(n, r.currency);
@@ -402,7 +404,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     el.btnFlush.hidden = !state.queue.length;
     if (state.queue.length) setStatus("Не отправлено: " + state.queue.length + ". Появится связь — отправлю.", "warn");
   }
-  function renderAll() { renderTpl(); renderSign(); el.btnCur.textContent = state.cur; renderCats(); renderDate(); renderEdit(); renderQueue(); }
+  function renderAll() { renderTpl(); renderSign(); renderCur(); renderCats(); renderDate(); renderEdit(); renderQueue(); }
 
   // ---------- the function in Supabase ----------
   function api(action, payload) {
@@ -454,6 +456,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   function send(en) {
     setStatus("Записываю…", "");
     return api("add", { id: en.id, sign: en.sign, amount: en.amount, currency: en.cur, category: en.cat, comment: en.comment, date: en.date }).then(function (j) {
+      if (state.flash && state.flash.uid === en.id) state.flash.dbId = j.id; // подсветка переходит на записанную строку
       dequeue(en.id); connected(true);
       if (!j.duplicate && j.id && !state.recent.some(function (r) { return r.id === j.id; })) {
         var signed = en.sign === "-" ? -en.amount : en.amount;
@@ -485,7 +488,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 
   // ---------- form ----------
   function resetForm() { markErr("amount", false); markErr("cat", false); el.amount.value = ""; el.comment.value = ""; renderTpl(); state.cat = ""; state.date = todayStr(); state.edit = null; renderCats(); renderDate(); renderEdit(); }
-  function commit(en) { enqueue(en); if (navigator.onLine !== false) send(en); }
+  function commit(en) { state.flash = { uid: en.id, dbId: null, until: Date.now() + 1300 }; enqueue(en); if (navigator.onLine !== false) send(en); }
   function markErr(field, on) {
     if (field === "amount") { el.errAmount.hidden = !on; el.amountRow.classList.toggle("err", on); }
     else { el.errCat.hidden = !on; el.cat.classList.toggle("err", on); }
@@ -515,7 +518,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     state.edit = { id: r.id, booking_date: r.booking_date, amount: r.amount, currency: r.currency };
     state.sign = n < 0 ? "-" : "+"; state.cur = CURS.indexOf(r.currency) >= 0 ? r.currency : "EUR"; state.cat = r.category || ""; state.date = r.booking_date || todayStr();
     el.amount.value = String(Math.abs(n)).replace(".", ","); el.comment.value = r.counterparty || ""; renderTpl();
-    renderSign(); el.btnCur.textContent = state.cur; renderCats(); renderDate(); renderEdit();
+    renderSign(); renderCur(); renderCats(); renderDate(); renderEdit();
     setStatus("", ""); window.scrollTo({ top: 0, behavior: "smooth" });
   }
   function editCancel() { resetForm(); setStatus("", ""); }
@@ -551,7 +554,10 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 
   el.segMinus.addEventListener("click", function () { state.sign = "-"; if (!state.edit) { prefs.sign = "-"; ls("cash_prefs", prefs); } renderSign(); });
   el.segPlus.addEventListener("click", function () { state.sign = "+"; if (!state.edit) { prefs.sign = "+"; ls("cash_prefs", prefs); } renderSign(); });
-  el.btnCur.addEventListener("click", function () { state.cur = CURS[(CURS.indexOf(state.cur) + 1) % CURS.length]; if (!state.edit) { prefs.cur = state.cur; ls("cash_prefs", prefs); } el.btnCur.textContent = state.cur; renderSave(); });
+  el.curseg.addEventListener("click", function (e) {
+    var b = e.target.closest ? e.target.closest("button[data-cur]") : null; if (!b) return;
+    state.cur = b.getAttribute("data-cur"); if (!state.edit) { prefs.cur = state.cur; ls("cash_prefs", prefs); } renderCur(); renderSave();
+  });
   el.amount.addEventListener("input", function () { if (parseAmount(el.amount.value)) markErr("amount", false); renderSave(); });
   el.amount.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); el.amount.blur(); } });
   el.cat.addEventListener("click", sheetOpen);
