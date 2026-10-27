@@ -66,7 +66,8 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 .sheet-back { position: absolute; inset: 0; background: rgba(0,0,0,.38); animation: fadein .2s ease-out; }
 .sheet-body { position: absolute; left: 0; right: 0; bottom: 0; max-height: 86%; overflow-y: auto; -webkit-overflow-scrolling: touch; background: var(--surface); border-radius: 20px 20px 0 0;
   padding: 6px 10px calc(14px + env(safe-area-inset-bottom, 0px)); box-shadow: 0 -8px 30px rgba(0,0,0,.18); animation: sheetup .24s cubic-bezier(.2,.8,.2,1); }
-.sheet-grip { width: 38px; height: 5px; border-radius: 3px; background: var(--line); margin: 4px auto 10px; }
+.sheet-head { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between; padding: 10px 6px 8px 14px; background: var(--surface); font-weight: 700; font-size: 17px; }
+.sheet-head button { height: 36px; padding: 0 14px; border: 0; border-radius: 999px; background: var(--chip); color: var(--fg); font-size: 15px; font-weight: 600; }
 .sheet-list { list-style: none; margin: 0; padding: 0; }
 .sheet-list button { width: 100%; min-height: 52px; display: flex; align-items: center; gap: 12px; padding: 6px 10px; border: 0; border-radius: 12px; background: transparent; color: var(--fg); font-size: 17px; text-align: left; }
 .sheet-list button:active { background: var(--chip); }
@@ -221,7 +222,10 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 
 <div class="sheet" id="sheet" hidden>
   <div class="sheet-back" id="sheetBack"></div>
-  <div class="sheet-body" role="dialog" aria-label="Категория"><div class="sheet-grip"></div><ul class="sheet-list" id="sheetList"></ul></div>
+  <div class="sheet-body" role="dialog" aria-label="Категория">
+    <div class="sheet-head"><span>Категория</span><button id="sheetClose" type="button">Закрыть</button></div>
+    <ul class="sheet-list" id="sheetList"></ul>
+  </div>
 </div>
 <div class="toast" id="toast" hidden><span id="toastText"></span><button id="btnUndo" type="button">Отменить</button><i class="bar" id="toastBar"></i></div>
 
@@ -229,7 +233,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "13"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "14"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Взял у Family Cash", "Чаевые", "Дал Насте"]; // шаблоны комментария под полем (его слово 27.10.2026): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -237,7 +241,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     ver: $("ver"), btnUpdate: $("btnUpdate"), connState: $("connState"), queueCount: $("queueCount"), btnFlush: $("btnFlush"), btnCats: $("btnCats"), btnReset: $("btnReset"),
     editBar: $("editBar"), editText: $("editText"), btnDelete: $("btnDelete"), btnCancel: $("btnCancel"),
     segMinus: $("segMinus"), segPlus: $("segPlus"), signMark: $("signMark"), amount: $("amount"), btnCur: $("btnCur"), catwrap: $("catwrap"), cat: $("cat"), comment: $("comment"),
-    btnClear: $("btnClear"), errAmount: $("errAmount"), errCat: $("errCat"), amountRow: document.querySelector(".amount-row"), tpl: $("tpl"), quick: $("quick"), sheet: $("sheet"), sheetBack: $("sheetBack"), sheetList: $("sheetList"), dToday: $("dToday"), dYest: $("dYest"), dOther: $("dOther"), dOtherText: $("dOtherText"), dateInput: $("dateInput"), status: $("status"), btnRecent: $("btnRecent"), recentCount: $("recentCount"),
+    btnClear: $("btnClear"), errAmount: $("errAmount"), errCat: $("errCat"), amountRow: document.querySelector(".amount-row"), tpl: $("tpl"), quick: $("quick"), sheet: $("sheet"), sheetBack: $("sheetBack"), sheetClose: $("sheetClose"), sheetList: $("sheetList"), dToday: $("dToday"), dYest: $("dYest"), dOther: $("dOther"), dOtherText: $("dOtherText"), dateInput: $("dateInput"), status: $("status"), btnRecent: $("btnRecent"), recentCount: $("recentCount"),
     app: $("app"), ptr: $("ptr"), recentHint: $("recentHint"), recentList: $("recentList"), btnSave: $("btnSave"), toast: $("toast"), toastText: $("toastText"), btnUndo: $("btnUndo"), toastBar: $("toastBar") };
 
   function ls(key, value) {
@@ -267,7 +271,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 
   var prefs = ls("cash_prefs") || {};
   var state = { sign: prefs.sign === "+" ? "+" : "-", cur: CURS.indexOf(prefs.cur) >= 0 ? prefs.cur : "EUR", cat: "", date: todayStr(),
-    cats: ls("cash_cats") || [], recent: ls("cash_recent") || [], queue: ls("cash_queue") || [], pending: null, pendTimer: null, sending: false,
+    cats: ls("cash_cats") || [], recent: ls("cash_recent") || [], month: ls("cash_month") || null, queue: ls("cash_queue") || [], pending: null, pendTimer: null, sending: false,
     edit: null, armed: null, busy: false };
 
   // ---------- access code: once from the sign-in link (#t=…) or typed, then kept on this phone ----------
@@ -356,11 +360,21 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     if (state.edit) { el.editText.textContent = "Правка записи от " + dmy(state.edit.booking_date); el.btnDelete.textContent = "Удалить"; state.armed = null; }
     renderSave(); renderRecent();
   }
+  // шапка: итог текущего месяца по валютам (его слово 27.10.2026) — с сервера (init.month), пока нет — по последним записям
+  function monthName() { return new Intl.DateTimeFormat("ru-RU", { month: "long" }).format(new Date()); }
+  function monthSums() {
+    if (state.month) return state.month;
+    var m = todayStr().slice(0, 7), sums = {};
+    state.recent.forEach(function (r) { if (String(r.booking_date).slice(0, 7) === m) sums[r.currency] = (sums[r.currency] || 0) + Number(r.amount); });
+    return sums;
+  }
+  function refreshMonth() { // после правки или удаления — точный итог с сервера, без смены текста статуса
+    if (!token()) return;
+    api("init").then(function (j) { if (j.month) { state.month = j.month; ls("cash_month", state.month); renderRecent(); } }).catch(function () { /* покажем при следующем обновлении */ });
+  }
   function renderRecent() {
-    var t = todayStr(), sums = {};
-    state.recent.forEach(function (r) { if (r.booking_date === t) sums[r.currency] = (sums[r.currency] || 0) + Number(r.amount); });
-    var keys = Object.keys(sums);
-    el.today.textContent = keys.length ? "сегодня " + keys.map(function (k) { return money(sums[k], k); }).join(" · ") : "";
+    var sums = monthSums(), keys = Object.keys(sums).filter(function (k) { return sums[k]; });
+    el.today.textContent = keys.length ? monthName() + " " + keys.map(function (k) { return money(sums[k], k); }).join(" · ") : "";
     el.recentCount.textContent = state.recent.length ? "(" + Math.min(state.recent.length, 10) + ")" : "";
     el.recentList.innerHTML = "";
     state.recent.slice(0, 10).forEach(function (r) {
@@ -423,7 +437,9 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     return api("init").then(function (j) {
       var names = (j.categories || []).filter(Boolean);
       if (names.length) { state.cats = names; ls("cash_cats", names); if (state.cat && names.indexOf(state.cat) < 0) state.cat = ""; renderCats(); }
-      state.recent = j.recent || []; ls("cash_recent", state.recent.slice(0, 40)); renderRecent(); renderQuick();
+      state.recent = j.recent || []; ls("cash_recent", state.recent.slice(0, 40));
+      if (j.month) { state.month = j.month; ls("cash_month", state.month); }
+      renderRecent(); renderQuick();
       connected(true); el.setup.hidden = true;
       if (!state.queue.length) setStatus("", "");
       return true;
@@ -440,9 +456,12 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     setStatus("Записываю…", "");
     return api("add", { id: en.id, sign: en.sign, amount: en.amount, currency: en.cur, category: en.cat, comment: en.comment, date: en.date }).then(function (j) {
       dequeue(en.id); connected(true);
-      if (!j.duplicate) {
-        state.recent.unshift({ id: j.id, booking_date: en.date, amount: en.sign === "-" ? -en.amount : en.amount, currency: en.cur, category: en.cat, counterparty: en.comment });
-        ls("cash_recent", state.recent.slice(0, 40)); renderRecent();
+      if (!j.duplicate && j.id && !state.recent.some(function (r) { return r.id === j.id; })) {
+        var signed = en.sign === "-" ? -en.amount : en.amount;
+        state.recent.unshift({ id: j.id, booking_date: en.date, amount: signed, currency: en.cur, category: en.cat, counterparty: en.comment });
+        ls("cash_recent", state.recent.slice(0, 40));
+        if (state.month && String(en.date).slice(0, 7) === todayStr().slice(0, 7)) { state.month[en.cur] = Math.round(((state.month[en.cur] || 0) + signed) * 100) / 100; ls("cash_month", state.month); }
+        renderRecent();
       }
       setStatus(j.sheet || j.duplicate ? "В базе ✓ · в таблице ✓" : "В базе ✓ · таблица догонит ночью", j.sheet || j.duplicate ? "" : "warn");
       return true;
@@ -521,7 +540,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     api("update", { id: id, sign: f.sign, amount: f.amount, currency: f.cur, category: f.cat, comment: f.comment, date: f.date }).then(function (j) {
       state.recent = state.recent.map(function (r) { return r.id === id ? { id: id, booking_date: f.date, amount: f.sign === "-" ? -f.amount : f.amount, currency: f.cur, category: f.cat, counterparty: f.comment } : r; });
       ls("cash_recent", state.recent.slice(0, 40));
-      resetForm(); connected(true);
+      resetForm(); connected(true); refreshMonth();
       setStatus(j.sheet ? "Изменено ✓ · в таблице ✓" : "Изменено ✓ · таблица обновится при следующей правке", j.sheet ? "" : "warn");
     }).catch(function (e) {
       if (e.code === "unauthorized") { token(null); showSetup("Код не подошёл"); }
@@ -536,7 +555,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     state.armed = null; state.busy = true; el.btnSave.disabled = true; setStatus("Удаляю…", "");
     api("delete", { id: id }).then(function (j) {
       state.recent = state.recent.filter(function (r) { return r.id !== id; }); ls("cash_recent", state.recent.slice(0, 40));
-      resetForm(); connected(true);
+      resetForm(); connected(true); refreshMonth();
       setStatus(j.sheet ? "Удалено ✓ · из таблицы тоже" : "Удалено из базы ✓ · строку в таблице убери руками", j.sheet ? "" : "warn");
     }).catch(function (e) {
       if (e.code === "unauthorized") { token(null); showSetup("Код не подошёл"); }
@@ -552,6 +571,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   el.amount.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); el.amount.blur(); } });
   el.cat.addEventListener("click", sheetOpen);
   el.sheetBack.addEventListener("click", sheetClose);
+  el.sheetClose.addEventListener("click", sheetClose);
   document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !el.sheet.hidden) sheetClose(); });
   el.comment.addEventListener("input", renderTpl);
   el.btnClear.addEventListener("pointerdown", function (e) { e.preventDefault(); }); // не ронять клавиатуру, если она открыта
