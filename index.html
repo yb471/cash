@@ -66,8 +66,10 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 .row2 { display: flex; gap: 8px; }
 .comment { flex: 1; min-width: 0; height: 46px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 0 12px; outline: none; }
 .comment:focus { border-color: var(--accent); }
-.date { height: 46px; padding: 0 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--muted); font-size: 14px; white-space: nowrap; }
-.date.set { color: var(--fg); font-weight: 600; }
+.dates { display: grid; grid-template-columns: 1.25fr 1fr 1fr; gap: 6px; background: var(--chip); padding: 4px; border-radius: 14px; }
+.date-btn { height: 40px; border: 0; border-radius: 10px; background: transparent; color: var(--muted); font-weight: 600; font-size: 14px; white-space: nowrap; padding: 0 4px; overflow: hidden; text-overflow: ellipsis; }
+.date-btn.on { background: var(--surface); color: var(--fg); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.date-btn .dm { font-weight: 400; font-variant-numeric: tabular-nums; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 .status { min-height: 18px; font-size: 13px; color: var(--muted); }
 .status.warn { color: var(--warn); }
@@ -154,7 +156,12 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   <div class="row2">
     <input id="comment" class="comment" type="text" placeholder="Комментарий" list="recentComments" maxlength="200" autocomplete="off" enterkeyhint="done">
     <datalist id="recentComments"></datalist>
-    <button class="date" id="btnDate" type="button">Сегодня</button>
+  </div>
+
+  <div class="dates" role="group" aria-label="Дата">
+    <button class="date-btn on" id="dToday" type="button">Сегодня</button>
+    <button class="date-btn" id="dYest" type="button">Вчера</button>
+    <button class="date-btn" id="dOther" type="button">Другая…</button>
     <input id="dateInput" type="date" class="visually-hidden" aria-label="Дата" tabindex="-1">
   </div>
 
@@ -182,7 +189,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     connState: $("connState"), queueCount: $("queueCount"), btnFlush: $("btnFlush"), btnCats: $("btnCats"), btnReset: $("btnReset"),
     editBar: $("editBar"), editText: $("editText"), btnDelete: $("btnDelete"), btnCancel: $("btnCancel"),
     segMinus: $("segMinus"), segPlus: $("segPlus"), signMark: $("signMark"), amount: $("amount"), btnCur: $("btnCur"), catwrap: $("catwrap"), cat: $("cat"), comment: $("comment"),
-    datalist: $("recentComments"), btnDate: $("btnDate"), dateInput: $("dateInput"), status: $("status"), btnRecent: $("btnRecent"), recentCount: $("recentCount"),
+    datalist: $("recentComments"), dToday: $("dToday"), dYest: $("dYest"), dOther: $("dOther"), dateInput: $("dateInput"), status: $("status"), btnRecent: $("btnRecent"), recentCount: $("recentCount"),
     recentHint: $("recentHint"), recentList: $("recentList"), btnSave: $("btnSave"), toast: $("toast"), toastText: $("toastText"), btnUndo: $("btnUndo"), toastBar: $("toastBar") };
 
   function ls(key, value) {
@@ -244,9 +251,17 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     sel.value = state.cats.indexOf(state.cat) >= 0 ? state.cat : "";
     sel.classList.toggle("set", !!sel.value);
   }
+  function dateChip(btn, word, iso, on) {
+    btn.textContent = ""; btn.appendChild(document.createTextNode(word + " "));
+    var dm = document.createElement("span"); dm.className = "dm"; dm.textContent = iso.slice(8, 10) + "." + iso.slice(5, 7); btn.appendChild(dm);
+    btn.classList.toggle("on", on); btn.setAttribute("aria-pressed", on ? "true" : "false");
+  }
   function renderDate() {
-    var t = todayStr(), y = todayStr(-1), label = state.date === t ? "Сегодня" : state.date === y ? "Вчера" : dmy(state.date);
-    el.btnDate.textContent = label; el.btnDate.classList.toggle("set", state.date !== t); el.dateInput.value = state.date;
+    var t = todayStr(), y = todayStr(-1), other = state.date !== t && state.date !== y;
+    dateChip(el.dToday, "Сегодня", t, state.date === t);
+    dateChip(el.dYest, "Вчера", y, state.date === y);
+    el.dOther.textContent = other ? dmy(state.date) + "." + state.date.slice(0, 4) : "Другая…"; el.dOther.classList.toggle("on", other); el.dOther.setAttribute("aria-pressed", other ? "true" : "false");
+    el.dateInput.value = state.date;
   }
   function renderEdit() {
     el.editBar.hidden = !state.edit;
@@ -440,7 +455,9 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   el.amount.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); el.amount.blur(); } });
   el.cat.addEventListener("change", function () { state.cat = el.cat.value; el.cat.classList.toggle("set", !!state.cat); renderComments(); });
   el.comment.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); onSave(); } });
-  el.btnDate.addEventListener("click", function () { var d = el.dateInput; d.value = state.date; if (d.showPicker) { try { d.showPicker(); return; } catch (e) { /* fall through */ } } d.focus(); d.click(); });
+  el.dToday.addEventListener("click", function () { state.date = todayStr(); renderDate(); });
+  el.dYest.addEventListener("click", function () { state.date = todayStr(-1); renderDate(); });
+  el.dOther.addEventListener("click", function () { var d = el.dateInput; d.value = state.date; if (d.showPicker) { try { d.showPicker(); return; } catch (e) { /* fall through */ } } d.focus(); d.click(); });
   el.dateInput.addEventListener("change", function () { if (/^\d{4}-\d{2}-\d{2}$/.test(el.dateInput.value) && el.dateInput.value <= todayStr(1)) state.date = el.dateInput.value; renderDate(); });
   el.btnSave.addEventListener("click", onSave);
   el.btnUndo.addEventListener("click", onUndo);
