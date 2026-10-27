@@ -227,7 +227,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "19"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "20"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Взял у Family Cash", "Чаевые", "Дал Насте"]; // шаблоны комментария под полем (его слово 27.10.2026): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -448,7 +448,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
         if (state.month && String(en.date).slice(0, 7) === todayStr().slice(0, 7)) { state.month[en.cur] = Math.round(((state.month[en.cur] || 0) + signed) * 100) / 100; ls("cash_month", state.month); }
         renderRecent();
       }
-      setStatus(j.sheet || j.duplicate ? "В базе ✓ · в таблице ✓" : "В базе ✓ · таблица догонит ночью", j.sheet || j.duplicate ? "" : "warn");
+      setStatus(j.sheet || j.duplicate ? "" : "Таблица обновится ночью", j.sheet || j.duplicate ? "" : "warn");
       return true;
     }).catch(function (e) {
       if (e.code === "bad") { dequeue(en.id); setStatus(explain(e), "err"); return true; } // база отвергла навсегда: в очереди не держим
@@ -512,7 +512,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
       state.recent = state.recent.map(function (r) { return r.id === id ? { id: id, booking_date: f.date, amount: f.sign === "-" ? -f.amount : f.amount, currency: f.cur, category: f.cat, counterparty: f.comment } : r; });
       ls("cash_recent", state.recent.slice(0, 40));
       resetForm(); connected(true); refreshMonth();
-      setStatus(j.sheet ? "Изменено ✓ · в таблице ✓" : "Изменено ✓ · таблица обновится при следующей правке", j.sheet ? "" : "warn");
+      setStatus(j.sheet ? "" : "Таблица обновится при следующей правке", j.sheet ? "" : "warn");
     }).catch(function (e) {
       if (e.code === "unauthorized") { token(null); showSetup("Код не подошёл"); }
       if (e.code === "gone") { state.recent = state.recent.filter(function (r) { return r.id !== id; }); ls("cash_recent", state.recent); resetForm(); }
@@ -527,7 +527,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     api("delete", { id: id }).then(function (j) {
       state.recent = state.recent.filter(function (r) { return r.id !== id; }); ls("cash_recent", state.recent.slice(0, 40));
       resetForm(); connected(true); refreshMonth();
-      setStatus(j.sheet ? "Удалено ✓ · из таблицы тоже" : "Удалено из базы ✓ · строку в таблице убери руками", j.sheet ? "" : "warn");
+      setStatus(j.sheet ? "" : "Строку в таблице убери руками", j.sheet ? "" : "warn");
     }).catch(function (e) {
       if (e.code === "unauthorized") { token(null); showSetup("Код не подошёл"); }
       if (e.code === "gone") { state.recent = state.recent.filter(function (r) { return r.id !== id; }); ls("cash_recent", state.recent); resetForm(); }
