@@ -47,8 +47,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 .editbar { display: flex; align-items: center; gap: 8px; background: var(--edit); color: var(--edit-fg); border-radius: 14px; padding: 10px 8px 10px 14px; font-size: calc(15 * var(--u)); box-shadow: 0 4px 14px rgba(242,194,27,.35); }
 .editbar span { flex: 1; min-width: 0; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .app.editing .amount-row, .app.editing .catsel, .app.editing .comment { border-color: var(--edit); border-width: 2px; }
-.app.editing .seg { box-shadow: inset 0 0 0 2px var(--edit); }
-.app.editing .date-btn.on { border-bottom-color: var(--edit); }
+.app.editing .dates, .app.editing .seg { box-shadow: inset 0 0 0 2px var(--edit); }
 .app.editing .recent { display: none; }
 .editbar button { height: 44px; padding: 0 12px; border: 0; border-radius: 10px; background: rgba(255,255,255,.92); color: #14181C; font-size: calc(14 * var(--u)); font-weight: 700; }
 .editbar button.danger { color: var(--minus); }
@@ -89,12 +88,12 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 .clear { position: absolute; right: 2px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border: 0; border-radius: 50%; background: transparent; color: var(--muted); font-size: calc(22 * var(--u)); line-height: 44px; padding: 0; text-align: center; }
 .clear:active { color: var(--fg); }
 .tpl { display: flex; flex-wrap: wrap; gap: 6px; }
-.tpl button { height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: 999px; background: var(--chip); color: var(--fg); font-size: calc(13 * var(--u)); font-weight: 600; white-space: nowrap; }
+.tpl button { height: 32px; padding: 0 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--chip); color: var(--fg); font-size: calc(13 * var(--u)); font-weight: 600; white-space: nowrap; }
 .tpl button.on { background: var(--accent); color: var(--accent-fg); border-color: transparent; }
-.dates { display: flex; gap: 18px; padding: 0 4px; margin-bottom: -4px; }
-.date-btn { position: relative; display: flex; align-items: center; height: 44px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: transparent; color: var(--muted); font-weight: 600; font-size: calc(14 * var(--u)); white-space: nowrap; padding: 0; overflow: hidden; }
+.dates { display: grid; grid-template-columns: 1.25fr 1fr 1fr; gap: 6px; background: var(--chip); padding: 4px; border-radius: 14px; }
+.date-btn { position: relative; display: flex; align-items: center; justify-content: center; height: 40px; border: 0; border-radius: 10px; background: transparent; color: var(--muted); font-weight: 600; font-size: calc(14 * var(--u)); white-space: nowrap; padding: 0 4px; overflow: hidden; }
 .date-input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; margin: 0; border: 0; padding: 0; font-size: calc(16 * var(--u)); -webkit-appearance: none; appearance: none; }
-.date-btn.on { color: var(--fg); border-bottom-color: var(--accent); }
+.date-btn.on { background: var(--surface); color: var(--fg); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
 .date-btn .dm { font-weight: 400; font-variant-numeric: tabular-nums; margin-left: 4px; }
 .app.ease { transition: transform .32s cubic-bezier(.2,.8,.2,1); }
 .ptr { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 12px); left: 50%; width: 30px; height: 30px; margin-left: -15px; z-index: 6; color: var(--accent); opacity: 0; pointer-events: none; }
@@ -236,7 +235,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "33"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "34"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Взял у Family Cash", "Чаевые", "Дал Насте"]; // шаблоны комментария под полем (его слово 27.10.2026): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
