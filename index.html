@@ -17,7 +17,7 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <style>
 /* layout: one phone screen top to bottom — edit bar (only while editing), sign toggle, amount with currency, category
-   dropdown, comment and date, sticky save; the toast with undo sits above the save bar */
+   dropdown, comment and date, sticky save; the save button itself shows progress and success */
 :root {
   --bg: #F2F4F6; --surface: #FFFFFF; --fg: #14181C; --muted: #6A737D; --line: #D9DFE5;
   --accent: #0E6F6A; --accent-fg: #FFFFFF; --minus: #C9403A; --plus: #1E8E5A;
@@ -43,9 +43,12 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 .brand { font-weight: 700; font-size: 17px; letter-spacing: .01em; }
 .today { margin-left: auto; color: var(--muted); font-variant-numeric: tabular-nums; font-size: 14px; white-space: nowrap; }
 .gear { width: 36px; height: 36px; border: 0; background: transparent; border-radius: 10px; font-size: 20px; color: var(--muted); }
-.editbar { display: flex; align-items: center; gap: 8px; background: var(--chip); border-radius: 12px; padding: 8px 8px 8px 12px; font-size: 14px; }
-.editbar span { flex: 1; min-width: 0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.editbar button { height: 34px; padding: 0 10px; border: 0; border-radius: 9px; background: var(--surface); font-size: 14px; font-weight: 600; }
+.editbar { display: flex; align-items: center; gap: 8px; background: var(--accent); color: var(--accent-fg); border-radius: 14px; padding: 10px 8px 10px 14px; font-size: 15px; box-shadow: 0 4px 14px rgba(14,111,106,.25); }
+.editbar span { flex: 1; min-width: 0; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.app.editing .amount-row, .app.editing .catsel, .app.editing .comment { border-color: var(--accent); border-width: 2px; }
+.app.editing .dates, .app.editing .seg { box-shadow: inset 0 0 0 2px var(--accent); }
+.save.edit { background: var(--accent) !important; color: var(--accent-fg); }
+.editbar button { height: 36px; padding: 0 12px; border: 0; border-radius: 10px; background: rgba(255,255,255,.92); color: var(--fg); font-size: 14px; font-weight: 700; }
 .editbar button.danger { color: var(--minus); }
 .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: var(--chip); padding: 4px; border-radius: 14px; }
 .seg-btn { height: 44px; border: 0; border-radius: 10px; background: transparent; color: var(--muted); font-weight: 600; font-size: 16px; }
@@ -128,13 +131,10 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 .save.minus { background: var(--minus); color: #fff; }
 .save.plus { background: var(--plus); color: #fff; }
 .save:disabled { opacity: .6; }
-.toast { position: fixed; left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(80px + env(safe-area-inset-bottom, 0px));
-  max-width: 488px; margin: 0 auto; background: var(--toast); color: var(--toast-fg); border-radius: 14px; padding: 12px 12px 12px 14px; display: flex; align-items: center; gap: 10px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,.25); z-index: 5; }
-.toast span { flex: 1; min-width: 0; font-size: 15px; font-weight: 600; }
-.toast button { border: 0; background: transparent; color: var(--accent); font-weight: 700; font-size: 15px; padding: 6px 8px; }
-.toast .bar { position: absolute; left: 0; bottom: 0; height: 3px; background: var(--accent); width: 100%; transform-origin: left; animation: drain 5s linear forwards; }
-@keyframes drain { to { transform: scaleX(0) } }
-@media (prefers-reduced-motion: reduce) { .toast .bar { animation: none; } .catwrap.shake { animation: none; } }
+.save .spin { display: inline-block; width: 18px; height: 18px; border: 3px solid rgba(255,255,255,.35); border-top-color: #fff; border-radius: 50%; animation: ptrspin .8s linear infinite; vertical-align: -3px; margin-right: 10px; }
+.save.busy { opacity: .9; }
+.save.done { background: var(--plus) !important; color: #fff; transition: background .2s; }
+@media (prefers-reduced-motion: reduce) { .catwrap.shake { animation: none; } }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 10px; font-size: 14px; }
 .card .line { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
 .card button { height: 36px; padding: 0 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--chip); font-size: 14px; }
@@ -227,13 +227,12 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     <ul class="sheet-list" id="sheetList"></ul>
   </div>
 </div>
-<div class="toast" id="toast" hidden><span id="toastText"></span><button id="btnUndo" type="button">Отменить</button><i class="bar" id="toastBar"></i></div>
 
 <script>
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "14"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "15"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Взял у Family Cash", "Чаевые", "Дал Насте"]; // шаблоны комментария под полем (его слово 27.10.2026): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -242,7 +241,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     editBar: $("editBar"), editText: $("editText"), btnDelete: $("btnDelete"), btnCancel: $("btnCancel"),
     segMinus: $("segMinus"), segPlus: $("segPlus"), signMark: $("signMark"), amount: $("amount"), btnCur: $("btnCur"), catwrap: $("catwrap"), cat: $("cat"), comment: $("comment"),
     btnClear: $("btnClear"), errAmount: $("errAmount"), errCat: $("errCat"), amountRow: document.querySelector(".amount-row"), tpl: $("tpl"), quick: $("quick"), sheet: $("sheet"), sheetBack: $("sheetBack"), sheetClose: $("sheetClose"), sheetList: $("sheetList"), dToday: $("dToday"), dYest: $("dYest"), dOther: $("dOther"), dOtherText: $("dOtherText"), dateInput: $("dateInput"), status: $("status"), btnRecent: $("btnRecent"), recentCount: $("recentCount"),
-    app: $("app"), ptr: $("ptr"), recentHint: $("recentHint"), recentList: $("recentList"), btnSave: $("btnSave"), toast: $("toast"), toastText: $("toastText"), btnUndo: $("btnUndo"), toastBar: $("toastBar") };
+    app: $("app"), ptr: $("ptr"), recentHint: $("recentHint"), recentList: $("recentList"), btnSave: $("btnSave") };
 
   function ls(key, value) {
     try { if (value === undefined) { var v = localStorage.getItem(key); return v ? JSON.parse(v) : null; } if (value === null) localStorage.removeItem(key); else localStorage.setItem(key, JSON.stringify(value)); } catch (e) { return null; }
@@ -271,7 +270,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 
   var prefs = ls("cash_prefs") || {};
   var state = { sign: prefs.sign === "+" ? "+" : "-", cur: CURS.indexOf(prefs.cur) >= 0 ? prefs.cur : "EUR", cat: "", date: todayStr(),
-    cats: ls("cash_cats") || [], recent: ls("cash_recent") || [], month: ls("cash_month") || null, queue: ls("cash_queue") || [], pending: null, pendTimer: null, sending: false,
+    cats: ls("cash_cats") || [], recent: ls("cash_recent") || [], month: ls("cash_month") || null, queue: ls("cash_queue") || [], inflight: 0, flash: false, sending: false,
     edit: null, armed: null, busy: false };
 
   // ---------- access code: once from the sign-in link (#t=…) or typed, then kept on this phone ----------
@@ -287,13 +286,18 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   function renderSign() {
     el.segMinus.classList.toggle("on", state.sign === "-"); el.segPlus.classList.toggle("on", state.sign === "+");
     el.signMark.textContent = state.sign === "-" ? "−" : "+"; el.signMark.classList.toggle("plus", state.sign === "+");
-    el.btnSave.className = "save " + (state.sign === "-" ? "minus" : "plus");
+    el.btnSave.className = "save " + (state.sign === "-" ? "minus" : "plus") + (state.edit ? " edit" : "");
     renderSave();
   }
+  // кнопка «Записать» сама показывает ход: кольцо и «Записываю…», пока запись идёт в базу, потом «Записано ✓» (его слово 27.10.2026)
   function renderSave() {
-    var a = parseAmount(el.amount.value), verb = state.edit ? "Сохранить" : "Записать";
-    el.btnSave.textContent = a ? verb + " " + money(state.sign === "-" ? -a : a, state.cur) : verb;
+    var a = parseAmount(el.amount.value), verb = state.edit ? "Сохранить изменения" : "Записать";
+    el.btnSave.classList.toggle("done", state.flash); el.btnSave.classList.toggle("busy", !state.flash && state.inflight > 0 && !state.edit);
+    if (state.flash) { el.btnSave.textContent = "Записано ✓"; return; }
+    if (state.inflight > 0 && !state.edit) { el.btnSave.textContent = ""; var sp = document.createElement("i"); sp.className = "spin"; el.btnSave.appendChild(sp); el.btnSave.appendChild(document.createTextNode("Записываю…")); return; }
+    el.btnSave.textContent = state.edit ? verb : (a ? verb + " " + money(state.sign === "-" ? -a : a, state.cur) : verb);
   }
+  function flashDone() { state.flash = true; renderSave(); setTimeout(function () { state.flash = false; renderSave(); }, 1300); }
   // четыре быстрые кнопки под списком: самые частые категории по последним записям, остаток — случайные (его слово
   // 27.10.2026: «пока их нет — рандомно»); случайный набор выбирается один раз на запуск, чтобы кнопки не прыгали
   var quickRand = null;
@@ -356,9 +360,9 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     el.dateInput.value = state.date; el.dateInput.max = todayStr(1);
   }
   function renderEdit() {
-    el.editBar.hidden = !state.edit;
-    if (state.edit) { el.editText.textContent = "Правка записи от " + dmy(state.edit.booking_date); el.btnDelete.textContent = "Удалить"; state.armed = null; }
-    renderSave(); renderRecent();
+    el.editBar.hidden = !state.edit; el.app.classList.toggle("editing", !!state.edit);
+    if (state.edit) { el.editText.textContent = "✏️ Правка · " + dmy(state.edit.booking_date); el.btnDelete.textContent = "Удалить"; state.armed = null; }
+    renderSign(); renderRecent();
   }
   // шапка: итог текущего месяца по валютам (его слово 27.10.2026) — с сервера (init.month), пока нет — по последним записям
   function monthName() { return new Intl.DateTimeFormat("ru-RU", { month: "long" }).format(new Date()); }
@@ -453,7 +457,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   function enqueue(en) { state.queue.push(en); ls("cash_queue", state.queue); renderQueue(); }
   function dequeue(id) { state.queue = state.queue.filter(function (q) { return q.id !== id; }); ls("cash_queue", state.queue); renderQueue(); }
   function send(en) {
-    setStatus("Записываю…", "");
+    setStatus("Записываю…", ""); state.inflight++; renderSave();
     return api("add", { id: en.id, sign: en.sign, amount: en.amount, currency: en.cur, category: en.cat, comment: en.comment, date: en.date }).then(function (j) {
       dequeue(en.id); connected(true);
       if (!j.duplicate && j.id && !state.recent.some(function (r) { return r.id === j.id; })) {
@@ -464,8 +468,10 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
         renderRecent();
       }
       setStatus(j.sheet || j.duplicate ? "В базе ✓ · в таблице ✓" : "В базе ✓ · таблица догонит ночью", j.sheet || j.duplicate ? "" : "warn");
+      state.inflight--; flashDone();
       return true;
     }).catch(function (e) {
+      state.inflight--; renderSave();
       if (e.code === "bad") { dequeue(en.id); setStatus(explain(e), "err"); return true; } // база отвергла навсегда: в очереди не держим
       if (e.code === "unauthorized") { token(null); showSetup("Код не подошёл"); }
       if (e.code === "network") connected(false);
@@ -486,8 +492,6 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 
   // ---------- form ----------
   function resetForm() { markErr("amount", false); markErr("cat", false); el.amount.value = ""; el.comment.value = ""; renderTpl(); state.cat = ""; state.date = todayStr(); state.edit = null; renderCats(); renderDate(); renderEdit(); }
-  function toastShow(text) { el.toastText.textContent = text; el.toast.hidden = false; var b = el.toastBar; b.style.animation = "none"; void b.offsetWidth; b.style.animation = ""; }
-  function toastHide() { el.toast.hidden = true; }
   function commit(en) { enqueue(en); if (navigator.onLine !== false) send(en); }
   function markErr(field, on) {
     if (field === "amount") { el.errAmount.hidden = !on; el.amountRow.classList.toggle("err", on); }
@@ -506,28 +510,16 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     if (state.busy) return;
     var f = readForm(); if (!f) return;
     if (state.edit) { saveEdit(f); return; }
-    if (state.pending) { clearTimeout(state.pendTimer); var prev = state.pending; state.pending = null; toastHide(); commit(prev); }
     var en = Object.assign({ id: uuid() }, f);
     if (navigator.vibrate) { try { navigator.vibrate(12); } catch (e) { /* no haptics */ } }
-    state.pending = en;
-    toastShow(money(en.sign === "-" ? -en.amount : en.amount, en.cur) + " · " + emojiSplit(en.cat).nm);
-    setStatus("", "");
-    state.pendTimer = setTimeout(function () { state.pending = null; toastHide(); commit(en); }, 5000);
+    commit(en); // сразу в базу, без паузы на отмену (его слово 27.10.2026); исправить можно касанием записи в «Последних»
     resetForm();
-  }
-  function onUndo() {
-    if (!state.pending) return;
-    clearTimeout(state.pendTimer); var en = state.pending; state.pending = null; toastHide();
-    state.sign = en.sign; state.cur = en.cur; state.cat = en.cat; state.date = en.date;
-    el.amount.value = String(en.amount).replace(".", ","); el.comment.value = en.comment; renderTpl();
-    renderAll(); setStatus("Отменено", "");
   }
 
   // ---------- editing an earlier entry ----------
   function editStart(r) {
-    if (state.pending) { clearTimeout(state.pendTimer); var prev = state.pending; state.pending = null; toastHide(); commit(prev); }
     var n = Number(r.amount);
-    state.edit = { id: r.id, booking_date: r.booking_date };
+    state.edit = { id: r.id, booking_date: r.booking_date, amount: r.amount, currency: r.currency };
     state.sign = n < 0 ? "-" : "+"; state.cur = CURS.indexOf(r.currency) >= 0 ? r.currency : "EUR"; state.cat = r.category || ""; state.date = r.booking_date || todayStr();
     el.amount.value = String(Math.abs(n)).replace(".", ","); el.comment.value = r.counterparty || ""; renderTpl();
     renderSign(); el.btnCur.textContent = state.cur; renderCats(); renderDate(); renderEdit();
@@ -581,7 +573,6 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   el.dYest.addEventListener("click", function () { state.date = todayStr(-1); renderDate(); });
   el.dateInput.addEventListener("change", function () { if (/^\d{4}-\d{2}-\d{2}$/.test(el.dateInput.value) && el.dateInput.value <= todayStr(1)) state.date = el.dateInput.value; renderDate(); });
   el.btnSave.addEventListener("click", onSave);
-  el.btnUndo.addEventListener("click", onUndo);
   el.btnDelete.addEventListener("click", onDelete);
   el.btnCancel.addEventListener("click", editCancel);
   el.btnRecent.addEventListener("click", function () { var open = el.recentList.hidden; el.recentList.hidden = !open; el.recentHint.hidden = !open; if (open) refreshInit(); });
@@ -601,7 +592,6 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   });
   el.btnFlush.addEventListener("click", flushQueue);
   window.addEventListener("online", flushQueue);
-  window.addEventListener("pagehide", function () { if (state.pending) { clearTimeout(state.pendTimer); enqueue(state.pending); state.pending = null; } });
   document.addEventListener("visibilitychange", function () { if (!document.hidden && token() && !state.edit) { refreshInit(); flushQueue(); } });
 
   // потянуть вниз от верха экрана — обновить данные и проверить новую версию приложения (у приложения с экрана «Домой»
