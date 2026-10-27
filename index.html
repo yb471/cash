@@ -66,6 +66,9 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 .row2 { display: flex; gap: 8px; }
 .comment { flex: 1; min-width: 0; height: 46px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 0 12px; outline: none; }
 .comment:focus { border-color: var(--accent); }
+.tpl { display: flex; flex-wrap: wrap; gap: 6px; margin-top: -4px; }
+.tpl button { height: 32px; padding: 0 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--chip); color: var(--fg); font-size: 13px; font-weight: 600; white-space: nowrap; }
+.tpl button.on { background: var(--accent); color: var(--accent-fg); border-color: transparent; }
 .dates { display: grid; grid-template-columns: 1.25fr 1fr 1fr; gap: 6px; background: var(--chip); padding: 4px; border-radius: 14px; }
 .date-btn { position: relative; display: flex; align-items: center; justify-content: center; height: 40px; border: 0; border-radius: 10px; background: transparent; color: var(--muted); font-weight: 600; font-size: 14px; white-space: nowrap; padding: 0 4px; overflow: hidden; }
 .date-input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; margin: 0; border: 0; padding: 0; font-size: 16px; -webkit-appearance: none; appearance: none; }
@@ -174,6 +177,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     <input id="comment" class="comment" type="text" placeholder="Комментарий" list="recentComments" maxlength="200" autocomplete="off" enterkeyhint="done">
     <datalist id="recentComments"></datalist>
   </div>
+  <div class="tpl" id="tpl" aria-label="Шаблоны комментария"></div>
 
   <div class="status" id="status"></div>
 
@@ -193,14 +197,15 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "7"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "8"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var TEMPLATES = ["Взял у Family Cash"]; // шаблоны комментария под полем (его слово 27.10.2026): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
   var el = { today: $("today"), setup: $("setup"), tokenInput: $("tokenInput"), setupMsg: $("setupMsg"), btnToken: $("btnToken"), more: $("more"), btnMore: $("btnMore"),
     ver: $("ver"), btnUpdate: $("btnUpdate"), connState: $("connState"), queueCount: $("queueCount"), btnFlush: $("btnFlush"), btnCats: $("btnCats"), btnReset: $("btnReset"),
     editBar: $("editBar"), editText: $("editText"), btnDelete: $("btnDelete"), btnCancel: $("btnCancel"),
     segMinus: $("segMinus"), segPlus: $("segPlus"), signMark: $("signMark"), amount: $("amount"), btnCur: $("btnCur"), catwrap: $("catwrap"), cat: $("cat"), comment: $("comment"),
-    datalist: $("recentComments"), dToday: $("dToday"), dYest: $("dYest"), dOther: $("dOther"), dOtherText: $("dOtherText"), dateInput: $("dateInput"), status: $("status"), btnRecent: $("btnRecent"), recentCount: $("recentCount"),
+    datalist: $("recentComments"), tpl: $("tpl"), dToday: $("dToday"), dYest: $("dYest"), dOther: $("dOther"), dOtherText: $("dOtherText"), dateInput: $("dateInput"), status: $("status"), btnRecent: $("btnRecent"), recentCount: $("recentCount"),
     app: $("app"), ptr: $("ptr"), recentHint: $("recentHint"), recentList: $("recentList"), btnSave: $("btnSave"), toast: $("toast"), toastText: $("toastText"), btnUndo: $("btnUndo"), toastBar: $("toastBar") };
 
   function ls(key, value) {
@@ -298,6 +303,15 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     });
     renderComments();
   }
+  function renderTpl() {
+    el.tpl.textContent = "";
+    var cur = el.comment.value.trim();
+    TEMPLATES.forEach(function (t) {
+      var b = document.createElement("button"); b.type = "button"; b.textContent = t; b.className = cur === t ? "on" : "";
+      b.addEventListener("click", function () { el.comment.value = cur === t ? "" : t; cur = el.comment.value; renderTpl(); });
+      el.tpl.appendChild(b);
+    });
+  }
   function renderComments() {
     var seen = {}, list = [];
     state.recent.forEach(function (r) { if (r.counterparty && !seen[r.counterparty] && (!state.cat || r.category === state.cat)) { seen[r.counterparty] = 1; list.push(r.counterparty); } });
@@ -309,7 +323,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     el.btnFlush.hidden = !state.queue.length;
     if (state.queue.length) setStatus("Не отправлено: " + state.queue.length + ". Появится связь — отправлю.", "warn");
   }
-  function renderAll() { renderSign(); el.btnCur.textContent = state.cur; renderCats(); renderDate(); renderEdit(); renderQueue(); }
+  function renderAll() { renderTpl(); renderSign(); el.btnCur.textContent = state.cur; renderCats(); renderDate(); renderEdit(); renderQueue(); }
 
   // ---------- the function in Supabase ----------
   function api(action, payload) {
@@ -386,7 +400,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   }
 
   // ---------- form ----------
-  function resetForm() { el.amount.value = ""; el.comment.value = ""; state.cat = ""; state.date = todayStr(); state.edit = null; renderCats(); renderDate(); renderEdit(); el.amount.focus(); }
+  function resetForm() { el.amount.value = ""; el.comment.value = ""; renderTpl(); state.cat = ""; state.date = todayStr(); state.edit = null; renderCats(); renderDate(); renderEdit(); el.amount.focus(); }
   function toastShow(text) { el.toastText.textContent = text; el.toast.hidden = false; var b = el.toastBar; b.style.animation = "none"; void b.offsetWidth; b.style.animation = ""; }
   function toastHide() { el.toast.hidden = true; }
   function commit(en) { enqueue(en); if (navigator.onLine !== false) send(en); }
@@ -414,7 +428,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     if (!state.pending) return;
     clearTimeout(state.pendTimer); var en = state.pending; state.pending = null; toastHide();
     state.sign = en.sign; state.cur = en.cur; state.cat = en.cat; state.date = en.date;
-    el.amount.value = String(en.amount).replace(".", ","); el.comment.value = en.comment;
+    el.amount.value = String(en.amount).replace(".", ","); el.comment.value = en.comment; renderTpl();
     renderAll(); setStatus("Отменено", ""); el.amount.focus();
   }
 
@@ -424,7 +438,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     var n = Number(r.amount);
     state.edit = { id: r.id, booking_date: r.booking_date };
     state.sign = n < 0 ? "-" : "+"; state.cur = CURS.indexOf(r.currency) >= 0 ? r.currency : "EUR"; state.cat = r.category || ""; state.date = r.booking_date || todayStr();
-    el.amount.value = String(Math.abs(n)).replace(".", ","); el.comment.value = r.counterparty || "";
+    el.amount.value = String(Math.abs(n)).replace(".", ","); el.comment.value = r.counterparty || ""; renderTpl();
     renderSign(); el.btnCur.textContent = state.cur; renderCats(); renderDate(); renderEdit();
     setStatus("", ""); window.scrollTo({ top: 0, behavior: "smooth" }); el.amount.focus();
   }
@@ -465,6 +479,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   el.amount.addEventListener("input", renderSave);
   el.amount.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); el.amount.blur(); } });
   el.cat.addEventListener("change", function () { state.cat = el.cat.value; el.cat.classList.toggle("set", !!state.cat); renderComments(); });
+  el.comment.addEventListener("input", renderTpl);
   el.comment.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); onSave(); } });
   el.dToday.addEventListener("click", function () { state.date = todayStr(); renderDate(); });
   el.dYest.addEventListener("click", function () { state.date = todayStr(-1); renderDate(); });
