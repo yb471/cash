@@ -83,6 +83,10 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 .row2 { display: flex; gap: 8px; }
 .comment { flex: 1; min-width: 0; height: 46px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 0 12px; outline: none; }
 .comment:focus { border-color: var(--accent); }
+.cwrap { position: relative; flex: 1; min-width: 0; }
+.cwrap .comment { width: 100%; box-sizing: border-box; padding-right: 44px; }
+.clear { position: absolute; right: 7px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; border: 0; border-radius: 50%; background: var(--chip); color: var(--muted); font-size: 20px; line-height: 32px; padding: 0; text-align: center; }
+.clear:active { background: var(--line); }
 .tpl { display: flex; flex-wrap: wrap; gap: 6px; margin-top: -4px; }
 .tpl button { height: 32px; padding: 0 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--chip); color: var(--fg); font-size: 13px; font-weight: 600; white-space: nowrap; }
 .tpl button.on { background: var(--accent); color: var(--accent-fg); border-color: transparent; }
@@ -192,7 +196,10 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   <div class="quick" id="quick" aria-label="Частые категории"></div>
 
   <div class="row2">
-    <input id="comment" class="comment" type="text" placeholder="Комментарий" list="recentComments" maxlength="200" autocomplete="off" enterkeyhint="done">
+    <div class="cwrap">
+      <input id="comment" class="comment" type="text" placeholder="Комментарий" list="recentComments" maxlength="200" autocomplete="off" enterkeyhint="done">
+      <button class="clear" id="btnClear" type="button" aria-label="Очистить комментарий" hidden>×</button>
+    </div>
     <datalist id="recentComments"></datalist>
   </div>
   <div class="tpl" id="tpl" aria-label="Шаблоны комментария"></div>
@@ -219,7 +226,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "10"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "11"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Взял у Family Cash", "Чаевые", "Дал Насте"]; // шаблоны комментария под полем (его слово 27.10.2026): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -227,7 +234,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     ver: $("ver"), btnUpdate: $("btnUpdate"), connState: $("connState"), queueCount: $("queueCount"), btnFlush: $("btnFlush"), btnCats: $("btnCats"), btnReset: $("btnReset"),
     editBar: $("editBar"), editText: $("editText"), btnDelete: $("btnDelete"), btnCancel: $("btnCancel"),
     segMinus: $("segMinus"), segPlus: $("segPlus"), signMark: $("signMark"), amount: $("amount"), btnCur: $("btnCur"), catwrap: $("catwrap"), cat: $("cat"), comment: $("comment"),
-    datalist: $("recentComments"), tpl: $("tpl"), quick: $("quick"), sheet: $("sheet"), sheetBack: $("sheetBack"), sheetList: $("sheetList"), dToday: $("dToday"), dYest: $("dYest"), dOther: $("dOther"), dOtherText: $("dOtherText"), dateInput: $("dateInput"), status: $("status"), btnRecent: $("btnRecent"), recentCount: $("recentCount"),
+    datalist: $("recentComments"), btnClear: $("btnClear"), tpl: $("tpl"), quick: $("quick"), sheet: $("sheet"), sheetBack: $("sheetBack"), sheetList: $("sheetList"), dToday: $("dToday"), dYest: $("dYest"), dOther: $("dOther"), dOtherText: $("dOtherText"), dateInput: $("dateInput"), status: $("status"), btnRecent: $("btnRecent"), recentCount: $("recentCount"),
     app: $("app"), ptr: $("ptr"), recentHint: $("recentHint"), recentList: $("recentList"), btnSave: $("btnSave"), toast: $("toast"), toastText: $("toastText"), btnUndo: $("btnUndo"), toastBar: $("toastBar") };
 
   function ls(key, value) {
@@ -369,6 +376,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   function renderTpl() {
     el.tpl.textContent = "";
     var cur = el.comment.value.trim();
+    el.btnClear.hidden = !el.comment.value;
     TEMPLATES.forEach(function (t) {
       var b = document.createElement("button"); b.type = "button"; b.textContent = t; b.className = cur === t ? "on" : "";
       b.addEventListener("click", function () { el.comment.value = cur === t ? "" : t; cur = el.comment.value; renderTpl(); });
@@ -545,6 +553,8 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   el.sheetBack.addEventListener("click", sheetClose);
   document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !el.sheet.hidden) sheetClose(); });
   el.comment.addEventListener("input", renderTpl);
+  el.btnClear.addEventListener("pointerdown", function (e) { e.preventDefault(); }); // не ронять клавиатуру, если она открыта
+  el.btnClear.addEventListener("click", function () { el.comment.value = ""; renderTpl(); if (document.activeElement === el.comment) el.comment.focus(); });
   el.comment.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); onSave(); } });
   el.dToday.addEventListener("click", function () { state.date = todayStr(); renderDate(); });
   el.dYest.addEventListener("click", function () { state.date = todayStr(-1); renderDate(); });
