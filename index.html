@@ -62,6 +62,10 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 @keyframes shake { 25% { transform: translateX(-4px) } 75% { transform: translateX(4px) } }
 .catsel { width: 100%; height: 50px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 0 40px 0 12px; font-size: 16px; appearance: none; -webkit-appearance: none; color: var(--muted); }
 .catsel.set { color: var(--fg); font-weight: 600; }
+.quick { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: -4px; }
+.quick:empty { display: none; }
+.quick button { height: 36px; min-width: 0; padding: 0 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--chip); color: var(--fg); font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left; }
+.quick button.on { background: var(--accent); color: var(--accent-fg); border-color: transparent; }
 .catwrap::after { content: "▾"; position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; font-size: 18px; }
 .row2 { display: flex; gap: 8px; }
 .comment { flex: 1; min-width: 0; height: 46px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 0 12px; outline: none; }
@@ -172,6 +176,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   <div class="catwrap" id="catwrap">
     <select id="cat" class="catsel" aria-label="Категория"><option value="">Категория…</option></select>
   </div>
+  <div class="quick" id="quick" aria-label="Частые категории"></div>
 
   <div class="row2">
     <input id="comment" class="comment" type="text" placeholder="Комментарий" list="recentComments" maxlength="200" autocomplete="off" enterkeyhint="done">
@@ -197,7 +202,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "8"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "9"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Взял у Family Cash"]; // шаблоны комментария под полем (его слово 27.10.2026): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -205,7 +210,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     ver: $("ver"), btnUpdate: $("btnUpdate"), connState: $("connState"), queueCount: $("queueCount"), btnFlush: $("btnFlush"), btnCats: $("btnCats"), btnReset: $("btnReset"),
     editBar: $("editBar"), editText: $("editText"), btnDelete: $("btnDelete"), btnCancel: $("btnCancel"),
     segMinus: $("segMinus"), segPlus: $("segPlus"), signMark: $("signMark"), amount: $("amount"), btnCur: $("btnCur"), catwrap: $("catwrap"), cat: $("cat"), comment: $("comment"),
-    datalist: $("recentComments"), tpl: $("tpl"), dToday: $("dToday"), dYest: $("dYest"), dOther: $("dOther"), dOtherText: $("dOtherText"), dateInput: $("dateInput"), status: $("status"), btnRecent: $("btnRecent"), recentCount: $("recentCount"),
+    datalist: $("recentComments"), tpl: $("tpl"), quick: $("quick"), dToday: $("dToday"), dYest: $("dYest"), dOther: $("dOther"), dOtherText: $("dOtherText"), dateInput: $("dateInput"), status: $("status"), btnRecent: $("btnRecent"), recentCount: $("recentCount"),
     app: $("app"), ptr: $("ptr"), recentHint: $("recentHint"), recentList: $("recentList"), btnSave: $("btnSave"), toast: $("toast"), toastText: $("toastText"), btnUndo: $("btnUndo"), toastBar: $("toastBar") };
 
   function ls(key, value) {
@@ -258,6 +263,29 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     var a = parseAmount(el.amount.value), verb = state.edit ? "Сохранить" : "Записать";
     el.btnSave.textContent = a ? verb + " " + money(state.sign === "-" ? -a : a, state.cur) : verb;
   }
+  // четыре быстрые кнопки под списком: самые частые категории по последним записям, остаток — случайные (его слово
+  // 27.10.2026: «пока их нет — рандомно»); случайный набор выбирается один раз на запуск, чтобы кнопки не прыгали
+  var quickRand = null;
+  function quickPick() {
+    if (!state.cats.length) return [];
+    var n = {}; state.recent.forEach(function (r) { if (r.category && state.cats.indexOf(r.category) >= 0) n[r.category] = (n[r.category] || 0) + 1; });
+    var top = Object.keys(n).sort(function (a, b) { return n[b] - n[a] || state.cats.indexOf(a) - state.cats.indexOf(b); }).slice(0, 4);
+    if (!quickRand || quickRand.length !== state.cats.length) { quickRand = state.cats.slice(); for (var i = quickRand.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = quickRand[i]; quickRand[i] = quickRand[j]; quickRand[j] = t; } }
+    quickRand.forEach(function (c) { if (top.length < 4 && top.indexOf(c) < 0) top.push(c); });
+    return top;
+  }
+  function catParts(name) { // «Mark 👶» → эмодзи вперёд, чтобы при обрезке длинного названия они оставались видны
+    var m = /^(.*?)\s*([\p{Extended_Pictographic}\uFE0F\u200D\p{Emoji_Modifier}]+)$/u.exec(name);
+    return m ? m[2] + " " + m[1] : name;
+  }
+  function renderQuick() {
+    el.quick.textContent = "";
+    quickPick().forEach(function (c) {
+      var b = document.createElement("button"); b.type = "button"; b.textContent = catParts(c); b.title = c; b.className = state.cat === c ? "on" : "";
+      b.addEventListener("click", function () { state.cat = c; el.cat.value = c; el.cat.classList.add("set"); renderComments(); renderQuick(); if (!el.amount.value) el.amount.focus(); });
+      el.quick.appendChild(b);
+    });
+  }
   function renderCats() {
     var sel = el.cat;
     sel.innerHTML = "";
@@ -266,6 +294,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     state.cats.forEach(function (name) { var o = document.createElement("option"); o.value = name; o.textContent = name; sel.appendChild(o); });
     sel.value = state.cats.indexOf(state.cat) >= 0 ? state.cat : "";
     sel.classList.toggle("set", !!sel.value);
+    renderQuick();
   }
   function dateChip(btn, word, iso, on) {
     btn.textContent = ""; btn.appendChild(document.createTextNode(word + " "));
@@ -357,7 +386,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     return api("init").then(function (j) {
       var names = (j.categories || []).filter(Boolean);
       if (names.length) { state.cats = names; ls("cash_cats", names); if (state.cat && names.indexOf(state.cat) < 0) state.cat = ""; renderCats(); }
-      state.recent = j.recent || []; ls("cash_recent", state.recent.slice(0, 40)); renderRecent();
+      state.recent = j.recent || []; ls("cash_recent", state.recent.slice(0, 40)); renderRecent(); renderQuick();
       connected(true); el.setup.hidden = true;
       if (!state.queue.length) setStatus("", "");
       return true;
@@ -478,7 +507,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   el.btnCur.addEventListener("click", function () { state.cur = CURS[(CURS.indexOf(state.cur) + 1) % CURS.length]; if (!state.edit) { prefs.cur = state.cur; ls("cash_prefs", prefs); } el.btnCur.textContent = state.cur; renderSave(); });
   el.amount.addEventListener("input", renderSave);
   el.amount.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); el.amount.blur(); } });
-  el.cat.addEventListener("change", function () { state.cat = el.cat.value; el.cat.classList.toggle("set", !!state.cat); renderComments(); });
+  el.cat.addEventListener("change", function () { state.cat = el.cat.value; el.cat.classList.toggle("set", !!state.cat); renderComments(); renderQuick(); });
   el.comment.addEventListener("input", renderTpl);
   el.comment.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); onSave(); } });
   el.dToday.addEventListener("click", function () { state.date = todayStr(); renderDate(); });
