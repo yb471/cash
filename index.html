@@ -37,7 +37,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 [hidden] { display: none !important; }
 .app { min-height: 100%; display: flex; flex-direction: column; gap: 12px; max-width: 520px; margin: 0 auto;
-  padding-top: calc(8px + env(safe-area-inset-top, 0px)); padding-bottom: 0;
+  padding-top: calc(8px + env(safe-area-inset-top, 0px)); padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 .top { display: flex; align-items: center; gap: 10px; min-height: 36px; }
 .brand { font-weight: 700; font-size: 17px; letter-spacing: .01em; }
@@ -126,7 +126,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 .recent-list .a.plus { color: var(--plus); }
 .recent-hint { font-size: 12px; color: var(--muted); padding: 0 4px 6px; }
 .spacer { flex: 1; }
-.savebar { position: sticky; bottom: 0; background: linear-gradient(to top, var(--bg) 70%, transparent); padding-top: 10px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
+.savebar { padding-top: 2px; } /* кнопка записи сразу под комментарием (его слово 27.10.2026) */
 .save { width: 100%; height: 54px; border: 0; border-radius: 16px; background: var(--accent); color: var(--accent-fg); font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .save.minus { background: var(--minus); color: #fff; }
 .save.plus { background: var(--plus); color: #fff; }
@@ -208,6 +208,8 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   </div>
   <div class="tpl" id="tpl" aria-label="Шаблоны комментария"></div>
 
+  <div class="savebar"><button class="save minus" id="btnSave" type="button">Записать</button></div>
+
   <div class="status" id="status"></div>
 
   <section class="recent">
@@ -217,7 +219,6 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   </section>
 
   <div class="spacer"></div>
-  <div class="savebar"><button class="save minus" id="btnSave" type="button">Записать</button></div>
 </div>
 
 <div class="sheet" id="sheet" hidden>
@@ -232,7 +233,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "15"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "16"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Взял у Family Cash", "Чаевые", "Дал Насте"]; // шаблоны комментария под полем (его слово 27.10.2026): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
