@@ -67,11 +67,18 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 .comment { flex: 1; min-width: 0; height: 46px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 0 12px; outline: none; }
 .comment:focus { border-color: var(--accent); }
 .dates { display: grid; grid-template-columns: 1.25fr 1fr 1fr; gap: 6px; background: var(--chip); padding: 4px; border-radius: 14px; }
-.date-btn { height: 40px; border: 0; border-radius: 10px; background: transparent; color: var(--muted); font-weight: 600; font-size: 14px; white-space: nowrap; padding: 0 4px; overflow: hidden; text-overflow: ellipsis; }
+.date-btn { position: relative; display: flex; align-items: center; justify-content: center; height: 40px; border: 0; border-radius: 10px; background: transparent; color: var(--muted); font-weight: 600; font-size: 14px; white-space: nowrap; padding: 0 4px; overflow: hidden; }
+.date-input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; margin: 0; border: 0; padding: 0; font-size: 16px; -webkit-appearance: none; appearance: none; }
 .date-btn.on { background: var(--surface); color: var(--fg); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
-.date-btn .dm { font-weight: 400; font-variant-numeric: tabular-nums; }
-.ptr { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 6px); left: 50%; transform: translate(-50%, -70px); z-index: 6; background: var(--surface); color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; font-size: 13px; font-weight: 600; white-space: nowrap; box-shadow: 0 4px 14px rgba(0,0,0,.12); pointer-events: none; }
-.ptr.anim { transition: transform .2s ease; }
+.date-btn .dm { font-weight: 400; font-variant-numeric: tabular-nums; margin-left: 4px; }
+.app.ease { transition: transform .32s cubic-bezier(.2,.8,.2,1); }
+.ptr { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 12px); left: 50%; width: 30px; height: 30px; margin-left: -15px; z-index: 6; color: var(--accent); opacity: 0; pointer-events: none; }
+.ptr.ease { transition: opacity .25s; }
+.ptr svg { width: 100%; height: 100%; display: block; }
+.ptr circle { fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-dasharray: 56.5; stroke-dashoffset: 56.5; }
+.ptr.spin svg { animation: ptrspin .8s linear infinite; }
+.ptr.spin circle { stroke-dashoffset: 16; }
+@keyframes ptrspin { to { transform: rotate(360deg); } }
 .visually-hidden { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 .status { min-height: 18px; font-size: 13px; color: var(--muted); }
 .status.warn { color: var(--warn); }
@@ -112,7 +119,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 </style>
 </head>
 <body>
-<div class="ptr" id="ptr" aria-hidden="true">Потяни, чтобы обновить</div>
+<div class="ptr" id="ptr" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg></div>
 <div class="app" id="app">
   <header class="top">
     <div class="brand">Cash YB</div>
@@ -153,6 +160,12 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     <button class="cur" id="btnCur" type="button" aria-label="Валюта">EUR</button>
   </div>
 
+  <div class="dates" role="group" aria-label="Дата">
+    <button class="date-btn on" id="dToday" type="button">Сегодня</button>
+    <button class="date-btn" id="dYest" type="button">Вчера</button>
+    <label class="date-btn" id="dOther"><span id="dOtherText">Другая…</span><input id="dateInput" type="date" class="date-input" aria-label="Другая дата"></label>
+  </div>
+
   <div class="catwrap" id="catwrap">
     <select id="cat" class="catsel" aria-label="Категория"><option value="">Категория…</option></select>
   </div>
@@ -160,13 +173,6 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   <div class="row2">
     <input id="comment" class="comment" type="text" placeholder="Комментарий" list="recentComments" maxlength="200" autocomplete="off" enterkeyhint="done">
     <datalist id="recentComments"></datalist>
-  </div>
-
-  <div class="dates" role="group" aria-label="Дата">
-    <button class="date-btn on" id="dToday" type="button">Сегодня</button>
-    <button class="date-btn" id="dYest" type="button">Вчера</button>
-    <button class="date-btn" id="dOther" type="button">Другая…</button>
-    <input id="dateInput" type="date" class="visually-hidden" aria-label="Дата" tabindex="-1">
   </div>
 
   <div class="status" id="status"></div>
@@ -187,15 +193,15 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "6"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "7"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
   var el = { today: $("today"), setup: $("setup"), tokenInput: $("tokenInput"), setupMsg: $("setupMsg"), btnToken: $("btnToken"), more: $("more"), btnMore: $("btnMore"),
     ver: $("ver"), btnUpdate: $("btnUpdate"), connState: $("connState"), queueCount: $("queueCount"), btnFlush: $("btnFlush"), btnCats: $("btnCats"), btnReset: $("btnReset"),
     editBar: $("editBar"), editText: $("editText"), btnDelete: $("btnDelete"), btnCancel: $("btnCancel"),
     segMinus: $("segMinus"), segPlus: $("segPlus"), signMark: $("signMark"), amount: $("amount"), btnCur: $("btnCur"), catwrap: $("catwrap"), cat: $("cat"), comment: $("comment"),
-    datalist: $("recentComments"), dToday: $("dToday"), dYest: $("dYest"), dOther: $("dOther"), dateInput: $("dateInput"), status: $("status"), btnRecent: $("btnRecent"), recentCount: $("recentCount"),
-    ptr: $("ptr"), recentHint: $("recentHint"), recentList: $("recentList"), btnSave: $("btnSave"), toast: $("toast"), toastText: $("toastText"), btnUndo: $("btnUndo"), toastBar: $("toastBar") };
+    datalist: $("recentComments"), dToday: $("dToday"), dYest: $("dYest"), dOther: $("dOther"), dOtherText: $("dOtherText"), dateInput: $("dateInput"), status: $("status"), btnRecent: $("btnRecent"), recentCount: $("recentCount"),
+    app: $("app"), ptr: $("ptr"), recentHint: $("recentHint"), recentList: $("recentList"), btnSave: $("btnSave"), toast: $("toast"), toastText: $("toastText"), btnUndo: $("btnUndo"), toastBar: $("toastBar") };
 
   function ls(key, value) {
     try { if (value === undefined) { var v = localStorage.getItem(key); return v ? JSON.parse(v) : null; } if (value === null) localStorage.removeItem(key); else localStorage.setItem(key, JSON.stringify(value)); } catch (e) { return null; }
@@ -265,8 +271,8 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     var t = todayStr(), y = todayStr(-1), other = state.date !== t && state.date !== y;
     dateChip(el.dToday, "Сегодня", t, state.date === t);
     dateChip(el.dYest, "Вчера", y, state.date === y);
-    el.dOther.textContent = other ? dmy(state.date) + "." + state.date.slice(0, 4) : "Другая…"; el.dOther.classList.toggle("on", other); el.dOther.setAttribute("aria-pressed", other ? "true" : "false");
-    el.dateInput.value = state.date;
+    el.dOtherText.textContent = other ? dmy(state.date) + "." + state.date.slice(0, 4) : "Другая…"; el.dOther.classList.toggle("on", other);
+    el.dateInput.value = state.date; el.dateInput.max = todayStr(1);
   }
   function renderEdit() {
     el.editBar.hidden = !state.edit;
@@ -462,7 +468,6 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   el.comment.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); onSave(); } });
   el.dToday.addEventListener("click", function () { state.date = todayStr(); renderDate(); });
   el.dYest.addEventListener("click", function () { state.date = todayStr(-1); renderDate(); });
-  el.dOther.addEventListener("click", function () { var d = el.dateInput; d.value = state.date; if (d.showPicker) { try { d.showPicker(); return; } catch (e) { /* fall through */ } } d.focus(); d.click(); });
   el.dateInput.addEventListener("change", function () { if (/^\d{4}-\d{2}-\d{2}$/.test(el.dateInput.value) && el.dateInput.value <= todayStr(1)) state.date = el.dateInput.value; renderDate(); });
   el.btnSave.addEventListener("click", onSave);
   el.btnUndo.addEventListener("click", onUndo);
@@ -490,37 +495,41 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 
   // потянуть вниз от верха экрана — обновить данные и проверить новую версию приложения (у приложения с экрана «Домой»
   // своего жеста нет); тянется только когда страница в самом верху, иначе обычная прокрутка
-  var ptr = { y0: null, p: 0, busy: false };
-  function ptrMove(p, text) { el.ptr.style.transform = "translate(-50%, " + (p - 70) + "px)"; if (text) el.ptr.textContent = text; }
+  var ptr = { y0: null, p: 0, busy: false, ring: el.ptr.querySelector("circle"), svg: el.ptr.querySelector("svg") };
+  function ptrDraw(p, ease) {
+    el.app.classList.toggle("ease", !!ease); el.ptr.classList.toggle("ease", !!ease);
+    el.app.style.transform = p ? "translateY(" + p + "px)" : "";
+    el.ptr.style.opacity = String(Math.min(1, p / 40));
+    if (!el.ptr.classList.contains("spin")) { ptr.ring.style.strokeDashoffset = String(56.5 * (1 - Math.min(1, p / 60))); ptr.svg.style.transform = "rotate(" + p * 4 + "deg)"; }
+  }
   function swUpdate() {
     if (!("serviceWorker" in navigator)) return Promise.resolve();
     return navigator.serviceWorker.getRegistration().then(function (r) { return r && r.update(); }).catch(function () { /* без сети */ });
   }
   function ptrRefresh() {
-    ptr.busy = true; ptrMove(70, "Обновляю…");
+    ptr.busy = true; ptr.ring.style.strokeDashoffset = ""; ptr.svg.style.transform = ""; el.ptr.classList.add("spin"); ptrDraw(56, true);
     Promise.all([refreshInit(), swUpdate()]).then(function (r) {
       if (r[0] && state.queue.length) flushQueue();
-      ptrMove(70, r[0] ? "Обновлено" : "Нет связи");
-      setTimeout(function () { ptrMove(0); ptr.busy = false; }, 700);
+      setTimeout(function () { ptrDraw(0, true); setTimeout(function () { el.ptr.classList.remove("spin"); ptr.busy = false; }, 350); }, 500);
     });
   }
   document.addEventListener("touchstart", function (e) {
-    ptr.y0 = (!ptr.busy && window.scrollY <= 0 && e.touches.length === 1) ? e.touches[0].clientY : null; ptr.p = 0; el.ptr.classList.remove("anim");
+    ptr.y0 = (!ptr.busy && window.scrollY <= 0 && e.touches.length === 1) ? e.touches[0].clientY : null; ptr.p = 0;
   }, { passive: true });
   document.addEventListener("touchmove", function (e) {
     if (ptr.y0 === null) return;
     var dy = e.touches[0].clientY - ptr.y0;
-    if (dy <= 0 || window.scrollY > 0) { if (ptr.p) { ptr.p = 0; ptrMove(0); } return; }
+    if (dy <= 0 || window.scrollY > 0) { if (ptr.p) { ptr.p = 0; ptrDraw(0, false); } return; }
     if (e.cancelable) e.preventDefault();
-    ptr.p = Math.min(90, dy * 0.5);
-    ptrMove(ptr.p, ptr.p >= 60 ? "Отпусти — обновлю" : "Потяни, чтобы обновить");
+    ptr.p = Math.min(84, Math.pow(dy, 0.85) * 0.75); // с сопротивлением, как у системных списков
+    ptrDraw(ptr.p, false);
   }, { passive: false });
   document.addEventListener("touchend", function () {
     if (ptr.y0 === null) return;
-    var go = ptr.p >= 60; ptr.y0 = null; el.ptr.classList.add("anim");
-    if (go) ptrRefresh(); else ptrMove(0);
+    var go = ptr.p >= 54; ptr.y0 = null;
+    if (go) ptrRefresh(); else ptrDraw(0, true);
   });
-  document.addEventListener("touchcancel", function () { if (ptr.y0 !== null) { ptr.y0 = null; el.ptr.classList.add("anim"); ptrMove(0); } });
+  document.addEventListener("touchcancel", function () { if (ptr.y0 !== null) { ptr.y0 = null; ptrDraw(0, true); } });
 
   renderAll();
   if (token()) { el.amount.focus(); refreshInit().then(flushQueue); } else { showSetup(""); }
