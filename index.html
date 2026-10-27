@@ -201,10 +201,9 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 
   <div class="row2">
     <div class="cwrap">
-      <input id="comment" class="comment" type="text" placeholder="Комментарий" list="recentComments" maxlength="200" autocomplete="off" enterkeyhint="done">
+      <input id="comment" class="comment" type="text" placeholder="Комментарий" maxlength="200" autocomplete="off" enterkeyhint="done">
       <button class="clear" id="btnClear" type="button" aria-label="Очистить комментарий" hidden>×</button>
     </div>
-    <datalist id="recentComments"></datalist>
   </div>
   <div class="tpl" id="tpl" aria-label="Шаблоны комментария"></div>
 
@@ -230,7 +229,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "12"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "13"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Взял у Family Cash", "Чаевые", "Дал Насте"]; // шаблоны комментария под полем (его слово 27.10.2026): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -238,7 +237,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     ver: $("ver"), btnUpdate: $("btnUpdate"), connState: $("connState"), queueCount: $("queueCount"), btnFlush: $("btnFlush"), btnCats: $("btnCats"), btnReset: $("btnReset"),
     editBar: $("editBar"), editText: $("editText"), btnDelete: $("btnDelete"), btnCancel: $("btnCancel"),
     segMinus: $("segMinus"), segPlus: $("segPlus"), signMark: $("signMark"), amount: $("amount"), btnCur: $("btnCur"), catwrap: $("catwrap"), cat: $("cat"), comment: $("comment"),
-    datalist: $("recentComments"), btnClear: $("btnClear"), errAmount: $("errAmount"), errCat: $("errCat"), amountRow: document.querySelector(".amount-row"), tpl: $("tpl"), quick: $("quick"), sheet: $("sheet"), sheetBack: $("sheetBack"), sheetList: $("sheetList"), dToday: $("dToday"), dYest: $("dYest"), dOther: $("dOther"), dOtherText: $("dOtherText"), dateInput: $("dateInput"), status: $("status"), btnRecent: $("btnRecent"), recentCount: $("recentCount"),
+    btnClear: $("btnClear"), errAmount: $("errAmount"), errCat: $("errCat"), amountRow: document.querySelector(".amount-row"), tpl: $("tpl"), quick: $("quick"), sheet: $("sheet"), sheetBack: $("sheetBack"), sheetList: $("sheetList"), dToday: $("dToday"), dYest: $("dYest"), dOther: $("dOther"), dOtherText: $("dOtherText"), dateInput: $("dateInput"), status: $("status"), btnRecent: $("btnRecent"), recentCount: $("recentCount"),
     app: $("app"), ptr: $("ptr"), recentHint: $("recentHint"), recentList: $("recentList"), btnSave: $("btnSave"), toast: $("toast"), toastText: $("toastText"), btnUndo: $("btnUndo"), toastBar: $("toastBar") };
 
   function ls(key, value) {
@@ -308,8 +307,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   }
   function catParts(name) { var c = catSplit(name); return c.em ? c.em + " " + c.nm : c.nm; } // эмодзи вперёд: при обрезке остаются видны
   function pickCat(c) {
-    state.cat = c; markErr("cat", false); sheetClose(); renderCats(); renderComments();
-    if (!el.amount.value) el.amount.focus();
+    state.cat = c; markErr("cat", false); sheetClose(); renderCats();
   }
   // список категорий — свой лист снизу во всю ширину (системное меню iOS узкое, его слово 27.10.2026)
   function sheetOpen() {
@@ -375,7 +373,6 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
       b.addEventListener("click", function () { editStart(r); });
       li.appendChild(b); el.recentList.appendChild(li);
     });
-    renderComments();
   }
   function renderTpl() {
     el.tpl.textContent = "";
@@ -386,12 +383,6 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
       b.addEventListener("click", function () { el.comment.value = cur === t ? "" : t; cur = el.comment.value; renderTpl(); });
       el.tpl.appendChild(b);
     });
-  }
-  function renderComments() {
-    var seen = {}, list = [];
-    state.recent.forEach(function (r) { if (r.counterparty && !seen[r.counterparty] && (!state.cat || r.category === state.cat)) { seen[r.counterparty] = 1; list.push(r.counterparty); } });
-    el.datalist.innerHTML = "";
-    list.slice(0, 12).forEach(function (s) { var o = document.createElement("option"); o.value = s; el.datalist.appendChild(o); });
   }
   function renderQueue() {
     el.queueCount.textContent = String(state.queue.length);
@@ -475,7 +466,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   }
 
   // ---------- form ----------
-  function resetForm() { markErr("amount", false); markErr("cat", false); el.amount.value = ""; el.comment.value = ""; renderTpl(); state.cat = ""; state.date = todayStr(); state.edit = null; renderCats(); renderDate(); renderEdit(); el.amount.focus(); }
+  function resetForm() { markErr("amount", false); markErr("cat", false); el.amount.value = ""; el.comment.value = ""; renderTpl(); state.cat = ""; state.date = todayStr(); state.edit = null; renderCats(); renderDate(); renderEdit(); }
   function toastShow(text) { el.toastText.textContent = text; el.toast.hidden = false; var b = el.toastBar; b.style.animation = "none"; void b.offsetWidth; b.style.animation = ""; }
   function toastHide() { el.toast.hidden = true; }
   function commit(en) { enqueue(en); if (navigator.onLine !== false) send(en); }
@@ -489,7 +480,6 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     // обязательные поля: подсказка сразу под каждым незаполненным, все разом (его слово 27.10.2026)
     markErr("amount", !a); markErr("cat", !state.cat);
     if (!state.cat) { el.catwrap.classList.remove("shake"); void el.catwrap.offsetWidth; el.catwrap.classList.add("shake"); }
-    if (!a) el.amount.focus();
     if (!a || !state.cat) return null;
     return { sign: state.sign, amount: a, cur: state.cur, cat: state.cat, comment: el.comment.value.trim().slice(0, 200), date: state.date };
   }
@@ -511,7 +501,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     clearTimeout(state.pendTimer); var en = state.pending; state.pending = null; toastHide();
     state.sign = en.sign; state.cur = en.cur; state.cat = en.cat; state.date = en.date;
     el.amount.value = String(en.amount).replace(".", ","); el.comment.value = en.comment; renderTpl();
-    renderAll(); setStatus("Отменено", ""); el.amount.focus();
+    renderAll(); setStatus("Отменено", "");
   }
 
   // ---------- editing an earlier entry ----------
@@ -522,7 +512,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     state.sign = n < 0 ? "-" : "+"; state.cur = CURS.indexOf(r.currency) >= 0 ? r.currency : "EUR"; state.cat = r.category || ""; state.date = r.booking_date || todayStr();
     el.amount.value = String(Math.abs(n)).replace(".", ","); el.comment.value = r.counterparty || ""; renderTpl();
     renderSign(); el.btnCur.textContent = state.cur; renderCats(); renderDate(); renderEdit();
-    setStatus("", ""); window.scrollTo({ top: 0, behavior: "smooth" }); el.amount.focus();
+    setStatus("", ""); window.scrollTo({ top: 0, behavior: "smooth" });
   }
   function editCancel() { resetForm(); setStatus("", ""); }
   function saveEdit(f) {
@@ -566,7 +556,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   el.comment.addEventListener("input", renderTpl);
   el.btnClear.addEventListener("pointerdown", function (e) { e.preventDefault(); }); // не ронять клавиатуру, если она открыта
   el.btnClear.addEventListener("click", function () { el.comment.value = ""; renderTpl(); if (document.activeElement === el.comment) el.comment.focus(); });
-  el.comment.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); onSave(); } });
+  el.comment.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); el.comment.blur(); } });
   el.dToday.addEventListener("click", function () { state.date = todayStr(); renderDate(); });
   el.dYest.addEventListener("click", function () { state.date = todayStr(-1); renderDate(); });
   el.dateInput.addEventListener("change", function () { if (/^\d{4}-\d{2}-\d{2}$/.test(el.dateInput.value) && el.dateInput.value <= todayStr(1)) state.date = el.dateInput.value; renderDate(); });
