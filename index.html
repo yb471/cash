@@ -104,6 +104,8 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 .ptr.spin circle { stroke-dashoffset: 16; }
 @keyframes ptrspin { to { transform: rotate(360deg); } }
 .visually-hidden { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.ferr { color: var(--minus); font-size: 13px; font-weight: 600; margin-top: -6px; padding-left: 4px; }
+.amount-row.err, .catsel.err { border-color: var(--minus); }
 .status { min-height: 18px; font-size: 13px; color: var(--muted); }
 .status.warn { color: var(--warn); }
 .status.err { color: var(--minus); }
@@ -183,6 +185,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     <input id="amount" class="amount" type="text" inputmode="decimal" placeholder="0" autocomplete="off" enterkeyhint="done" aria-label="Сумма">
     <button class="cur" id="btnCur" type="button" aria-label="Валюта">EUR</button>
   </div>
+  <div class="ferr" id="errAmount" hidden>Введи сумму</div>
 
   <div class="dates" role="group" aria-label="Дата">
     <button class="date-btn on" id="dToday" type="button">Сегодня</button>
@@ -194,6 +197,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     <button id="cat" class="catsel" type="button" aria-haspopup="dialog">Категория…</button>
   </div>
   <div class="quick" id="quick" aria-label="Частые категории"></div>
+  <div class="ferr" id="errCat" hidden>Выбери категорию</div>
 
   <div class="row2">
     <div class="cwrap">
@@ -226,7 +230,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "11"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "12"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Взял у Family Cash", "Чаевые", "Дал Насте"]; // шаблоны комментария под полем (его слово 27.10.2026): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -234,7 +238,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     ver: $("ver"), btnUpdate: $("btnUpdate"), connState: $("connState"), queueCount: $("queueCount"), btnFlush: $("btnFlush"), btnCats: $("btnCats"), btnReset: $("btnReset"),
     editBar: $("editBar"), editText: $("editText"), btnDelete: $("btnDelete"), btnCancel: $("btnCancel"),
     segMinus: $("segMinus"), segPlus: $("segPlus"), signMark: $("signMark"), amount: $("amount"), btnCur: $("btnCur"), catwrap: $("catwrap"), cat: $("cat"), comment: $("comment"),
-    datalist: $("recentComments"), btnClear: $("btnClear"), tpl: $("tpl"), quick: $("quick"), sheet: $("sheet"), sheetBack: $("sheetBack"), sheetList: $("sheetList"), dToday: $("dToday"), dYest: $("dYest"), dOther: $("dOther"), dOtherText: $("dOtherText"), dateInput: $("dateInput"), status: $("status"), btnRecent: $("btnRecent"), recentCount: $("recentCount"),
+    datalist: $("recentComments"), btnClear: $("btnClear"), errAmount: $("errAmount"), errCat: $("errCat"), amountRow: document.querySelector(".amount-row"), tpl: $("tpl"), quick: $("quick"), sheet: $("sheet"), sheetBack: $("sheetBack"), sheetList: $("sheetList"), dToday: $("dToday"), dYest: $("dYest"), dOther: $("dOther"), dOtherText: $("dOtherText"), dateInput: $("dateInput"), status: $("status"), btnRecent: $("btnRecent"), recentCount: $("recentCount"),
     app: $("app"), ptr: $("ptr"), recentHint: $("recentHint"), recentList: $("recentList"), btnSave: $("btnSave"), toast: $("toast"), toastText: $("toastText"), btnUndo: $("btnUndo"), toastBar: $("toastBar") };
 
   function ls(key, value) {
@@ -304,7 +308,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   }
   function catParts(name) { var c = catSplit(name); return c.em ? c.em + " " + c.nm : c.nm; } // эмодзи вперёд: при обрезке остаются видны
   function pickCat(c) {
-    state.cat = c; sheetClose(); renderCats(); renderComments();
+    state.cat = c; markErr("cat", false); sheetClose(); renderCats(); renderComments();
     if (!el.amount.value) el.amount.focus();
   }
   // список категорий — свой лист снизу во всю ширину (системное меню iOS узкое, его слово 27.10.2026)
@@ -471,15 +475,22 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   }
 
   // ---------- form ----------
-  function resetForm() { el.amount.value = ""; el.comment.value = ""; renderTpl(); state.cat = ""; state.date = todayStr(); state.edit = null; renderCats(); renderDate(); renderEdit(); el.amount.focus(); }
+  function resetForm() { markErr("amount", false); markErr("cat", false); el.amount.value = ""; el.comment.value = ""; renderTpl(); state.cat = ""; state.date = todayStr(); state.edit = null; renderCats(); renderDate(); renderEdit(); el.amount.focus(); }
   function toastShow(text) { el.toastText.textContent = text; el.toast.hidden = false; var b = el.toastBar; b.style.animation = "none"; void b.offsetWidth; b.style.animation = ""; }
   function toastHide() { el.toast.hidden = true; }
   function commit(en) { enqueue(en); if (navigator.onLine !== false) send(en); }
+  function markErr(field, on) {
+    if (field === "amount") { el.errAmount.hidden = !on; el.amountRow.classList.toggle("err", on); }
+    else { el.errCat.hidden = !on; el.cat.classList.toggle("err", on); }
+  }
   function readForm() {
     var a = parseAmount(el.amount.value);
     if (!token()) { showSetup(""); return null; }
-    if (!a) { el.amount.focus(); setStatus("Введи сумму", "warn"); return null; }
-    if (!state.cat) { el.catwrap.classList.remove("shake"); void el.catwrap.offsetWidth; el.catwrap.classList.add("shake"); setStatus("Выбери категорию", "warn"); return null; }
+    // обязательные поля: подсказка сразу под каждым незаполненным, все разом (его слово 27.10.2026)
+    markErr("amount", !a); markErr("cat", !state.cat);
+    if (!state.cat) { el.catwrap.classList.remove("shake"); void el.catwrap.offsetWidth; el.catwrap.classList.add("shake"); }
+    if (!a) el.amount.focus();
+    if (!a || !state.cat) return null;
     return { sign: state.sign, amount: a, cur: state.cur, cat: state.cat, comment: el.comment.value.trim().slice(0, 200), date: state.date };
   }
   function onSave() {
@@ -547,7 +558,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   el.segMinus.addEventListener("click", function () { state.sign = "-"; if (!state.edit) { prefs.sign = "-"; ls("cash_prefs", prefs); } renderSign(); });
   el.segPlus.addEventListener("click", function () { state.sign = "+"; if (!state.edit) { prefs.sign = "+"; ls("cash_prefs", prefs); } renderSign(); });
   el.btnCur.addEventListener("click", function () { state.cur = CURS[(CURS.indexOf(state.cur) + 1) % CURS.length]; if (!state.edit) { prefs.cur = state.cur; ls("cash_prefs", prefs); } el.btnCur.textContent = state.cur; renderSave(); });
-  el.amount.addEventListener("input", renderSave);
+  el.amount.addEventListener("input", function () { if (parseAmount(el.amount.value)) markErr("amount", false); renderSave(); });
   el.amount.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); el.amount.blur(); } });
   el.cat.addEventListener("click", sheetOpen);
   el.sheetBack.addEventListener("click", sheetClose);
