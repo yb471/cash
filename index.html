@@ -164,7 +164,6 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   <section class="card" id="more" hidden>
     <div class="line"><span>Связь с базой</span><span id="connState">—</span></div>
     <div class="line"><span>Не отправлено</span><span><span id="queueCount">0</span> <button id="btnFlush" type="button" hidden>Отправить</button></span></div>
-    <div class="line"><span>Код доступа</span><button id="btnReset" type="button">Ввести заново</button></div>
     <div class="line"><span>Версия</span><span id="ver"></span></div>
     <div class="line"><a href="https://docs.google.com/spreadsheets/d/1cKYM1-z92p6Q14BxznyrYuXFfWDnJfb1w0Dj51CcAhk/edit#gid=1765023070" target="_blank" rel="noopener">Открыть вкладку YB Cash</a></div>
   </section>
@@ -235,12 +234,12 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "37"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "38"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Взял у Family Cash", "Чаевые", "Дал Насте"]; // шаблоны комментария под полем (его слово 27.10.2026): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
   var el = { today: $("today"), setup: $("setup"), tokenInput: $("tokenInput"), setupMsg: $("setupMsg"), btnToken: $("btnToken"), more: $("more"), btnMore: $("btnMore"),
-    ver: $("ver"), connState: $("connState"), queueCount: $("queueCount"), btnFlush: $("btnFlush"), btnReset: $("btnReset"),
+    ver: $("ver"), connState: $("connState"), queueCount: $("queueCount"), btnFlush: $("btnFlush"),
     editBar: $("editBar"), editText: $("editText"), btnDelete: $("btnDelete"), btnCancel: $("btnCancel"),
     segMinus: $("segMinus"), segPlus: $("segPlus"), signMark: $("signMark"), amount: $("amount"), btnCur: $("btnCur"), catwrap: $("catwrap"), cat: $("cat"), comment: $("comment"),
     btnClear: $("btnClear"), errAmount: $("errAmount"), errCat: $("errCat"), amountRow: document.querySelector(".amount-row"), tpl: $("tpl"), sheet: $("sheet"), sheetBack: $("sheetBack"), sheetClose: $("sheetClose"), sheetList: $("sheetList"), dToday: $("dToday"), dYest: $("dYest"), dOther: $("dOther"), dOtherText: $("dOtherText"), dateInput: $("dateInput"), status: $("status"), recentCount: $("recentCount"),
@@ -575,7 +574,6 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   el.btnCancel.addEventListener("click", editCancel);
   el.btnMore.addEventListener("click", function () { el.more.hidden = !el.more.hidden; });
   el.ver.textContent = APP_VERSION;
-  el.btnReset.addEventListener("click", function () { el.more.hidden = true; showSetup(""); });
   el.btnToken.addEventListener("click", function () {
     var v = el.tokenInput.value.trim().toLowerCase();
     if (!/^[0-9a-f]{48}$/.test(v)) { el.setupMsg.textContent = "Код: 48 знаков 0–9 и a–f"; return; }
