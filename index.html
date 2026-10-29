@@ -135,6 +135,16 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 .save.edit { background: var(--edit); color: var(--edit-fg); }
 .save:disabled { opacity: .6; }
 @media (prefers-reduced-motion: reduce) { .catwrap.shake, .sheet-back, .sheet-body, .recent-list button.new, .ptr.spin svg { animation: none; } }
+/* остаток по записям от последнего пересчёта и кнопка пересчёта (его «да» 29.10.2026: сверка наличных раз в месяц) */
+.bal { display: flex; align-items: center; gap: 10px; font-size: calc(14 * var(--u)); color: var(--muted); }
+.bal span { flex: 1; min-width: 0; }
+.bal b { color: var(--fg); font-variant-numeric: tabular-nums; font-weight: 600; }
+.bal button { height: 40px; padding: 0 14px; border: 1px solid var(--line); border-radius: 999px; background: var(--chip); color: var(--fg); font-weight: 600; font-size: calc(14 * var(--u)); white-space: nowrap; }
+.count-body { display: flex; flex-direction: column; gap: 12px; padding: 4px 6px 6px; }
+.count-body p { margin: 0; color: var(--muted); font-size: calc(14 * var(--u)); }
+.count-body p.err { color: var(--minus); font-weight: 600; }
+.seg-btn.on.neutral { background: var(--surface); color: var(--fg); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.count-sym { font-size: calc(24 * var(--u)); font-weight: 600; color: var(--muted); padding-right: 6px; }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 10px; font-size: calc(14 * var(--u)); }
 .card .line { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
 .card button { height: 36px; padding: 0 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--chip); font-size: calc(14 * var(--u)); }
@@ -213,6 +223,8 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 
   <div class="status" id="status"></div>
 
+  <div class="bal" id="bal"><span id="balText">Остаток по записям: пересчёта ещё не было</span><button id="btnCount" type="button">Пересчёт</button></div>
+
   <section class="recent">
     <div class="recent-head">Последние <span id="recentCount"></span></div>
     <div class="recent-hint" id="recentHint">Нажми запись, чтобы исправить или удалить</div>
@@ -230,11 +242,25 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   </div>
 </div>
 
+<div class="sheet" id="countSheet" hidden>
+  <div class="sheet-back" id="countBack"></div>
+  <div class="sheet-body" role="dialog" aria-label="Пересчёт наличных">
+    <div class="sheet-head"><span>Пересчёт наличных</span><button id="countClose" type="button">Закрыть</button></div>
+    <div class="count-body">
+      <p>Сколько наличных у тебя на руках сейчас. Всё, что уже записано, считается учтённым. Лучше пересчитывать в начале месяца.</p>
+      <div class="seg" role="group" aria-label="Валюта"><button class="seg-btn neutral on" id="cEUR" type="button">EUR</button><button class="seg-btn neutral" id="cUSD" type="button">USD</button></div>
+      <div class="amount-row"><input id="countAmount" class="amount" type="text" inputmode="decimal" placeholder="0" autocomplete="off" enterkeyhint="done" aria-label="Сколько на руках"><span class="count-sym" id="countSym">€</span></div>
+      <p id="countHint"></p>
+      <button class="save" id="btnCountSave" type="button">Записать пересчёт</button>
+    </div>
+  </div>
+</div>
+
 <script>
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "38"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "39"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Взял у Family Cash", "Чаевые", "Дал Насте"]; // шаблоны комментария под полем (его слово 27.10.2026): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -243,7 +269,9 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     editBar: $("editBar"), editText: $("editText"), btnDelete: $("btnDelete"), btnCancel: $("btnCancel"),
     segMinus: $("segMinus"), segPlus: $("segPlus"), signMark: $("signMark"), amount: $("amount"), btnCur: $("btnCur"), catwrap: $("catwrap"), cat: $("cat"), comment: $("comment"),
     btnClear: $("btnClear"), errAmount: $("errAmount"), errCat: $("errCat"), amountRow: document.querySelector(".amount-row"), tpl: $("tpl"), sheet: $("sheet"), sheetBack: $("sheetBack"), sheetClose: $("sheetClose"), sheetList: $("sheetList"), dToday: $("dToday"), dYest: $("dYest"), dOther: $("dOther"), dOtherText: $("dOtherText"), dateInput: $("dateInput"), status: $("status"), recentCount: $("recentCount"),
-    app: $("app"), ptr: $("ptr"), recentList: $("recentList"), recentHint: $("recentHint"), recentEmpty: $("recentEmpty"), btnMoreRecent: $("btnMoreRecent"), btnSave: $("btnSave") };
+    app: $("app"), ptr: $("ptr"), recentList: $("recentList"), recentHint: $("recentHint"), recentEmpty: $("recentEmpty"), btnMoreRecent: $("btnMoreRecent"), btnSave: $("btnSave"),
+    balText: $("balText"), btnCount: $("btnCount"), countSheet: $("countSheet"), countBack: $("countBack"), countClose: $("countClose"), cEUR: $("cEUR"), cUSD: $("cUSD"),
+    countAmount: $("countAmount"), countSym: $("countSym"), countHint: $("countHint"), btnCountSave: $("btnCountSave") };
 
   function ls(key, value) {
     try { if (value === undefined) { var v = localStorage.getItem(key); return v ? JSON.parse(v) : null; } if (value === null) localStorage.removeItem(key); else localStorage.setItem(key, JSON.stringify(value)); } catch (e) { return null; }
@@ -273,7 +301,8 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   var prefs = ls("cash_prefs") || {};
   var state = { sign: prefs.sign === "+" ? "+" : "-", cur: CURS.indexOf(prefs.cur) >= 0 ? prefs.cur : "EUR", cat: "", date: todayStr(),
     cats: ls("cash_cats") || [], recent: ls("cash_recent") || [], month: ls("cash_month") || null, queue: ls("cash_queue") || [], shown: 10, sending: false,
-    edit: null, armed: null, busy: false, flash: null }; // flash — только что записанная строка, подсвечивается секунду
+    edit: null, armed: null, busy: false, flash: null, // flash — только что записанная строка, подсвечивается секунду
+    balance: ls("cash_balance") || {}, count: null }; // balance — остаток по записям от пересчёта по валютам; count — открытый пересчёт {cur, id}
 
   // ---------- access code: once from the sign-in link (#t=…) or typed, then kept on this phone ----------
   function token(v) { if (v === undefined) return ls("cash_token"); ls("cash_token", v); }
@@ -404,7 +433,25 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     el.btnFlush.hidden = !state.queue.length;
     if (state.queue.length) setStatus("Не отправлено: " + state.queue.length + ". Появится связь — отправлю.", "warn");
   }
-  function renderAll() { renderTpl(); renderSign(); renderCur(); renderCats(); renderDate(); renderEdit(); renderQueue(); }
+  // остаток по записям от последнего пересчёта (с сервера) плюс ещё не отправленные записи этой валюты
+  function balNow(cur) {
+    var b = state.balance && state.balance[cur]; if (!b) return null;
+    var n = Number(b.now) || 0;
+    state.queue.forEach(function (q) { if (q.cur === cur) n += q.sign === "-" ? -q.amount : q.amount; });
+    return Math.round(n * 100) / 100;
+  }
+  function plain(n, cur) { return (n < 0 ? "−" : "") + nf.format(Math.abs(n)) + " " + (SYM[cur] || cur); }
+  function localDm(iso) { var d = new Date(iso); return isNaN(d) ? "" : String(d.getDate()).padStart(2, "0") + "." + String(d.getMonth() + 1).padStart(2, "0"); }
+  function renderBal() {
+    var keys = CURS.filter(function (k) { return state.balance && state.balance[k]; });
+    el.balText.textContent = "";
+    if (!keys.length) { el.balText.textContent = "Остаток по записям: пересчёта ещё не было"; return; }
+    el.balText.appendChild(document.createTextNode("По записям: "));
+    keys.forEach(function (k, i) { var b = document.createElement("b"); b.textContent = plain(balNow(k), k); if (i) el.balText.appendChild(document.createTextNode(" · ")); el.balText.appendChild(b); });
+    var last = keys.map(function (k) { return state.balance[k].at; }).sort().pop();
+    el.balText.appendChild(document.createTextNode(" · пересчёт " + localDm(last)));
+  }
+  function renderAll() { renderTpl(); renderSign(); renderCur(); renderCats(); renderDate(); renderEdit(); renderQueue(); renderBal(); }
 
   // ---------- the function in Supabase ----------
   function api(action, payload) {
@@ -440,7 +487,8 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
       if (names.length) { state.cats = names; ls("cash_cats", names); if (state.cat && names.indexOf(state.cat) < 0) state.cat = ""; renderCats(); }
       state.recent = j.recent || []; ls("cash_recent", state.recent);
       if (j.month) { state.month = j.month; ls("cash_month", state.month); }
-      renderRecent();
+      if (j.balance) { state.balance = j.balance; ls("cash_balance", state.balance); }
+      renderRecent(); renderBal();
       connected(true); el.setup.hidden = true;
       if (!state.queue.length) setStatus("", "");
       return true;
@@ -451,7 +499,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
       return false;
     });
   }
-  function enqueue(en) { state.queue.push(en); ls("cash_queue", state.queue); renderQueue(); renderRecent(); }
+  function enqueue(en) { state.queue.push(en); ls("cash_queue", state.queue); renderQueue(); renderRecent(); renderBal(); }
   function dequeue(id) { state.queue = state.queue.filter(function (q) { return q.id !== id; }); ls("cash_queue", state.queue); renderQueue(); renderRecent(); }
   function send(en) {
     setStatus("Записываю…", "");
@@ -552,6 +600,54 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     }).then(function () { state.busy = false; el.btnSave.disabled = false; });
   }
 
+  // ---------- пересчёт наличных: сколько на руках сейчас (для сверки месяца) ----------
+  function countCur(cur) {
+    state.count.cur = cur;
+    el.cEUR.classList.toggle("on", cur === "EUR"); el.cUSD.classList.toggle("on", cur === "USD");
+    el.countSym.textContent = SYM[cur] || cur;
+    var n = balNow(cur);
+    el.countHint.className = ""; el.countHint.textContent = n === null ? "Первый пересчёт в " + cur + ": с него начнётся сверка." : "По записям сейчас: " + plain(n, cur) + ".";
+  }
+  function countOpen() {
+    if (!token()) { showSetup(""); return; }
+    state.count = { cur: state.cur, id: uuid() }; // один id на открытие: повтор после сбоя связи не создаст второй пересчёт
+    el.countAmount.value = ""; el.amount.blur(); el.comment.blur();
+    countCur(state.count.cur); el.countSheet.hidden = false; el.btnCountSave.disabled = false;
+  }
+  function countClose() { el.countSheet.hidden = true; state.count = null; }
+  function parseCount(s) {
+    s = String(s || "").replace(/\s/g, "").replace(",", ".");
+    if (!/^\d+(\.\d{0,2})?$/.test(s)) return null;
+    var n = Math.round(Number(s) * 100) / 100;
+    return n >= 0 && n <= 1000000 ? n : null;
+  }
+  function countSave() {
+    if (!state.count || el.btnCountSave.disabled) return;
+    var a = parseCount(el.countAmount.value), cur = state.count.cur;
+    if (a === null) { el.countHint.className = "err"; el.countHint.textContent = "Введи сумму: 0, если наличных нет"; return; }
+    el.btnCountSave.disabled = true; el.countHint.className = ""; el.countHint.textContent = "Записываю…";
+    api("count", { id: state.count.id, currency: cur, amount: a }).then(function (j) {
+      countClose(); connected(true);
+      var msg = j.duplicate ? "Этот пересчёт уже записан"
+        : j.delta === null ? "Пересчёт записан: " + plain(a, cur) + ". С него начнётся сверка."
+        : Math.abs(j.delta) < 0.005 ? "Пересчёт записан: сходится с записями."
+        : "Пересчёт записан. Расхождение с записями: " + plain(j.delta, cur) + (j.delta < 0 ? " (денег меньше, чем по записям)" : " (денег больше, чем по записям)");
+      var kind = j.delta && Math.abs(j.delta) >= 0.005 ? "warn" : "";
+      setStatus(msg, kind);
+      refreshInit().then(function () { setStatus(msg, kind); }); // обновление данных не стирает итог пересчёта
+    }).catch(function (e) {
+      if (e.code === "unauthorized") { countClose(); token(null); showSetup("Код не подошёл"); return; }
+      el.btnCountSave.disabled = false; el.countHint.className = "err"; el.countHint.textContent = explain(e) + (e.code === "network" ? " — пересчёт не записан, попробуй ещё раз" : "");
+    });
+  }
+  el.btnCount.addEventListener("click", countOpen);
+  el.countBack.addEventListener("click", countClose);
+  el.countClose.addEventListener("click", countClose);
+  el.cEUR.addEventListener("click", function () { if (state.count) countCur("EUR"); });
+  el.cUSD.addEventListener("click", function () { if (state.count) countCur("USD"); });
+  el.btnCountSave.addEventListener("click", countSave);
+  el.countAmount.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); countSave(); } });
+
   el.segMinus.addEventListener("click", function () { state.sign = "-"; if (!state.edit) { prefs.sign = "-"; ls("cash_prefs", prefs); } renderSign(); });
   el.segPlus.addEventListener("click", function () { state.sign = "+"; if (!state.edit) { prefs.sign = "+"; ls("cash_prefs", prefs); } renderSign(); });
   el.btnCur.addEventListener("click", function () { state.cur = CURS[(CURS.indexOf(state.cur) + 1) % CURS.length]; if (!state.edit) { prefs.cur = state.cur; ls("cash_prefs", prefs); } renderCur(); renderSave(); });
@@ -561,7 +657,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   el.sheetBack.addEventListener("click", sheetClose);
   el.sheetClose.addEventListener("click", sheetClose);
   el.btnMoreRecent.addEventListener("click", function () { state.shown += 10; renderRecent(); }); // по 10 за раз (его слово 27.10.2026)
-  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !el.sheet.hidden) sheetClose(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") { if (!el.sheet.hidden) sheetClose(); if (!el.countSheet.hidden) countClose(); } });
   el.comment.addEventListener("input", renderTpl);
   el.btnClear.addEventListener("pointerdown", function (e) { e.preventDefault(); }); // не ронять клавиатуру, если она открыта
   el.btnClear.addEventListener("click", function () { el.comment.value = ""; renderTpl(); if (document.activeElement === el.comment) el.comment.focus(); });
