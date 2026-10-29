@@ -381,7 +381,10 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   }
   function refreshMonth() { // после правки или удаления — точный итог с сервера, без смены текста статуса
     if (!token()) return;
-    api("init").then(function (j) { if (j.month) { state.month = j.month; ls("cash_month", state.month); renderRecent(); } }).catch(function () { /* покажем при следующем обновлении */ });
+    api("init").then(function (j) {
+      if (j.month) { state.month = j.month; ls("cash_month", state.month); renderRecent(); }
+      if (j.balance) { state.balance = j.balance; ls("cash_balance", state.balance); renderBal(); }
+    }).catch(function () { /* покажем при следующем обновлении */ });
   }
   function twoLines(cat, comment) { // категория, под ней комментарий приглушённо; без комментария — прочерк
     var c = document.createElement("span"), top = document.createElement("span"), sub = document.createElement("span");
@@ -500,7 +503,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     });
   }
   function enqueue(en) { state.queue.push(en); ls("cash_queue", state.queue); renderQueue(); renderRecent(); renderBal(); }
-  function dequeue(id) { state.queue = state.queue.filter(function (q) { return q.id !== id; }); ls("cash_queue", state.queue); renderQueue(); renderRecent(); }
+  function dequeue(id) { state.queue = state.queue.filter(function (q) { return q.id !== id; }); ls("cash_queue", state.queue); renderQueue(); renderRecent(); renderBal(); }
   function send(en) {
     setStatus("Записываю…", "");
     return api("add", { id: en.id, sign: en.sign, amount: en.amount, currency: en.cur, category: en.cat, comment: en.comment, date: en.date }).then(function (j) {
@@ -511,7 +514,9 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
         state.recent.unshift({ id: j.id, booking_date: en.date, amount: signed, currency: en.cur, category: en.cat, counterparty: en.comment });
         ls("cash_recent", state.recent);
         if (state.month && String(en.date).slice(0, 7) === todayStr().slice(0, 7)) { state.month[en.cur] = Math.round(((state.month[en.cur] || 0) + signed) * 100) / 100; ls("cash_month", state.month); }
-        renderRecent();
+        var bal = state.balance && state.balance[en.cur]; // запись после пересчёта меняет остаток по записям
+        if (bal) { bal.now = Math.round(((Number(bal.now) || 0) + signed) * 100) / 100; ls("cash_balance", state.balance); }
+        renderRecent(); renderBal();
       }
       setStatus(j.sheet || j.duplicate ? "" : "Таблица обновится ночью", j.sheet || j.duplicate ? "" : "warn");
       return true;
@@ -607,6 +612,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     el.countSym.textContent = SYM[cur] || cur;
     var n = balNow(cur);
     el.countHint.className = ""; el.countHint.textContent = n === null ? "Первый пересчёт в " + cur + ": с него начнётся сверка." : "По записям сейчас: " + plain(n, cur) + ".";
+    if (state.queue.length) { el.countHint.className = "err"; el.countHint.textContent = "Сначала уйдут записи без связи (" + state.queue.length + "), потом пересчёт."; }
   }
   function countOpen() {
     if (!token()) { showSetup(""); return; }
@@ -623,11 +629,13 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   }
   function countSave() {
     if (!state.count || el.btnCountSave.disabled) return;
-    var a = parseCount(el.countAmount.value), cur = state.count.cur;
+    var a = parseCount(el.countAmount.value), req = state.count, cur = req.cur;
     if (a === null) { el.countHint.className = "err"; el.countHint.textContent = "Введи сумму: 0, если наличных нет"; return; }
+    // записи без связи должны уйти раньше пересчёта, иначе база посчитает их тратами после него
+    if (state.queue.length || state.sending) { flushQueue(); el.countHint.className = "err"; el.countHint.textContent = "Сначала отправляю записи без связи (" + state.queue.length + "). Нажми ещё раз, когда они уйдут."; return; }
     el.btnCountSave.disabled = true; el.countHint.className = ""; el.countHint.textContent = "Записываю…";
-    api("count", { id: state.count.id, currency: cur, amount: a }).then(function (j) {
-      countClose(); connected(true);
+    api("count", { id: req.id, currency: cur, amount: a, day: todayStr() }).then(function (j) {
+      if (state.count === req) countClose(); connected(true);
       var msg = j.duplicate ? "Этот пересчёт уже записан"
         : j.delta === null ? "Пересчёт записан: " + plain(a, cur) + ". С него начнётся сверка."
         : Math.abs(j.delta) < 0.005 ? "Пересчёт записан: сходится с записями."
@@ -637,7 +645,9 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
       refreshInit().then(function () { setStatus(msg, kind); }); // обновление данных не стирает итог пересчёта
     }).catch(function (e) {
       if (e.code === "unauthorized") { countClose(); token(null); showSetup("Код не подошёл"); return; }
-      el.btnCountSave.disabled = false; el.countHint.className = "err"; el.countHint.textContent = explain(e) + (e.code === "network" ? " — пересчёт не записан, попробуй ещё раз" : "");
+      if (state.count !== req) return; // лист закрыт или открыт заново — подсказка уже не про этот пересчёт
+      el.btnCountSave.disabled = false; el.countHint.className = "err";
+      el.countHint.textContent = explain(e) + (e.code === "network" ? ". Нажми «Записать пересчёт» ещё раз: второй пересчёт не появится." : "");
     });
   }
   el.btnCount.addEventListener("click", countOpen);
