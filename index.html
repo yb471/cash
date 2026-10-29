@@ -184,6 +184,9 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     <button id="btnCancel" type="button">Отмена</button>
   </div>
 
+  <!-- пересчёт нужен раз в месяц — наверху, частые поля ниже под пальцем (его слово 29.10.2026) -->
+  <div class="bal" id="bal"><span id="balText">Остаток по записям: пересчёта ещё не было</span><button id="btnCount" type="button">Пересчёт</button></div>
+
   <div class="dates" role="group" aria-label="Дата">
     <button class="date-btn on" id="dToday" type="button">Сегодня</button>
     <button class="date-btn" id="dYest" type="button">Вчера</button>
@@ -223,7 +226,6 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 
   <div class="status" id="status"></div>
 
-  <div class="bal" id="bal"><span id="balText">Остаток по записям: пересчёта ещё не было</span><button id="btnCount" type="button">Пересчёт</button></div>
 
   <section class="recent">
     <div class="recent-head">Последние <span id="recentCount"></span></div>
@@ -260,7 +262,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "39"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "40"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Взял у Family Cash", "Чаевые", "Дал Насте"]; // шаблоны комментария под полем (его слово 27.10.2026): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
