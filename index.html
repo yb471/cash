@@ -137,10 +137,13 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 @media (prefers-reduced-motion: reduce) { .catwrap.shake, .sheet-back, .sheet-body, .recent-list button.new, .ptr.spin svg { animation: none; } }
 /* остаток по записям от последнего пересчёта и кнопка пересчёта (его «да» 29.10.2026: сверка наличных раз в месяц) */
 .bal { display: flex; align-items: center; gap: 10px; font-size: calc(14 * var(--u)); color: var(--muted); }
-.bal-info { flex: 1; min-width: 0; display: grid; grid-template-columns: auto 1fr; column-gap: 10px; row-gap: 2px; align-items: baseline; font-variant-numeric: tabular-nums; }
+.bal-info { flex: 1; min-width: 0; display: grid; grid-template-columns: auto auto 1fr; column-gap: 8px; row-gap: 2px; align-items: baseline; font-variant-numeric: tabular-nums; }
 .bal-info .k { color: var(--muted); font-size: calc(13 * var(--u)); white-space: nowrap; }
 .bal-info b { color: var(--fg); font-weight: 600; white-space: nowrap; }
-.bal-d { font-weight: 700; }
+.bal-d { font-weight: 700; white-space: nowrap; }
+.bal button { flex: none; }
+@media (max-width: 374px) { /* узкий экран: три колонки цифр и кнопка помещаются в строку */
+  .bal { gap: 6px; } .bal-info { column-gap: 6px; } .bal-info b { font-size: calc(13 * var(--u)); } .bal-info .k { font-size: calc(12 * var(--u)); } .bal button { padding: 0 10px; } }
 .bal-d.ok { color: var(--plus); }
 .bal-d.bad { color: var(--minus); }
 .bal button { height: 40px; padding: 0 14px; border: 1px solid var(--line); border-radius: 999px; background: var(--chip); color: var(--fg); font-weight: 600; font-size: calc(14 * var(--u)); white-space: nowrap; }
@@ -266,7 +269,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "42"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "43"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Взял у Family Cash", "Чаевые", "Дал Насте"]; // шаблоны комментария под полем (его слово 27.10.2026): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -453,17 +456,18 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   function localDm(iso) { var d = new Date(iso); return isNaN(d) ? "" : String(d.getDate()).padStart(2, "0") + "." + String(d.getMonth() + 1).padStart(2, "0"); }
   function signed(n, cur) { return (n > 0.004 ? "+" : n < -0.004 ? "−" : "") + nf.format(Math.abs(n)) + " " + (SYM[cur] || cur); }
   function node(tag, cls, text) { var x = document.createElement(tag); if (cls) x.className = cls; if (text !== undefined) x.textContent = text; return x; }
-  // вверху цифрами (его слово 31.10.2026), подписи слева, цифры колонкой: «По записям 80,00 €» и «Сверка 31.10 Δ −18,00 €» (кнопка «Сверка» — его слово 31.10.2026, было «Пересчёт»)
-  // (Δ — пересчёт минус записи: зелёная — сходится, красная — нет; у первого пересчёта Δ нет — показана его сумма)
+  // вверху цифрами (его слово 31.10.2026), подписи слева, суммы колонкой: «По записям 80,00 €» и «Сверка 31.10 80,00 € Δ −18,00 €»
+  // — внесённая при сверке сумма видна (его слово 31.10.2026); кнопка «Сверка» — его слово 31.10.2026, было «Пересчёт»
+  // (Δ — сверка минус записи: зелёная — сходится, красная — нет; у первой сверки Δ нет)
   function renderBal() {
     var keys = CURS.filter(function (k) { return state.balance && state.balance[k]; });
     el.balText.textContent = "";
     if (!keys.length) { el.balText.appendChild(node("span", "k", "Сверки ещё не было")); return; }
     keys.forEach(function (k) {
       var b = state.balance[k], d = b.delta !== null && b.delta !== undefined && isFinite(b.delta) ? Number(b.delta) : null;
-      el.balText.appendChild(node("span", "k", "По записям")); el.balText.appendChild(node("b", "", plain(balNow(k), k)));
-      el.balText.appendChild(node("span", "k", "Сверка " + localDm(b.at)));
-      el.balText.appendChild(d === null ? node("b", "", plain(Number(b.count) || 0, k)) : node("b", "bal-d " + (Math.abs(d) < 0.005 ? "ok" : "bad"), "Δ " + signed(d, k)));
+      el.balText.appendChild(node("span", "k", "По записям")); el.balText.appendChild(node("b", "", plain(balNow(k), k))); el.balText.appendChild(node("span", ""));
+      el.balText.appendChild(node("span", "k", "Сверка " + localDm(b.at))); el.balText.appendChild(node("b", "", plain(Number(b.count) || 0, k)));
+      el.balText.appendChild(d === null ? node("span", "") : node("b", "bal-d " + (Math.abs(d) < 0.005 ? "ok" : "bad"), "Δ " + signed(d, k)));
     });
   }
   function renderAll() { renderTpl(); renderSign(); renderCur(); renderCats(); renderDate(); renderEdit(); renderQueue(); renderBal(); }
