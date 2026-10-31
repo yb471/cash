@@ -1,5 +1,5 @@
 // Burda Finance — service worker: оболочка приложения из кэша (мгновенный запуск и работа без сети), запросы к базе — только по сети
-const CACHE = "cash-v50";
+const CACHE = "cash-v51";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon-180.png", "./icon-192.png", "./icon-512.png"];
 // оболочка берётся с сервера в обход HTTP-кэша (GitHub Pages отдаёт max-age 600, иначе в новый кэш могла лечь старая страница)
 self.addEventListener("install", (e) => {

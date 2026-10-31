@@ -121,6 +121,9 @@ body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top 
 .recent-list button.new { animation: rowin 1.2s ease-out; } /* новая запись подсвечивается на секунду */
 @keyframes rowin { from { background: var(--chip); } to { background: transparent; } }
 .recent-list button.queued { opacity: .75; }
+/* заголовок месяца с итогом месяца (его слово 31.10.2026), прилипает к верху при прокрутке — видно, чей это месяц */
+.recent-list .mh { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 1; display: flex; justify-content: space-between; gap: 10px; padding: 12px 4px 6px; background: var(--bg); border-bottom: 1px solid var(--line); font-size: calc(14 * var(--u)); font-weight: 700; color: var(--fg); }
+.recent-list .mh span:last-child { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .recent-list button.queued .d { color: var(--warn); }
 .recent-list .d { color: var(--muted); font-variant-numeric: tabular-nums; }
 .recent-list .c { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
@@ -275,7 +278,7 @@ body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top 
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "50"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "51"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Взял у Family Cash", "Чаевые", "Дал Насте"]; // шаблоны комментария под полем (его слово 27.10.2026): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -317,13 +320,13 @@ body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top 
   var state = { sign: prefs.sign === "+" ? "+" : "-", cur: CURS.indexOf(prefs.cur) >= 0 ? prefs.cur : "EUR", cat: "", date: todayStr(),
     cats: ls("cash_cats") || [], recent: ls("cash_recent") || [], queue: ls("cash_queue") || [], shown: 10, sending: false,
     edit: null, armed: null, busy: false, flash: null, // flash — только что записанная строка, подсвечивается секунду
-    balance: ls("cash_balance") || {}, count: null }; // balance — остаток по записям от пересчёта по валютам; count — открытый пересчёт {cur, id}
+    balance: ls("cash_balance") || {}, count: null, months: ls("cash_months") || {} }; // months — итоги месяцев {ГГГГ-ММ: {валюта: сумма}} // balance — остаток по записям от пересчёта по валютам; count — открытый пересчёт {cur, id}
 
   // ---------- access code: once from the sign-in link (#t=…) or typed, then kept on this phone ----------
   function token(v) {
     if (v === undefined) return ls("cash_token");
     ls("cash_token", v);
-    if (v === null) { ls("cash_recent", null); ls("cash_balance", null); state.recent = []; state.balance = {}; } // без кода — никаких чужих данных на экране и в памяти
+    if (v === null) { ls("cash_recent", null); ls("cash_balance", null); ls("cash_months", null); state.recent = []; state.balance = {}; state.months = {}; } // без кода — никаких чужих данных на экране и в памяти
   }
   (function fromLink() {
     var m = (location.hash || "").match(/^#t=([0-9a-f]{48})$/i);
@@ -393,6 +396,7 @@ body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top 
     if (!token()) return;
     api("init").then(function (j) {
       if (j.balance) { state.balance = j.balance; ls("cash_balance", state.balance); renderBal(); }
+      if (j.months) { state.months = j.months; ls("cash_months", state.months); renderRecent(); }
     }).catch(function () { /* покажем при следующем обновлении */ });
   }
   function twoLines(cat, comment) { // категория, под ней комментарий приглушённо; без комментария — прочерк
@@ -400,6 +404,18 @@ body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top 
     c.className = "c"; top.textContent = cat || "—"; sub.className = "sub"; sub.textContent = comment || "—";
     c.appendChild(top); c.appendChild(sub);
     return c;
+  }
+  // «Последние» по дате записи, свежие сверху (его слово 31.10.2026)
+  function sortRecent() { state.recent.sort(function (a, b) { return String(b.booking_date).localeCompare(String(a.booking_date)) || (b.id - a.id); }); }
+  var MONTHS = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
+  function monthHead(m) { // «Октябрь 2026 · −626,00 €»: итог месяца с сервера, пока его нет — по загруженным записям
+    var t = state.months && state.months[m];
+    if (!t) { t = {}; state.recent.forEach(function (r) { if (String(r.booking_date).slice(0, 7) === m) t[r.currency] = Math.round(((t[r.currency] || 0) + Number(r.amount)) * 100) / 100; }); }
+    var li = document.createElement("li"); li.className = "mh";
+    var name = document.createElement("span"); name.textContent = MONTHS[Number(m.slice(5, 7)) - 1] + " " + m.slice(0, 4);
+    var sum = document.createElement("span"); sum.textContent = CURS.filter(function (k) { return t[k]; }).map(function (k) { return money(t[k], k); }).join(" · ") || "0,00 €";
+    li.appendChild(name); li.appendChild(sum);
+    return li;
   }
   function renderRecent() {
     el.recentCount.textContent = (state.recent.length || state.queue.length) ? "(" + (state.recent.length + state.queue.length) + ")" : "";
@@ -417,7 +433,10 @@ body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top 
       b.addEventListener("click", function () { setStatus("Ещё не отправлено: появится связь — уйдёт само. Исправить можно после отправки.", "warn"); flushQueue(); });
       li.appendChild(b); el.recentList.appendChild(li);
     });
+    var lastMonth = "";
     state.recent.slice(0, state.shown).forEach(function (r) {
+      var m = String(r.booking_date).slice(0, 7);
+      if (m !== lastMonth) { el.recentList.appendChild(monthHead(m)); lastMonth = m; }
       var li = document.createElement("li"), b = document.createElement("button"), n = Number(r.amount);
       b.type = "button"; b.className = (state.edit && state.edit.id === r.id ? "editing" : "") + (fl && fl.dbId === r.id ? " new" : "");
       var d = document.createElement("span"); d.className = "d"; d.textContent = dmy(r.booking_date);
@@ -506,7 +525,8 @@ body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top 
     return api("init").then(function (j) {
       var names = (j.categories || []).filter(Boolean);
       if (names.length) { state.cats = names; ls("cash_cats", names); if (state.cat && names.indexOf(state.cat) < 0) state.cat = ""; renderCats(); }
-      state.recent = j.recent || []; ls("cash_recent", state.recent);
+      state.recent = j.recent || []; sortRecent(); ls("cash_recent", state.recent);
+      if (j.months) { state.months = j.months; ls("cash_months", state.months); }
       if (j.balance) { state.balance = j.balance; ls("cash_balance", state.balance); }
       renderRecent(); renderBal();
       connected(true); el.setup.hidden = true; document.body.classList.remove("locked");
@@ -529,7 +549,9 @@ body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top 
       if (!j.duplicate && j.id && !state.recent.some(function (r) { return r.id === j.id; })) {
         var signed = en.sign === "-" ? -en.amount : en.amount;
         state.recent.unshift({ id: j.id, booking_date: en.date, amount: signed, currency: en.cur, category: en.cat, counterparty: en.comment });
-        ls("cash_recent", state.recent);
+        sortRecent(); ls("cash_recent", state.recent);
+        var mk = String(en.date).slice(0, 7); state.months = state.months || {}; state.months[mk] = state.months[mk] || {}; // итог месяца сразу, точный — с сервера
+        state.months[mk][en.cur] = Math.round(((state.months[mk][en.cur] || 0) + signed) * 100) / 100; ls("cash_months", state.months);
         var bal = state.balance && state.balance[en.cur]; // запись после сверки меняет «В наличии» сразу, точная цифра — с сервера
         if (bal && en.date >= countDay(bal)) { bal.now = Math.round(((Number(bal.now) || 0) + signed) * 100) / 100; ls("cash_balance", state.balance); }
         renderRecent(); renderBal(); refreshBalance();
@@ -596,7 +618,7 @@ body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top 
     state.busy = true; el.btnSave.disabled = true; setStatus("Сохраняю…", "");
     api("update", { id: id, sign: f.sign, amount: f.amount, currency: f.cur, category: f.cat, comment: f.comment, date: f.date }).then(function (j) {
       state.recent = state.recent.map(function (r) { return r.id === id ? { id: id, booking_date: f.date, amount: f.sign === "-" ? -f.amount : f.amount, currency: f.cur, category: f.cat, counterparty: f.comment } : r; });
-      ls("cash_recent", state.recent);
+      sortRecent(); ls("cash_recent", state.recent);
       resetForm(); connected(true); refreshBalance();
       setStatus(j.sheet ? "" : "Таблица обновится при следующей правке", j.sheet ? "" : "warn");
     }).catch(function (e) {
