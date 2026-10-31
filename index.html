@@ -137,8 +137,12 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 @media (prefers-reduced-motion: reduce) { .catwrap.shake, .sheet-back, .sheet-body, .recent-list button.new, .ptr.spin svg { animation: none; } }
 /* остаток по записям от последнего пересчёта и кнопка пересчёта (его «да» 29.10.2026: сверка наличных раз в месяц) */
 .bal { display: flex; align-items: center; gap: 10px; font-size: calc(14 * var(--u)); color: var(--muted); }
-.bal span { flex: 1; min-width: 0; }
-.bal b { color: var(--fg); font-variant-numeric: tabular-nums; font-weight: 600; }
+.bal-info { flex: 1; min-width: 0; display: grid; grid-template-columns: auto 1fr; column-gap: 10px; row-gap: 2px; align-items: baseline; font-variant-numeric: tabular-nums; }
+.bal-info .k { color: var(--muted); font-size: calc(13 * var(--u)); white-space: nowrap; }
+.bal-info b { color: var(--fg); font-weight: 600; white-space: nowrap; }
+.bal-d { font-weight: 700; }
+.bal-d.ok { color: var(--plus); }
+.bal-d.bad { color: var(--minus); }
 .bal button { height: 40px; padding: 0 14px; border: 1px solid var(--line); border-radius: 999px; background: var(--chip); color: var(--fg); font-weight: 600; font-size: calc(14 * var(--u)); white-space: nowrap; }
 .count-body { display: flex; flex-direction: column; gap: 12px; padding: 4px 6px 6px; }
 .count-body p { margin: 0; color: var(--muted); font-size: calc(14 * var(--u)); }
@@ -185,7 +189,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   </div>
 
   <!-- пересчёт нужен раз в месяц — наверху, частые поля ниже под пальцем (его слово 29.10.2026) -->
-  <div class="bal" id="bal"><span id="balText">Остаток по записям: пересчёта ещё не было</span><button id="btnCount" type="button">Пересчёт</button></div>
+  <div class="bal" id="bal"><div class="bal-info" id="balText"></div><button id="btnCount" type="button">Сверка</button></div>
 
   <div class="dates" role="group" aria-label="Дата">
     <button class="date-btn on" id="dToday" type="button">Сегодня</button>
@@ -246,14 +250,14 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 
 <div class="sheet" id="countSheet" hidden>
   <div class="sheet-back" id="countBack"></div>
-  <div class="sheet-body" role="dialog" aria-label="Пересчёт наличных">
-    <div class="sheet-head"><span>Пересчёт наличных</span><button id="countClose" type="button">Закрыть</button></div>
+  <div class="sheet-body" role="dialog" aria-label="Сверка наличных">
+    <div class="sheet-head"><span>Сверка наличных</span><button id="countClose" type="button">Закрыть</button></div>
     <div class="count-body">
-      <p>Сколько наличных у тебя на руках сейчас. Всё, что уже записано, считается учтённым. Лучше пересчитывать в начале месяца.</p>
+      <p>Сколько наличных у тебя на руках сейчас. Всё, что уже записано, считается учтённым. Лучше сверять в начале месяца.</p>
       <div class="seg" role="group" aria-label="Валюта"><button class="seg-btn neutral on" id="cEUR" type="button">EUR</button><button class="seg-btn neutral" id="cUSD" type="button">USD</button></div>
       <div class="amount-row"><input id="countAmount" class="amount" type="text" inputmode="decimal" placeholder="0" autocomplete="off" enterkeyhint="done" aria-label="Сколько на руках"><span class="count-sym" id="countSym">€</span></div>
       <p id="countHint"></p>
-      <button class="save" id="btnCountSave" type="button">Записать пересчёт</button>
+      <button class="save" id="btnCountSave" type="button">Записать сверку</button>
     </div>
   </div>
 </div>
@@ -262,7 +266,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "40"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "42"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Взял у Family Cash", "Чаевые", "Дал Насте"]; // шаблоны комментария под полем (его слово 27.10.2026): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -447,14 +451,20 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   }
   function plain(n, cur) { return (n < 0 ? "−" : "") + nf.format(Math.abs(n)) + " " + (SYM[cur] || cur); }
   function localDm(iso) { var d = new Date(iso); return isNaN(d) ? "" : String(d.getDate()).padStart(2, "0") + "." + String(d.getMonth() + 1).padStart(2, "0"); }
+  function signed(n, cur) { return (n > 0.004 ? "+" : n < -0.004 ? "−" : "") + nf.format(Math.abs(n)) + " " + (SYM[cur] || cur); }
+  function node(tag, cls, text) { var x = document.createElement(tag); if (cls) x.className = cls; if (text !== undefined) x.textContent = text; return x; }
+  // вверху цифрами (его слово 31.10.2026), подписи слева, цифры колонкой: «По записям 80,00 €» и «Сверка 31.10 Δ −18,00 €» (кнопка «Сверка» — его слово 31.10.2026, было «Пересчёт»)
+  // (Δ — пересчёт минус записи: зелёная — сходится, красная — нет; у первого пересчёта Δ нет — показана его сумма)
   function renderBal() {
     var keys = CURS.filter(function (k) { return state.balance && state.balance[k]; });
     el.balText.textContent = "";
-    if (!keys.length) { el.balText.textContent = "Остаток по записям: пересчёта ещё не было"; return; }
-    el.balText.appendChild(document.createTextNode("По записям: "));
-    keys.forEach(function (k, i) { var b = document.createElement("b"); b.textContent = plain(balNow(k), k); if (i) el.balText.appendChild(document.createTextNode(" · ")); el.balText.appendChild(b); });
-    var last = keys.map(function (k) { return state.balance[k].at; }).sort().pop();
-    el.balText.appendChild(document.createTextNode(" · пересчёт " + localDm(last)));
+    if (!keys.length) { el.balText.appendChild(node("span", "k", "Сверки ещё не было")); return; }
+    keys.forEach(function (k) {
+      var b = state.balance[k], d = b.delta !== null && b.delta !== undefined && isFinite(b.delta) ? Number(b.delta) : null;
+      el.balText.appendChild(node("span", "k", "По записям")); el.balText.appendChild(node("b", "", plain(balNow(k), k)));
+      el.balText.appendChild(node("span", "k", "Сверка " + localDm(b.at)));
+      el.balText.appendChild(d === null ? node("b", "", plain(Number(b.count) || 0, k)) : node("b", "bal-d " + (Math.abs(d) < 0.005 ? "ok" : "bad"), "Δ " + signed(d, k)));
+    });
   }
   function renderAll() { renderTpl(); renderSign(); renderCur(); renderCats(); renderDate(); renderEdit(); renderQueue(); renderBal(); }
 
@@ -613,8 +623,8 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     el.cEUR.classList.toggle("on", cur === "EUR"); el.cUSD.classList.toggle("on", cur === "USD");
     el.countSym.textContent = SYM[cur] || cur;
     var n = balNow(cur);
-    el.countHint.className = ""; el.countHint.textContent = n === null ? "Первый пересчёт в " + cur + ": с него начнётся сверка." : "По записям сейчас: " + plain(n, cur) + ".";
-    if (state.queue.length) { el.countHint.className = "err"; el.countHint.textContent = "Сначала уйдут записи без связи (" + state.queue.length + "), потом пересчёт."; }
+    el.countHint.className = ""; el.countHint.textContent = n === null ? "Первая сверка в " + cur + ": точка отсчёта." : "По записям сейчас: " + plain(n, cur) + ".";
+    if (state.queue.length) { el.countHint.className = "err"; el.countHint.textContent = "Сначала уйдут записи без связи (" + state.queue.length + "), потом сверка."; }
   }
   function countOpen() {
     if (!token()) { showSetup(""); return; }
@@ -638,18 +648,21 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     el.btnCountSave.disabled = true; el.countHint.className = ""; el.countHint.textContent = "Записываю…";
     api("count", { id: req.id, currency: cur, amount: a, day: todayStr() }).then(function (j) {
       if (state.count === req) countClose(); connected(true);
-      var msg = j.duplicate ? "Этот пересчёт уже записан"
-        : j.delta === null ? "Пересчёт записан: " + plain(a, cur) + ". С него начнётся сверка."
-        : Math.abs(j.delta) < 0.005 ? "Пересчёт записан: сходится с записями."
-        : "Пересчёт записан. Расхождение с записями: " + plain(j.delta, cur) + (j.delta < 0 ? " (денег меньше, чем по записям)" : " (денег больше, чем по записям)");
+      var msg = j.duplicate ? "Эта сверка уже записана"
+        : "Сверка " + plain(a, cur) + (j.delta === null ? " · точка отсчёта" : " · Δ " + signed(j.delta, cur));
       var kind = j.delta && Math.abs(j.delta) >= 0.005 ? "warn" : "";
+      if (!j.duplicate) { // строка вверху сразу, не дожидаясь обновления данных
+        state.balance = state.balance || {};
+        state.balance[cur] = { now: a, count: a, at: new Date().toISOString(), delta: j.delta };
+        ls("cash_balance", state.balance); renderBal();
+      }
       setStatus(msg, kind);
       refreshInit().then(function () { setStatus(msg, kind); }); // обновление данных не стирает итог пересчёта
     }).catch(function (e) {
       if (e.code === "unauthorized") { countClose(); token(null); showSetup("Код не подошёл"); return; }
       if (state.count !== req) return; // лист закрыт или открыт заново — подсказка уже не про этот пересчёт
       el.btnCountSave.disabled = false; el.countHint.className = "err";
-      el.countHint.textContent = explain(e) + (e.code === "network" ? ". Нажми «Записать пересчёт» ещё раз: второй пересчёт не появится." : "");
+      el.countHint.textContent = explain(e) + (e.code === "network" ? ". Нажми «Записать сверку» ещё раз: второй не появится." : "");
     });
   }
   el.btnCount.addEventListener("click", countOpen);
