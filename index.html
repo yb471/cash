@@ -111,8 +111,7 @@ body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top 
 .status:empty { display: none; }
 .status.warn { color: var(--warn); }
 .status.err { color: var(--minus); }
-.recent { border-top: 1px solid var(--line); padding-top: 6px; margin-top: 18px; } /* чуть больше воздуха после кнопки (его слово 27.10.2026) */
-.recent-head { color: var(--muted); font-size: calc(14 * var(--u)); padding: 6px 0; display: flex; gap: 6px; align-items: center; }
+.recent { margin-top: 18px; } /* чуть больше воздуха после кнопки (его слово 27.10.2026); без полосы и заголовка (его слово 31.10.2026) */
 .recent-hint { font-size: calc(13 * var(--u)); color: var(--muted); padding: 0 4px 6px; }
 .recent-list { list-style: none; margin: 0; padding: 0 0 6px; display: flex; flex-direction: column; gap: 2px; }
 .recent-list button { width: 100%; display: grid; grid-template-columns: 44px 1fr auto; gap: 8px; font-size: calc(14 * var(--u)); align-items: start; border: 0; background: transparent; padding: 6px 4px; border-radius: 8px; text-align: left; } /* дата, категория и комментарий, сумма в конце (его слово 27.10.2026) */
@@ -244,7 +243,6 @@ body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top 
 
 
   <section class="recent">
-    <div class="recent-head">Последние <span id="recentCount"></span></div>
     <div class="recent-hint" id="recentEmpty" hidden>Пока пусто</div>
     <ul class="recent-list" id="recentList"></ul>
     <button class="more-btn" id="btnMoreRecent" type="button" hidden>Показать ещё</button>
@@ -277,7 +275,7 @@ body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top 
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "54"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "55"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Взял у Family Cash", "Чаевые", "Дал Насте"]; // шаблоны комментария под полем (его слово 27.10.2026): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -285,7 +283,7 @@ body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top 
     ver: $("ver"), connState: $("connState"), queueCount: $("queueCount"), btnFlush: $("btnFlush"),
     editBar: $("editBar"), editText: $("editText"), btnDelete: $("btnDelete"), btnCancel: $("btnCancel"),
     segMinus: $("segMinus"), segPlus: $("segPlus"), signMark: $("signMark"), amount: $("amount"), btnCur: $("btnCur"), catwrap: $("catwrap"), cat: $("cat"), comment: $("comment"),
-    btnClear: $("btnClear"), errAmount: $("errAmount"), errCat: $("errCat"), amountRow: document.querySelector(".amount-row"), tpl: $("tpl"), sheet: $("sheet"), sheetBack: $("sheetBack"), sheetClose: $("sheetClose"), sheetList: $("sheetList"), dToday: $("dToday"), dYest: $("dYest"), dOther: $("dOther"), dOtherText: $("dOtherText"), dateInput: $("dateInput"), status: $("status"), recentCount: $("recentCount"),
+    btnClear: $("btnClear"), errAmount: $("errAmount"), errCat: $("errCat"), amountRow: document.querySelector(".amount-row"), tpl: $("tpl"), sheet: $("sheet"), sheetBack: $("sheetBack"), sheetClose: $("sheetClose"), sheetList: $("sheetList"), dToday: $("dToday"), dYest: $("dYest"), dOther: $("dOther"), dOtherText: $("dOtherText"), dateInput: $("dateInput"), status: $("status"),
     app: $("app"), ptr: $("ptr"), recentList: $("recentList"), recentEmpty: $("recentEmpty"), btnMoreRecent: $("btnMoreRecent"), btnSave: $("btnSave"),
     balText: $("balText"), btnCount: $("btnCount"), countSheet: $("countSheet"), countBack: $("countBack"), countClose: $("countClose"), cEUR: $("cEUR"), cUSD: $("cUSD"),
     countAmount: $("countAmount"), countTitle: $("countTitle"), countSym: $("countSym"), countHint: $("countHint"), btnCountSave: $("btnCountSave") };
@@ -417,7 +415,6 @@ body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top 
     return li;
   }
   function renderRecent() {
-    el.recentCount.textContent = (state.recent.length || state.queue.length) ? "(" + (state.recent.length + state.queue.length) + ")" : "";
     var list = state.recent, mon = function (r) { return String(r.booking_date).slice(0, 7); };
     if (list.length >= 200) { var cut = list.filter(function (r) { return mon(r) !== mon(list[list.length - 1]); }); if (cut.length) list = cut; } // последний месяц за пределом 200 записей мог прийти не целиком
     var n = Math.min(state.shown, list.length); // по 10, но месяц всегда целиком (его слово 31.10.2026)
