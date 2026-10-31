@@ -270,7 +270,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "44"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "45"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Взял у Family Cash", "Чаевые", "Дал Насте"]; // шаблоны комментария под полем (его слово 27.10.2026): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -459,9 +459,9 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   function localDm(iso) { var d = new Date(iso); return isNaN(d) ? "" : String(d.getDate()).padStart(2, "0") + "." + String(d.getMonth() + 1).padStart(2, "0"); }
   function signed(n, cur) { return (n > 0.004 ? "+" : n < -0.004 ? "−" : "") + nf.format(Math.abs(n)) + " " + (SYM[cur] || cur); }
   function node(tag, cls, text) { var x = document.createElement(tag); if (cls) x.className = cls; if (text !== undefined) x.textContent = text; return x; }
-  // вверху (его слово 31.10.2026): «В наличии (по записям): 80,00 €» — остаток сейчас, меняется после каждой записи, правки и
-  // удаления; «Сверка 31.10: 80,00 € Δ −18,00 €» — внесённая сумма и расхождение с записями (Δ зелёная — сходится, красная —
-  // нет; у первой сверки Δ нет). Кнопка «Сверка» — его слово 31.10.2026, было «Пересчёт»
+  // вверху (его слово 31.10.2026): «В наличии: 77,00 €» — остаток по записям сейчас, меняется после каждой записи, правки и
+  // удаления; «Сверка 31.10: Δ −18,00 €» — расхождение последней сверки с записями (зелёная — сходится, красная — нет;
+  // у первой сверки сравнивать не с чем — «Δ —»). Кнопка «Сверка» — его слово 31.10.2026, было «Пересчёт»
   function renderBal() {
     var keys = CURS.filter(function (k) { return state.balance && state.balance[k]; });
     el.balText.textContent = "";
@@ -469,9 +469,9 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     keys.forEach(function (k) {
       var b = state.balance[k], d = b.delta !== null && b.delta !== undefined && isFinite(b.delta) ? Number(b.delta) : null;
       var l1 = node("div", "bal-l"), l2 = node("div", "bal-l");
-      l1.appendChild(node("span", "k", "В наличии (по записям):")); l1.appendChild(node("b", "", plain(balNow(k), k)));
-      l2.appendChild(node("span", "k", "Сверка " + localDm(b.at) + ":")); l2.appendChild(node("b", "", plain(Number(b.count) || 0, k)));
-      if (d !== null) l2.appendChild(node("b", "bal-d " + (Math.abs(d) < 0.005 ? "ok" : "bad"), "Δ " + signed(d, k)));
+      l1.appendChild(node("span", "k", "В наличии:")); l1.appendChild(node("b", "", plain(balNow(k), k)));
+      l2.appendChild(node("span", "k", "Сверка " + localDm(b.at) + ":"));
+      l2.appendChild(d === null ? node("span", "k", "Δ —") : node("b", "bal-d " + (Math.abs(d) < 0.005 ? "ok" : "bad"), "Δ " + signed(d, k)));
       el.balText.appendChild(l1); el.balText.appendChild(l2);
     });
   }
