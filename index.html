@@ -245,7 +245,6 @@ body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top 
 
   <section class="recent">
     <div class="recent-head">Последние <span id="recentCount"></span></div>
-    <div class="recent-hint" id="recentHint">Нажми запись, чтобы исправить или удалить</div>
     <div class="recent-hint" id="recentEmpty" hidden>Пока пусто</div>
     <ul class="recent-list" id="recentList"></ul>
     <button class="more-btn" id="btnMoreRecent" type="button" hidden>Показать ещё</button>
@@ -278,7 +277,7 @@ body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top 
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "52"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "53"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Взял у Family Cash", "Чаевые", "Дал Насте"]; // шаблоны комментария под полем (его слово 27.10.2026): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -287,7 +286,7 @@ body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top 
     editBar: $("editBar"), editText: $("editText"), btnDelete: $("btnDelete"), btnCancel: $("btnCancel"),
     segMinus: $("segMinus"), segPlus: $("segPlus"), signMark: $("signMark"), amount: $("amount"), btnCur: $("btnCur"), catwrap: $("catwrap"), cat: $("cat"), comment: $("comment"),
     btnClear: $("btnClear"), errAmount: $("errAmount"), errCat: $("errCat"), amountRow: document.querySelector(".amount-row"), tpl: $("tpl"), sheet: $("sheet"), sheetBack: $("sheetBack"), sheetClose: $("sheetClose"), sheetList: $("sheetList"), dToday: $("dToday"), dYest: $("dYest"), dOther: $("dOther"), dOtherText: $("dOtherText"), dateInput: $("dateInput"), status: $("status"), recentCount: $("recentCount"),
-    app: $("app"), ptr: $("ptr"), recentList: $("recentList"), recentHint: $("recentHint"), recentEmpty: $("recentEmpty"), btnMoreRecent: $("btnMoreRecent"), btnSave: $("btnSave"),
+    app: $("app"), ptr: $("ptr"), recentList: $("recentList"), recentEmpty: $("recentEmpty"), btnMoreRecent: $("btnMoreRecent"), btnSave: $("btnSave"),
     balText: $("balText"), btnCount: $("btnCount"), countSheet: $("countSheet"), countBack: $("countBack"), countClose: $("countClose"), cEUR: $("cEUR"), cUSD: $("cUSD"),
     countAmount: $("countAmount"), countTitle: $("countTitle"), countSym: $("countSym"), countHint: $("countHint"), btnCountSave: $("btnCountSave") };
 
@@ -420,7 +419,7 @@ body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top 
   function renderRecent() {
     el.recentCount.textContent = (state.recent.length || state.queue.length) ? "(" + (state.recent.length + state.queue.length) + ")" : "";
     el.btnMoreRecent.hidden = state.recent.length <= state.shown;
-    var empty = !state.recent.length && !state.queue.length; el.recentEmpty.hidden = !empty; el.recentHint.hidden = empty;
+    var empty = !state.recent.length && !state.queue.length; el.recentEmpty.hidden = !empty;
     el.recentList.innerHTML = "";
     var fl = state.flash && Date.now() < state.flash.until ? state.flash : null;
     state.queue.slice().reverse().forEach(function (q) { // не отправленные — сверху, с часами; править нельзя, пока не ушли
