@@ -37,6 +37,8 @@ button, input { font: inherit; color: inherit; }
 button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 [hidden] { display: none !important; }
+/* без кода доступа видно только название и поле кода (его слово 31.10.2026) */
+body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top .section, body.locked .gear { display: none !important; }
 .app { min-height: 100%; display: flex; flex-direction: column; gap: 12px; max-width: 520px; margin: 0 auto;
   padding-top: calc(8px + env(safe-area-inset-top, 0px)); padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
@@ -177,7 +179,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 
   <section class="card" id="setup" hidden>
     <h2>Код доступа</h2>
-    <p>Один раз: вставь код доступа. Он останется на этом телефоне. Новый код выдаёт Claude в чате Architekt YB.</p>
+    <p>Вставь код доступа — один раз, он останется в этом приложении. Код лежит в «Паролях» iPhone; если его там нет, новый выдаёт Claude.</p>
     <input id="tokenInput" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="48 знаков" aria-label="Код доступа">
     <div class="line"><span id="setupMsg"></span><button class="primary" id="btnToken" type="button">Сохранить</button></div>
   </section>
@@ -273,7 +275,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "47"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "48"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Взял у Family Cash", "Чаевые", "Дал Насте"]; // шаблоны комментария под полем (его слово 27.10.2026): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -318,12 +320,16 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     balance: ls("cash_balance") || {}, count: null }; // balance — остаток по записям от пересчёта по валютам; count — открытый пересчёт {cur, id}
 
   // ---------- access code: once from the sign-in link (#t=…) or typed, then kept on this phone ----------
-  function token(v) { if (v === undefined) return ls("cash_token"); ls("cash_token", v); }
+  function token(v) {
+    if (v === undefined) return ls("cash_token");
+    ls("cash_token", v);
+    if (v === null) { ls("cash_recent", null); ls("cash_balance", null); state.recent = []; state.balance = {}; } // без кода — никаких чужих данных на экране и в памяти
+  }
   (function fromLink() {
     var m = (location.hash || "").match(/^#t=([0-9a-f]{48})$/i);
     if (m) { token(m[1].toLowerCase()); try { history.replaceState(null, "", location.pathname + location.search); } catch (e) { location.hash = ""; } }
   })();
-  function showSetup(msg) { el.setup.hidden = false; el.setupMsg.textContent = msg || ""; el.tokenInput.focus(); }
+  function showSetup(msg) { document.body.classList.toggle("locked", !token()); el.setup.hidden = false; el.setupMsg.textContent = msg || ""; el.tokenInput.focus(); }
 
   // ---------- render ----------
   function setStatus(text, kind) { el.status.textContent = text || ""; el.status.className = "status" + (kind ? " " + kind : ""); }
@@ -503,7 +509,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
       state.recent = j.recent || []; ls("cash_recent", state.recent);
       if (j.balance) { state.balance = j.balance; ls("cash_balance", state.balance); }
       renderRecent(); renderBal();
-      connected(true); el.setup.hidden = true;
+      connected(true); el.setup.hidden = true; document.body.classList.remove("locked");
       if (!state.queue.length) setStatus("", "");
       return true;
     }).catch(function (e) {
@@ -741,6 +747,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   });
   document.addEventListener("touchcancel", function () { if (ptr.y0 !== null) { ptr.y0 = null; ptrDraw(0, true); } });
 
+  if (!token()) token(null); // старые записи без кода не показываем
   renderAll();
   if (token()) { el.amount.focus(); refreshInit().then(flushQueue); } else { showSetup(""); }
 
