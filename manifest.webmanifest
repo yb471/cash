@@ -1,7 +1,7 @@
 {
-  "name": "Cash YB",
-  "short_name": "Cash YB",
-  "description": "Расходы и приходы наличными: сумма, категория, комментарий — в базу и таблицу операций",
+  "name": "Burda Finance",
+  "short_name": "Burda Finance",
+  "description": "Семейные финансы Бурда. Раздел Cash YB: расходы и приходы наличными и их сверка",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

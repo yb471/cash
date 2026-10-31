@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Cash YB</title>
+<title>Burda Finance</title>
 <meta name="description" content="Расходы и приходы наличными: сумма, категория, комментарий — в базу и таблицу операций">
 <meta name="theme-color" content="#0E6F6A" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0F1316" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Cash YB">
+<meta name="apple-mobile-web-app-title" content="Burda Finance">
 <meta name="format-detection" content="telephone=no">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -42,7 +42,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 .top { display: flex; align-items: center; gap: 10px; min-height: 36px; }
 .brand { font-weight: 700; font-size: calc(17 * var(--u)); letter-spacing: .01em; }
-.today { margin-left: auto; color: var(--muted); font-variant-numeric: tabular-nums; font-size: calc(14 * var(--u)); white-space: nowrap; }
+.section { margin-left: auto; color: var(--muted); font-weight: 600; font-size: calc(14 * var(--u)); white-space: nowrap; } /* раздел приложения (его слово 31.10.2026: вместо итога месяца) */
 .gear { width: 44px; height: 44px; margin-right: -8px; border: 0; background: transparent; border-radius: 10px; font-size: calc(20 * var(--u)); color: var(--muted); }
 .editbar { display: flex; align-items: center; gap: 8px; background: var(--edit); color: var(--edit-fg); border-radius: 14px; padding: 10px 8px 10px 14px; font-size: calc(15 * var(--u)); box-shadow: 0 4px 14px rgba(242,194,27,.35); }
 .editbar span { flex: 1; min-width: 0; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -170,8 +170,8 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 <div class="ptr" id="ptr" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg></div>
 <div class="app" id="app">
   <header class="top">
-    <div class="brand">Cash YB</div>
-    <div class="today" id="today"></div>
+    <div class="brand">Burda Finance</div>
+    <div class="section">Cash YB</div>
     <button class="gear" id="btnMore" type="button" aria-label="Меню">⋯</button>
   </header>
 
@@ -273,7 +273,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "46"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "47"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Взял у Family Cash", "Чаевые", "Дал Насте"]; // шаблоны комментария под полем (его слово 27.10.2026): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -313,7 +313,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 
   var prefs = ls("cash_prefs") || {};
   var state = { sign: prefs.sign === "+" ? "+" : "-", cur: CURS.indexOf(prefs.cur) >= 0 ? prefs.cur : "EUR", cat: "", date: todayStr(),
-    cats: ls("cash_cats") || [], recent: ls("cash_recent") || [], month: ls("cash_month") || null, queue: ls("cash_queue") || [], shown: 10, sending: false,
+    cats: ls("cash_cats") || [], recent: ls("cash_recent") || [], queue: ls("cash_queue") || [], shown: 10, sending: false,
     edit: null, armed: null, busy: false, flash: null, // flash — только что записанная строка, подсвечивается секунду
     balance: ls("cash_balance") || {}, count: null }; // balance — остаток по записям от пересчёта по валютам; count — открытый пересчёт {cur, id}
 
@@ -383,19 +383,9 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     if (state.edit) { el.editText.textContent = "✏️ Правка · " + dmy(state.edit.booking_date); el.btnDelete.textContent = "Удалить"; state.armed = null; }
     renderSign(); renderRecent();
   }
-  // шапка: итог текущего месяца по валютам (его слово 27.10.2026) — с сервера (init.month), пока нет — по последним записям
-  function monthName() { return new Intl.DateTimeFormat("ru-RU", { month: "long" }).format(new Date()); }
-  function monthSums() {
-    var m = todayStr().slice(0, 7), sums = {};
-    if (state.month) { Object.keys(state.month).forEach(function (k) { sums[k] = Number(state.month[k]) || 0; }); }
-    else state.recent.forEach(function (r) { if (String(r.booking_date).slice(0, 7) === m) sums[r.currency] = (sums[r.currency] || 0) + Number(r.amount); });
-    state.queue.forEach(function (q) { if (String(q.date).slice(0, 7) === m) sums[q.cur] = (sums[q.cur] || 0) + (q.sign === "-" ? -q.amount : q.amount); }); // ещё не отправленные — тоже
-    return sums;
-  }
-  function refreshMonth() { // после правки или удаления — точный итог с сервера, без смены текста статуса
+  function refreshBalance() { // после записи, правки или удаления — точное «В наличии» с сервера, без смены текста статуса
     if (!token()) return;
     api("init").then(function (j) {
-      if (j.month) { state.month = j.month; ls("cash_month", state.month); renderRecent(); }
       if (j.balance) { state.balance = j.balance; ls("cash_balance", state.balance); renderBal(); }
     }).catch(function () { /* покажем при следующем обновлении */ });
   }
@@ -406,8 +396,6 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     return c;
   }
   function renderRecent() {
-    var sums = monthSums(), keys = Object.keys(sums).filter(function (k) { return sums[k]; });
-    el.today.textContent = keys.length ? monthName() + " " + keys.map(function (k) { return money(sums[k], k); }).join(" · ") : "";
     el.recentCount.textContent = (state.recent.length || state.queue.length) ? "(" + (state.recent.length + state.queue.length) + ")" : "";
     el.btnMoreRecent.hidden = state.recent.length <= state.shown;
     var empty = !state.recent.length && !state.queue.length; el.recentEmpty.hidden = !empty; el.recentHint.hidden = empty;
@@ -513,7 +501,6 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
       var names = (j.categories || []).filter(Boolean);
       if (names.length) { state.cats = names; ls("cash_cats", names); if (state.cat && names.indexOf(state.cat) < 0) state.cat = ""; renderCats(); }
       state.recent = j.recent || []; ls("cash_recent", state.recent);
-      if (j.month) { state.month = j.month; ls("cash_month", state.month); }
       if (j.balance) { state.balance = j.balance; ls("cash_balance", state.balance); }
       renderRecent(); renderBal();
       connected(true); el.setup.hidden = true;
@@ -537,10 +524,9 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
         var signed = en.sign === "-" ? -en.amount : en.amount;
         state.recent.unshift({ id: j.id, booking_date: en.date, amount: signed, currency: en.cur, category: en.cat, counterparty: en.comment });
         ls("cash_recent", state.recent);
-        if (state.month && String(en.date).slice(0, 7) === todayStr().slice(0, 7)) { state.month[en.cur] = Math.round(((state.month[en.cur] || 0) + signed) * 100) / 100; ls("cash_month", state.month); }
         var bal = state.balance && state.balance[en.cur]; // запись после сверки меняет «В наличии» сразу, точная цифра — с сервера
         if (bal && en.date >= countDay(bal)) { bal.now = Math.round(((Number(bal.now) || 0) + signed) * 100) / 100; ls("cash_balance", state.balance); }
-        renderRecent(); renderBal(); refreshMonth();
+        renderRecent(); renderBal(); refreshBalance();
       }
       setStatus(j.sheet || j.duplicate ? "" : "Таблица обновится ночью", j.sheet || j.duplicate ? "" : "warn");
       return true;
@@ -605,7 +591,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     api("update", { id: id, sign: f.sign, amount: f.amount, currency: f.cur, category: f.cat, comment: f.comment, date: f.date }).then(function (j) {
       state.recent = state.recent.map(function (r) { return r.id === id ? { id: id, booking_date: f.date, amount: f.sign === "-" ? -f.amount : f.amount, currency: f.cur, category: f.cat, counterparty: f.comment } : r; });
       ls("cash_recent", state.recent);
-      resetForm(); connected(true); refreshMonth();
+      resetForm(); connected(true); refreshBalance();
       setStatus(j.sheet ? "" : "Таблица обновится при следующей правке", j.sheet ? "" : "warn");
     }).catch(function (e) {
       if (e.code === "unauthorized") { token(null); showSetup("Код не подошёл"); }
@@ -620,7 +606,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     state.armed = null; state.busy = true; el.btnSave.disabled = true; setStatus("Удаляю…", "");
     api("delete", { id: id }).then(function (j) {
       state.recent = state.recent.filter(function (r) { return r.id !== id; }); ls("cash_recent", state.recent);
-      resetForm(); connected(true); refreshMonth();
+      resetForm(); connected(true); refreshBalance();
       setStatus(j.sheet ? "" : "Строку в таблице убери руками", j.sheet ? "" : "warn");
     }).catch(function (e) {
       if (e.code === "unauthorized") { token(null); showSetup("Код не подошёл"); }
