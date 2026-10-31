@@ -137,13 +137,14 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 @media (prefers-reduced-motion: reduce) { .catwrap.shake, .sheet-back, .sheet-body, .recent-list button.new, .ptr.spin svg { animation: none; } }
 /* остаток по записям от последнего пересчёта и кнопка пересчёта (его «да» 29.10.2026: сверка наличных раз в месяц) */
 .bal { display: flex; align-items: center; gap: 10px; font-size: calc(14 * var(--u)); color: var(--muted); }
-.bal-info { flex: 1; min-width: 0; display: grid; grid-template-columns: auto auto 1fr; column-gap: 8px; row-gap: 2px; align-items: baseline; font-variant-numeric: tabular-nums; }
-.bal-info .k { color: var(--muted); font-size: calc(13 * var(--u)); white-space: nowrap; }
-.bal-info b { color: var(--fg); font-weight: 600; white-space: nowrap; }
+.bal-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-variant-numeric: tabular-nums; }
+.bal-l { display: flex; align-items: baseline; gap: 6px; white-space: nowrap; }
+.bal-info .k { color: var(--muted); font-size: calc(13 * var(--u)); }
+.bal-info b { color: var(--fg); font-weight: 600; }
 .bal-d { font-weight: 700; white-space: nowrap; }
 .bal button { flex: none; }
 @media (max-width: 374px) { /* узкий экран: три колонки цифр и кнопка помещаются в строку */
-  .bal { gap: 6px; } .bal-info { column-gap: 6px; } .bal-info b { font-size: calc(13 * var(--u)); } .bal-info .k { font-size: calc(12 * var(--u)); } .bal button { padding: 0 10px; } }
+  .bal { gap: 6px; } .bal-l { gap: 4px; } .bal-info b { font-size: calc(13 * var(--u)); } .bal-info .k { font-size: calc(12 * var(--u)); } .bal button { padding: 0 10px; } }
 .bal-d.ok { color: var(--plus); }
 .bal-d.bad { color: var(--minus); }
 .bal button { height: 40px; padding: 0 14px; border: 1px solid var(--line); border-radius: 999px; background: var(--chip); color: var(--fg); font-weight: 600; font-size: calc(14 * var(--u)); white-space: nowrap; }
@@ -269,7 +270,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "43"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "44"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Взял у Family Cash", "Чаевые", "Дал Насте"]; // шаблоны комментария под полем (его слово 27.10.2026): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -446,28 +447,32 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
     if (state.queue.length) setStatus("Не отправлено: " + state.queue.length + ". Появится связь — отправлю.", "warn");
   }
   // остаток по записям от последнего пересчёта (с сервера) плюс ещё не отправленные записи этой валюты
+  // день сверки по часам телефона (так его считает и база): запись с датой раньше уже была в пересчитанных деньгах
+  function countDay(b) { var d = new Date(b.at); return isNaN(d) ? "" : d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
   function balNow(cur) {
     var b = state.balance && state.balance[cur]; if (!b) return null;
-    var n = Number(b.now) || 0;
-    state.queue.forEach(function (q) { if (q.cur === cur) n += q.sign === "-" ? -q.amount : q.amount; });
+    var n = Number(b.now) || 0, day = countDay(b);
+    state.queue.forEach(function (q) { if (q.cur === cur && q.date >= day) n += q.sign === "-" ? -q.amount : q.amount; });
     return Math.round(n * 100) / 100;
   }
   function plain(n, cur) { return (n < 0 ? "−" : "") + nf.format(Math.abs(n)) + " " + (SYM[cur] || cur); }
   function localDm(iso) { var d = new Date(iso); return isNaN(d) ? "" : String(d.getDate()).padStart(2, "0") + "." + String(d.getMonth() + 1).padStart(2, "0"); }
   function signed(n, cur) { return (n > 0.004 ? "+" : n < -0.004 ? "−" : "") + nf.format(Math.abs(n)) + " " + (SYM[cur] || cur); }
   function node(tag, cls, text) { var x = document.createElement(tag); if (cls) x.className = cls; if (text !== undefined) x.textContent = text; return x; }
-  // вверху цифрами (его слово 31.10.2026), подписи слева, суммы колонкой: «По записям 80,00 €» и «Сверка 31.10 80,00 € Δ −18,00 €»
-  // — внесённая при сверке сумма видна (его слово 31.10.2026); кнопка «Сверка» — его слово 31.10.2026, было «Пересчёт»
-  // (Δ — сверка минус записи: зелёная — сходится, красная — нет; у первой сверки Δ нет)
+  // вверху (его слово 31.10.2026): «В наличии (по записям): 80,00 €» — остаток сейчас, меняется после каждой записи, правки и
+  // удаления; «Сверка 31.10: 80,00 € Δ −18,00 €» — внесённая сумма и расхождение с записями (Δ зелёная — сходится, красная —
+  // нет; у первой сверки Δ нет). Кнопка «Сверка» — его слово 31.10.2026, было «Пересчёт»
   function renderBal() {
     var keys = CURS.filter(function (k) { return state.balance && state.balance[k]; });
     el.balText.textContent = "";
     if (!keys.length) { el.balText.appendChild(node("span", "k", "Сверки ещё не было")); return; }
     keys.forEach(function (k) {
       var b = state.balance[k], d = b.delta !== null && b.delta !== undefined && isFinite(b.delta) ? Number(b.delta) : null;
-      el.balText.appendChild(node("span", "k", "По записям")); el.balText.appendChild(node("b", "", plain(balNow(k), k))); el.balText.appendChild(node("span", ""));
-      el.balText.appendChild(node("span", "k", "Сверка " + localDm(b.at))); el.balText.appendChild(node("b", "", plain(Number(b.count) || 0, k)));
-      el.balText.appendChild(d === null ? node("span", "") : node("b", "bal-d " + (Math.abs(d) < 0.005 ? "ok" : "bad"), "Δ " + signed(d, k)));
+      var l1 = node("div", "bal-l"), l2 = node("div", "bal-l");
+      l1.appendChild(node("span", "k", "В наличии (по записям):")); l1.appendChild(node("b", "", plain(balNow(k), k)));
+      l2.appendChild(node("span", "k", "Сверка " + localDm(b.at) + ":")); l2.appendChild(node("b", "", plain(Number(b.count) || 0, k)));
+      if (d !== null) l2.appendChild(node("b", "bal-d " + (Math.abs(d) < 0.005 ? "ok" : "bad"), "Δ " + signed(d, k)));
+      el.balText.appendChild(l1); el.balText.appendChild(l2);
     });
   }
   function renderAll() { renderTpl(); renderSign(); renderCur(); renderCats(); renderDate(); renderEdit(); renderQueue(); renderBal(); }
@@ -530,9 +535,9 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
         state.recent.unshift({ id: j.id, booking_date: en.date, amount: signed, currency: en.cur, category: en.cat, counterparty: en.comment });
         ls("cash_recent", state.recent);
         if (state.month && String(en.date).slice(0, 7) === todayStr().slice(0, 7)) { state.month[en.cur] = Math.round(((state.month[en.cur] || 0) + signed) * 100) / 100; ls("cash_month", state.month); }
-        var bal = state.balance && state.balance[en.cur]; // запись после пересчёта меняет остаток по записям
-        if (bal) { bal.now = Math.round(((Number(bal.now) || 0) + signed) * 100) / 100; ls("cash_balance", state.balance); }
-        renderRecent(); renderBal();
+        var bal = state.balance && state.balance[en.cur]; // запись после сверки меняет «В наличии» сразу, точная цифра — с сервера
+        if (bal && en.date >= countDay(bal)) { bal.now = Math.round(((Number(bal.now) || 0) + signed) * 100) / 100; ls("cash_balance", state.balance); }
+        renderRecent(); renderBal(); refreshMonth();
       }
       setStatus(j.sheet || j.duplicate ? "" : "Таблица обновится ночью", j.sheet || j.duplicate ? "" : "warn");
       return true;
