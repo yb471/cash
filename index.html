@@ -48,7 +48,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 .editbar span { flex: 1; min-width: 0; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .app.editing .amount-row, .app.editing .catsel, .app.editing .comment { border-color: var(--edit); border-width: 2px; }
 .app.editing .dates, .app.editing .seg { box-shadow: inset 0 0 0 2px var(--edit); }
-.app.editing .recent { display: none; }
+.app.editing .recent, .app.editing .bal { display: none; } /* в правке — только форма записи */
 .editbar button { height: 44px; padding: 0 12px; border: 0; border-radius: 10px; background: rgba(255,255,255,.92); color: #14181C; font-size: calc(14 * var(--u)); font-weight: 700; }
 .editbar button.danger { color: var(--minus); }
 .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: var(--chip); padding: 4px; border-radius: 14px; }
@@ -136,18 +136,21 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 .save:disabled { opacity: .6; }
 @media (prefers-reduced-motion: reduce) { .catwrap.shake, .sheet-back, .sheet-body, .recent-list button.new, .ptr.spin svg { animation: none; } }
 /* остаток по записям от последнего пересчёта и кнопка пересчёта (его «да» 29.10.2026: сверка наличных раз в месяц) */
-.bal { display: flex; align-items: center; gap: 10px; font-size: calc(14 * var(--u)); color: var(--muted); }
+/* сверка — своя карточка над формой: слева состояние (в наличии, Δ последней сверки), справа действие. Цвет сверки — фирменный
+   бирюзовый, как кнопка «Записать сверку» в листе; красный и зелёный остаются за деньгами (расход, приход, Δ) */
+.bal { display: flex; align-items: center; gap: 10px; font-size: calc(14 * var(--u)); color: var(--muted); background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 8px 8px 8px 12px; }
 .bal-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-variant-numeric: tabular-nums; }
 .bal-l { display: flex; align-items: baseline; gap: 6px; white-space: nowrap; }
 .bal-info .k { color: var(--muted); font-size: calc(13 * var(--u)); }
 .bal-info b { color: var(--fg); font-weight: 600; }
 .bal-d { font-weight: 700; white-space: nowrap; }
 .bal button { flex: none; }
+.bal button:active { background: var(--accent); color: var(--accent-fg); }
 @media (max-width: 374px) { /* узкий экран: три колонки цифр и кнопка помещаются в строку */
-  .bal { gap: 6px; } .bal-l { gap: 4px; } .bal-info b { font-size: calc(13 * var(--u)); } .bal-info .k { font-size: calc(12 * var(--u)); } .bal button { padding: 0 10px; } }
+  .bal { gap: 6px; } .bal-l { gap: 4px; } .bal-info b { font-size: calc(13 * var(--u)); } .bal-info .k { font-size: calc(12 * var(--u)); } .bal button { padding: 0 12px; } .bal { padding-left: 10px; } }
 .bal-d.ok { color: var(--plus); }
 .bal-d.bad { color: var(--minus); }
-.bal button { height: 40px; padding: 0 14px; border: 1px solid var(--line); border-radius: 999px; background: var(--chip); color: var(--fg); font-weight: 600; font-size: calc(14 * var(--u)); white-space: nowrap; }
+.bal button { height: 40px; padding: 0 16px; border: 1.5px solid var(--accent); border-radius: 999px; background: transparent; color: var(--accent); font-weight: 700; font-size: calc(14 * var(--u)); white-space: nowrap; } /* второстепенное действие: контур, не заливка — не спорит с «Записать» */
 .count-body { display: flex; flex-direction: column; gap: 12px; padding: 4px 6px 6px; }
 .count-body p { margin: 0; color: var(--muted); font-size: calc(14 * var(--u)); }
 .count-body p.err { color: var(--minus); font-weight: 600; }
@@ -193,7 +196,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   </div>
 
   <!-- пересчёт нужен раз в месяц — наверху, частые поля ниже под пальцем (его слово 29.10.2026) -->
-  <div class="bal" id="bal"><div class="bal-info" id="balText"></div><button id="btnCount" type="button">Сверка</button></div>
+  <div class="bal" id="bal"><div class="bal-info" id="balText"></div><button id="btnCount" type="button">Сделать сверку</button></div>
 
   <div class="dates" role="group" aria-label="Дата">
     <button class="date-btn on" id="dToday" type="button">Сегодня</button>
@@ -270,7 +273,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "45"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "46"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Взял у Family Cash", "Чаевые", "Дал Насте"]; // шаблоны комментария под полем (его слово 27.10.2026): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -461,7 +464,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
   function node(tag, cls, text) { var x = document.createElement(tag); if (cls) x.className = cls; if (text !== undefined) x.textContent = text; return x; }
   // вверху (его слово 31.10.2026): «В наличии: 77,00 €» — остаток по записям сейчас, меняется после каждой записи, правки и
   // удаления; «Сверка 31.10: Δ −18,00 €» — расхождение последней сверки с записями (зелёная — сходится, красная — нет;
-  // у первой сверки сравнивать не с чем — «Δ —»). Кнопка «Сверка» — его слово 31.10.2026, было «Пересчёт»
+  // у первой сверки сравнивать не с чем — «Δ —»). Кнопка «Сделать сверку» — его слово 31.10.2026 (было «Пересчёт», затем «Сверка»)
   function renderBal() {
     var keys = CURS.filter(function (k) { return state.balance && state.balance[k]; });
     el.balText.textContent = "";
