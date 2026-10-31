@@ -275,7 +275,7 @@ body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top 
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "49"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "50"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Взял у Family Cash", "Чаевые", "Дал Насте"]; // шаблоны комментария под полем (его слово 27.10.2026): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -627,7 +627,7 @@ body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top 
     el.cEUR.classList.toggle("on", cur === "EUR"); el.cUSD.classList.toggle("on", cur === "USD");
     el.countSym.textContent = SYM[cur] || cur;
     var n = balNow(cur);
-    el.countHint.className = ""; el.countHint.textContent = n === null ? "Первая сверка в " + cur + ": точка отсчёта." : "По записям сейчас: " + plain(n, cur) + ".";
+    el.countHint.className = ""; el.countHint.textContent = n === null ? "Первая сверка в " + cur + ": точка отсчёта." : ""; // «по записям» в листе не нужно — оно в карточке (его слово 31.10.2026)
     if (state.queue.length) { el.countHint.className = "err"; el.countHint.textContent = "Сначала уйдут записи без связи (" + state.queue.length + "), потом сверка."; }
   }
   function countOpen() {
