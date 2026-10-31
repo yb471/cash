@@ -263,7 +263,7 @@ body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top 
 <div class="sheet" id="countSheet" hidden>
   <div class="sheet-back" id="countBack"></div>
   <div class="sheet-body" role="dialog" aria-label="Сверка наличных">
-    <div class="sheet-head"><span>Сверка наличных</span><button id="countClose" type="button">Закрыть</button></div>
+    <div class="sheet-head"><span id="countTitle">Сверка наличных</span><button id="countClose" type="button">Закрыть</button></div>
     <div class="count-body">
       <p>Укажи сколько наличных у тебя на руках:</p>
       <div class="seg" role="group" aria-label="Валюта"><button class="seg-btn neutral on" id="cEUR" type="button">EUR</button><button class="seg-btn neutral" id="cUSD" type="button">USD</button></div>
@@ -278,7 +278,7 @@ body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top 
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "51"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "52"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Взял у Family Cash", "Чаевые", "Дал Насте"]; // шаблоны комментария под полем (его слово 27.10.2026): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -289,7 +289,7 @@ body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top 
     btnClear: $("btnClear"), errAmount: $("errAmount"), errCat: $("errCat"), amountRow: document.querySelector(".amount-row"), tpl: $("tpl"), sheet: $("sheet"), sheetBack: $("sheetBack"), sheetClose: $("sheetClose"), sheetList: $("sheetList"), dToday: $("dToday"), dYest: $("dYest"), dOther: $("dOther"), dOtherText: $("dOtherText"), dateInput: $("dateInput"), status: $("status"), recentCount: $("recentCount"),
     app: $("app"), ptr: $("ptr"), recentList: $("recentList"), recentHint: $("recentHint"), recentEmpty: $("recentEmpty"), btnMoreRecent: $("btnMoreRecent"), btnSave: $("btnSave"),
     balText: $("balText"), btnCount: $("btnCount"), countSheet: $("countSheet"), countBack: $("countBack"), countClose: $("countClose"), cEUR: $("cEUR"), cUSD: $("cUSD"),
-    countAmount: $("countAmount"), countSym: $("countSym"), countHint: $("countHint"), btnCountSave: $("btnCountSave") };
+    countAmount: $("countAmount"), countTitle: $("countTitle"), countSym: $("countSym"), countHint: $("countHint"), btnCountSave: $("btnCountSave") };
 
   function ls(key, value) {
     try { if (value === undefined) { var v = localStorage.getItem(key); return v ? JSON.parse(v) : null; } if (value === null) localStorage.removeItem(key); else localStorage.setItem(key, JSON.stringify(value)); } catch (e) { return null; }
@@ -656,6 +656,7 @@ body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top 
     if (!token()) { showSetup(""); return; }
     state.count = { cur: state.cur, id: uuid() }; // один id на открытие: повтор после сбоя связи не создаст второй пересчёт
     el.countAmount.value = ""; el.amount.blur(); el.comment.blur();
+    el.countTitle.textContent = "Сверка наличных на " + dmy(todayStr()); // на сегодня по телефону (его слово 31.10.2026)
     countCur(state.count.cur); el.countSheet.hidden = false; el.btnCountSave.disabled = false;
   }
   function countClose() { el.countSheet.hidden = true; state.count = null; }
