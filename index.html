@@ -262,7 +262,7 @@ body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top 
   <div class="sheet-body" role="dialog" aria-label="Сверка наличных">
     <div class="sheet-head"><span>Сверка наличных</span><button id="countClose" type="button">Закрыть</button></div>
     <div class="count-body">
-      <p>Сколько наличных у тебя на руках сейчас. Всё, что уже записано, считается учтённым. Лучше сверять в начале месяца.</p>
+      <p>Укажи сколько наличных у тебя на руках:</p>
       <div class="seg" role="group" aria-label="Валюта"><button class="seg-btn neutral on" id="cEUR" type="button">EUR</button><button class="seg-btn neutral" id="cUSD" type="button">USD</button></div>
       <div class="amount-row"><input id="countAmount" class="amount" type="text" inputmode="decimal" placeholder="0" autocomplete="off" enterkeyhint="done" aria-label="Сколько на руках"><span class="count-sym" id="countSym">€</span></div>
       <p id="countHint"></p>
@@ -275,7 +275,7 @@ body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top 
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "48"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "49"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Взял у Family Cash", "Чаевые", "Дал Насте"]; // шаблоны комментария под полем (его слово 27.10.2026): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
