@@ -215,9 +215,9 @@ body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top 
 
   <div class="field">
     <div class="amount-row">
-      <button class="cur" id="btnCur" type="button" aria-label="Валюта, касание переключает">EUR</button> <!-- слева, поле суммы до правого края — под палец (его слово 01.11.2026) -->
       <span class="sign" id="signMark">−</span>
       <input id="amount" class="amount" type="text" inputmode="decimal" placeholder="0" autocomplete="off" enterkeyhint="done" aria-label="Сумма">
+      <button class="cur" id="btnCur" type="button" aria-label="Валюта, касание переключает">EUR</button>
     </div>
     <div class="ferr" id="errAmount" hidden>Введи сумму</div>
   </div>
@@ -275,7 +275,7 @@ body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top 
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "58"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "59"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Взял у Family Cash", "Чаевые", "Дал Насте"]; // шаблоны комментария под полем (его слово 27.10.2026): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
