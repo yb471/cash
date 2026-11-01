@@ -63,11 +63,7 @@ body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top 
 .sign.plus { color: var(--plus); }
 .amount { flex: 1; min-width: 0; border: 0; background: transparent; font-size: calc(40 * var(--u)); font-weight: 700; font-variant-numeric: tabular-nums; padding: 4px 0; outline: none; }
 .amount::placeholder { color: var(--line); }
-.cur { height: 48px; min-width: 40px; padding: 0 4px; border: 0; background: transparent; color: var(--muted); font-weight: 600; font-size: calc(28 * var(--u)); } /* знак валюты, касание переключает € ↔ $ */
-.amount-row.right { justify-content: flex-end; cursor: text; position: relative; overflow: hidden; } /* сумма справа, под большим пальцем (его слово 01.11.2026) */
-.amount-row.right .sign { width: auto; }
-.amount-row.right .amount { flex: 0 1 auto; width: 1ch; text-align: right; }
-.amount-mirror { position: absolute; left: 0; top: 0; visibility: hidden; white-space: pre; font-size: calc(40 * var(--u)); font-weight: 700; font-variant-numeric: tabular-nums; } /* мерка ширины суммы */
+.cur { height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--chip); font-weight: 600; font-size: calc(14 * var(--u)); letter-spacing: .04em; } /* касание переключает EUR ↔ USD */
 .catwrap { position: relative; }
 .catwrap.shake { animation: shake .3s linear; }
 @keyframes shake { 25% { transform: translateX(-4px) } 75% { transform: translateX(4px) } }
@@ -218,11 +214,10 @@ body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top 
   </div>
 
   <div class="field">
-    <div class="amount-row right">
+    <div class="amount-row">
       <span class="sign" id="signMark">−</span>
       <input id="amount" class="amount" type="text" inputmode="decimal" placeholder="0" autocomplete="off" enterkeyhint="done" aria-label="Сумма">
-      <button class="cur" id="btnCur" type="button" aria-label="Валюта, касание переключает">€</button>
-      <span class="amount-mirror" id="amountMirror" aria-hidden="true"></span>
+      <button class="cur" id="btnCur" type="button" aria-label="Валюта, касание переключает">EUR</button>
     </div>
     <div class="ferr" id="errAmount" hidden>Введи сумму</div>
   </div>
@@ -280,14 +275,14 @@ body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top 
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "56"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "57"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Взял у Family Cash", "Чаевые", "Дал Насте"]; // шаблоны комментария под полем (его слово 27.10.2026): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
   var el = { today: $("today"), setup: $("setup"), tokenInput: $("tokenInput"), setupMsg: $("setupMsg"), btnToken: $("btnToken"), more: $("more"), btnMore: $("btnMore"),
     ver: $("ver"), connState: $("connState"), queueCount: $("queueCount"), btnFlush: $("btnFlush"),
     editBar: $("editBar"), editText: $("editText"), btnDelete: $("btnDelete"), btnCancel: $("btnCancel"),
-    segMinus: $("segMinus"), segPlus: $("segPlus"), signMark: $("signMark"), amount: $("amount"), btnCur: $("btnCur"), amountMirror: $("amountMirror"), catwrap: $("catwrap"), cat: $("cat"), comment: $("comment"),
+    segMinus: $("segMinus"), segPlus: $("segPlus"), signMark: $("signMark"), amount: $("amount"), btnCur: $("btnCur"), catwrap: $("catwrap"), cat: $("cat"), comment: $("comment"),
     btnClear: $("btnClear"), errAmount: $("errAmount"), errCat: $("errCat"), amountRow: document.querySelector(".amount-row"), tpl: $("tpl"), sheet: $("sheet"), sheetBack: $("sheetBack"), sheetClose: $("sheetClose"), sheetList: $("sheetList"), dToday: $("dToday"), dYest: $("dYest"), dOther: $("dOther"), dOtherText: $("dOtherText"), dateInput: $("dateInput"), status: $("status"),
     app: $("app"), ptr: $("ptr"), recentList: $("recentList"), recentEmpty: $("recentEmpty"), btnMoreRecent: $("btnMoreRecent"), btnSave: $("btnSave"),
     balText: $("balText"), btnCount: $("btnCount"), countSheet: $("countSheet"), countBack: $("countBack"), countClose: $("countClose"), cEUR: $("cEUR"), cUSD: $("cUSD"),
@@ -344,11 +339,7 @@ body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top 
     el.btnSave.className = "save " + (state.sign === "-" ? "minus" : "plus") + (state.edit ? " edit" : "");
     renderSave();
   }
-  function renderCur() { el.btnCur.textContent = SYM[state.cur] || state.cur; el.btnCur.setAttribute("aria-label", "Валюта " + state.cur + ", касание переключает"); }
-  function fitAmount() { // поле суммы шириной по тексту: цифры прижаты к знаку валюты справа
-    el.amountMirror.textContent = el.amount.value || el.amount.placeholder;
-    el.amount.style.width = Math.ceil(el.amountMirror.getBoundingClientRect().width) + 4 + "px";
-  }
+  function renderCur() { el.btnCur.textContent = state.cur; }
   function renderSave() {
     var a = parseAmount(el.amount.value), verb = state.edit ? "Сохранить изменения" : "Записать";
     el.btnSave.textContent = state.edit ? verb : (a ? verb + " " + money(state.sign === "-" ? -a : a, state.cur) : verb);
@@ -500,7 +491,7 @@ body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top 
       el.balText.appendChild(l1); el.balText.appendChild(l2);
     });
   }
-  function renderAll() { renderTpl(); renderSign(); renderCur(); fitAmount(); renderCats(); renderDate(); renderEdit(); renderQueue(); renderBal(); }
+  function renderAll() { renderTpl(); renderSign(); renderCur(); renderCats(); renderDate(); renderEdit(); renderQueue(); renderBal(); }
 
   // ---------- the function in Supabase ----------
   function api(action, payload) {
@@ -587,7 +578,7 @@ body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top 
   }
 
   // ---------- form ----------
-  function resetForm() { markErr("amount", false); markErr("cat", false); el.amount.value = ""; fitAmount(); el.comment.value = ""; renderTpl(); state.cat = ""; state.date = todayStr(); state.edit = null; renderCats(); renderDate(); renderEdit(); }
+  function resetForm() { markErr("amount", false); markErr("cat", false); el.amount.value = ""; el.comment.value = ""; renderTpl(); state.cat = ""; state.date = todayStr(); state.edit = null; renderCats(); renderDate(); renderEdit(); }
   function commit(en) { state.flash = { uid: en.id, dbId: null, until: Date.now() + 1300 }; enqueue(en); if (navigator.onLine !== false) send(en); }
   function markErr(field, on) {
     if (field === "amount") { el.errAmount.hidden = !on; el.amountRow.classList.toggle("err", on); }
@@ -617,7 +608,7 @@ body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top 
     var n = Number(r.amount);
     state.edit = { id: r.id, booking_date: r.booking_date, amount: r.amount, currency: r.currency };
     state.sign = n < 0 ? "-" : "+"; state.cur = CURS.indexOf(r.currency) >= 0 ? r.currency : "EUR"; state.cat = r.category || ""; state.date = r.booking_date || todayStr();
-    el.amount.value = String(Math.abs(n)).replace(".", ","); fitAmount(); el.comment.value = r.counterparty || ""; renderTpl();
+    el.amount.value = String(Math.abs(n)).replace(".", ","); el.comment.value = r.counterparty || ""; renderTpl();
     renderSign(); renderCur(); renderCats(); renderDate(); renderEdit();
     setStatus("", ""); window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -712,8 +703,7 @@ body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top 
   el.segMinus.addEventListener("click", function () { state.sign = "-"; if (!state.edit) { prefs.sign = "-"; ls("cash_prefs", prefs); } renderSign(); });
   el.segPlus.addEventListener("click", function () { state.sign = "+"; if (!state.edit) { prefs.sign = "+"; ls("cash_prefs", prefs); } renderSign(); });
   el.btnCur.addEventListener("click", function () { state.cur = CURS[(CURS.indexOf(state.cur) + 1) % CURS.length]; if (!state.edit) { prefs.cur = state.cur; ls("cash_prefs", prefs); } renderCur(); renderSave(); });
-  el.amount.addEventListener("input", function () { fitAmount(); if (parseAmount(el.amount.value)) markErr("amount", false); renderSave(); });
-  el.amountRow.addEventListener("click", function (e) { if (e.target !== el.btnCur && e.target !== el.amount) el.amount.focus(); }); // касание в любом месте строки — ввод суммы
+  el.amount.addEventListener("input", function () { if (parseAmount(el.amount.value)) markErr("amount", false); renderSave(); });
   el.amount.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); el.amount.blur(); } });
   el.cat.addEventListener("click", sheetOpen);
   el.sheetBack.addEventListener("click", sheetClose);
