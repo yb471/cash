@@ -332,17 +332,17 @@ body.tab-bank .gear { visibility: hidden; }
 
   <section id="soon">Раздел в работе</section>
 
-  <section id="bankPage" aria-label="Банк">
+  <section id="bankPage" aria-label="Банк"> <!-- карточка точности — сразу под названием (его слово 02.11.2026) -->
+    <div class="bk-card" id="bkCard">
+      <div class="bk-acc" id="bkAcc">Загружаю операции…</div>
+      <button class="bk-bulk" id="bkBulk" type="button" hidden></button>
+    </div>
     <div class="bk-top">
       <button class="bk-bank" id="bkBank" type="button" aria-disabled="true"><span id="bkBankName">YB Revolut</span><span class="car" id="bkBankCar" hidden>▾</span></button>
       <div class="seg" role="group" aria-label="Какие операции">
         <button class="seg-btn neutral on" id="bkReview" type="button">К проверке<span class="n" id="bkPendingN"></span></button>
         <button class="seg-btn neutral" id="bkAll" type="button">Все</button>
       </div>
-    </div>
-    <div class="bk-card" id="bkCard">
-      <div class="bk-acc" id="bkAcc">Загружаю операции…</div>
-      <button class="bk-bulk" id="bkBulk" type="button" hidden></button>
     </div>
     <div class="status" id="bkStatus"></div>
     <ul class="bk-list" id="bkList"></ul>
@@ -413,7 +413,7 @@ body.tab-bank .gear { visibility: hidden; }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "66"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "67"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
