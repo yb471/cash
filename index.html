@@ -40,10 +40,21 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action
 /* без кода доступа видно только название и поле кода (его слово 31.10.2026) */
 body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top .section, body.locked .gear { display: none !important; }
 .app { min-height: 100%; display: flex; flex-direction: column; gap: 12px; max-width: 520px; margin: 0 auto;
-  padding-top: calc(8px + env(safe-area-inset-top, 0px)); padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  padding-top: calc(8px + env(safe-area-inset-top, 0px)); padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); /* место под меню разделов */
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 .top { display: flex; align-items: center; gap: 10px; min-height: 36px; }
 .brand { font-weight: 700; font-size: calc(17 * var(--u)); letter-spacing: .01em; }
+/* меню разделов внизу, всегда на экране (его слово 02.11.2026: пока только меню, логика общего приложения — потом) */
+.tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; display: flex; justify-content: center; background: var(--surface); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.tabbar-in { display: flex; width: 100%; max-width: 520px; }
+.tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 7px 0 6px; border: 0; background: transparent; color: var(--muted); font: inherit; font-size: calc(11 * var(--u)); font-weight: 600; }
+.tab svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.tab.on { color: var(--accent); }
+body.locked .tabbar { display: none; }
+#soon { display: none; flex: 1; align-items: center; justify-content: center; color: var(--muted); font-size: calc(15 * var(--u)); min-height: 50vh; }
+body.tab-other .app > :not(.top):not(#soon) { display: none !important; }
+body.tab-other #soon { display: flex; }
+body.tab-other .gear { visibility: hidden; }
 .section { margin-left: auto; color: var(--muted); font-weight: 600; font-size: calc(14 * var(--u)); white-space: nowrap; } /* раздел приложения (его слово 31.10.2026: вместо итога месяца) */
 .gear { width: 44px; height: 44px; margin-right: -8px; border: 0; background: transparent; border-radius: 10px; font-size: calc(20 * var(--u)); color: var(--muted); }
 .editbar { display: flex; align-items: center; gap: 8px; background: var(--edit); color: var(--edit-fg); border-radius: 14px; padding: 10px 8px 10px 14px; font-size: calc(15 * var(--u)); box-shadow: 0 4px 14px rgba(242,194,27,.35); }
@@ -175,7 +186,7 @@ body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top 
 <div class="app" id="app">
   <header class="top">
     <div class="brand">Burda Finance</div>
-    <div class="section">Cash YB</div>
+    <div class="section" id="section">Cash YB</div>
     <button class="gear" id="btnMore" type="button" aria-label="Меню">⋯</button>
   </header>
 
@@ -247,7 +258,16 @@ body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top 
     <ul class="recent-list" id="recentList"></ul>
     <button class="more-btn" id="btnMoreRecent" type="button" hidden>Показать ещё</button>
   </section>
+
+  <section id="soon">Раздел в работе</section>
 </div>
+
+<nav class="tabbar" aria-label="Разделы"><div class="tabbar-in">
+  <button class="tab" type="button" data-tab="dashboard"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg>Dashboard</button>
+  <button class="tab on" type="button" data-tab="cash" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 9.5v5M18 9.5v5"/></svg>Cash</button>
+  <button class="tab" type="button" data-tab="bank"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9.5 12 4l9 5.5"/><path d="M4 20h16"/><path d="M6 11v6M10 11v6M14 11v6M18 11v6"/></svg>Bank</button>
+  <button class="tab" type="button" data-tab="invest"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 17 6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Invest</button>
+</div></nav>
 
 <div class="sheet" id="sheet" hidden>
   <div class="sheet-back" id="sheetBack"></div>
@@ -275,7 +295,7 @@ body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top 
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "59"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "60"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Взял у Family Cash", "Чаевые", "Дал Насте"]; // шаблоны комментария под полем (его слово 27.10.2026): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -708,6 +728,17 @@ body.locked .app > :not(.top):not(#setup), body.locked .sheet, body.locked .top 
   el.cat.addEventListener("click", sheetOpen);
   el.sheetBack.addEventListener("click", sheetClose);
   el.sheetClose.addEventListener("click", sheetClose);
+  // меню разделов: пока работает только Cash, остальные — заглушка (его слово 02.11.2026)
+  var SECTIONS = { dashboard: "Dashboard", cash: "Cash YB", bank: "Bank", invest: "Invest" };
+  Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (b) {
+    b.addEventListener("click", function () {
+      var t = b.getAttribute("data-tab");
+      Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (x) { var on = x === b; x.classList.toggle("on", on); if (on) x.setAttribute("aria-current", "page"); else x.removeAttribute("aria-current"); });
+      document.body.classList.toggle("tab-other", t !== "cash");
+      $("section").textContent = SECTIONS[t];
+      window.scrollTo(0, 0);
+    });
+  });
   el.btnMoreRecent.addEventListener("click", function () { state.shown = state.rendered + 10; renderRecent(); }); // по 10 за раз (его слово 27.10.2026), месяц целиком
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") { if (!el.sheet.hidden) sheetClose(); if (!el.countSheet.hidden) countClose(); } });
   el.comment.addEventListener("input", renderTpl);
