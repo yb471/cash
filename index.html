@@ -117,10 +117,13 @@ body.tab-bank .gear { visibility: hidden; }
 .tx-sugg .yb { display: block; margin-top: 4px; color: var(--muted); font-style: italic; }
 .tx-label { padding: 6px 14px 4px; color: var(--muted); font-size: calc(13 * var(--u)); font-weight: 600; }
 .sheet-list .tag { flex: none; font-size: calc(11.5 * var(--u)); font-weight: 700; color: var(--accent); }
-.tx-foot { flex: none; display: flex; flex-direction: column; gap: 8px; padding: 10px 4px calc(10px + env(safe-area-inset-bottom, 0px)); background: var(--surface); border-top: 1px solid var(--line); }
-.tx-foot .comment { padding-right: 12px; }
-.tx-left { text-align: center; color: var(--muted); font-size: calc(12.5 * var(--u)); }
+/* низ листа — компактный (его слово 02.11.2026): поле и кнопка по одной строке, отступ снизу — только под полоску «Домой» */
+.tx-foot { flex: none; display: flex; flex-direction: column; gap: 6px; padding: 8px 2px max(8px, calc(env(safe-area-inset-bottom, 0px) - 12px)); background: var(--surface); border-top: 1px solid var(--line); }
+.tx-foot .comment { height: 42px; padding-right: 12px; }
+.tx-foot .save { height: 46px; padding: 0 14px; font-size: calc(16 * var(--u)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tx-left { margin-left: auto; margin-right: 10px; color: var(--muted); font-size: calc(13 * var(--u)); font-weight: 600; white-space: nowrap; }
 .tx-left:empty { display: none; }
+.tx-body .sheet-head span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .save:disabled { opacity: .45; }
 .section { margin-left: auto; color: var(--muted); font-weight: 600; font-size: calc(14 * var(--u)); white-space: nowrap; } /* раздел приложения (его слово 31.10.2026: вместо итога месяца) */
 .gear { width: 44px; height: 44px; margin-right: -8px; border: 0; background: transparent; border-radius: 10px; font-size: calc(20 * var(--u)); color: var(--muted); }
@@ -365,7 +368,7 @@ body.tab-bank .gear { visibility: hidden; }
 <div class="sheet" id="txSheet" hidden>
   <div class="sheet-back" id="txBack"></div>
   <div class="sheet-body tx-body" role="dialog" aria-label="Операция банка">
-    <div class="sheet-head"><span id="txTitle">Операция</span><button id="txClose" type="button">Закрыть</button></div>
+    <div class="sheet-head"><span id="txTitle">Операция</span><span class="tx-left" id="txLeft"></span><button id="txClose" type="button">Закрыть</button></div>
     <div class="tx-scroll" id="txScroll">
       <div class="tx-info">
         <div class="tx-amt" id="txAmt"></div>
@@ -377,9 +380,8 @@ body.tab-bank .gear { visibility: hidden; }
       <ul class="sheet-list" id="txCats"></ul>
     </div>
     <div class="tx-foot">
-      <input id="txNote" class="comment" type="text" placeholder="Комментарий для Claude: почему так (по желанию)" maxlength="500" autocomplete="off" enterkeyhint="done">
+      <input id="txNote" class="comment" type="text" placeholder="Комментарий для Claude (по желанию)" maxlength="500" autocomplete="off" enterkeyhint="done">
       <button class="save" id="txOk" type="button" disabled>Выбери категорию</button>
-      <div class="tx-left" id="txLeft"></div>
     </div>
   </div>
 </div>
@@ -410,7 +412,7 @@ body.tab-bank .gear { visibility: hidden; }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "64"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "65"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -1019,9 +1021,9 @@ body.tab-bank .gear { visibility: hidden; }
     });
     var same = t.category && bk.pick === t.category;
     bel.ok.disabled = !bk.pick;
-    bel.ok.textContent = !bk.pick ? "Выбери категорию" : same ? "Сохранить комментарий" : (t.category ? "Изменить на " : "Подтвердить · ") + catSplit(bk.pick).nm;
+    bel.ok.textContent = !bk.pick ? "Выбери категорию" : same ? "Сохранить комментарий" : (t.category ? "Изменить: " : "✓ ") + catLabel(bk.pick);
     var left = bkItems().filter(function (x) { return !x.category && x.id !== t.id && String(x.date) >= (bk.data ? bk.data.review_from : ""); }).length;
-    bel.left.textContent = !t.category && left ? "Дальше — следующая к проверке, осталось " + left : "";
+    bel.left.textContent = !t.category && left ? "ещё " + left : ""; // после подтверждения откроется следующая
   }
   function txNext(afterId) { // следующая неразмеченная ниже по списку, потом сверху
     var vis = bkItems().filter(function (x) { return !x.category && String(x.date) >= (bk.data ? bk.data.review_from : ""); }), all = bkItems(), pos = -1;
