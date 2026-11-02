@@ -74,7 +74,6 @@ body.tab-bank .gear { visibility: hidden; }
 .bk-card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
 .bk-acc { font-size: calc(14 * var(--u)); color: var(--muted); line-height: 1.35; }
 .bk-acc b { color: var(--fg); font-variant-numeric: tabular-nums; }
-.bk-bulk { height: 46px; border: 0; border-radius: 12px; background: var(--accent); color: var(--accent-fg); font-weight: 700; font-size: calc(15 * var(--u)); }
 .bk-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
 .bk-list .mh { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 1; display: flex; justify-content: space-between; gap: 10px; padding: 12px 4px 6px; background: var(--bg); border-bottom: 1px solid var(--line); font-size: calc(14 * var(--u)); font-weight: 700; }
 .bk-list .mh span:last-child { color: var(--muted); font-weight: 600; white-space: nowrap; }
@@ -335,7 +334,6 @@ body.tab-bank .gear { visibility: hidden; }
   <section id="bankPage" aria-label="Банк"> <!-- карточка точности — сразу под названием (его слово 02.11.2026) -->
     <div class="bk-card" id="bkCard">
       <div class="bk-acc" id="bkAcc">Загружаю операции…</div>
-      <button class="bk-bulk" id="bkBulk" type="button" hidden></button>
     </div>
     <div class="bk-top">
       <button class="bk-bank" id="bkBank" type="button" aria-disabled="true"><span id="bkBankName">YB Revolut</span><span class="car" id="bkBankCar" hidden>▾</span></button>
@@ -413,7 +411,7 @@ body.tab-bank .gear { visibility: hidden; }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "67"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "68"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -853,7 +851,7 @@ body.tab-bank .gear { visibility: hidden; }
     loaded: false, done: {}, cur: null, pick: "", busy: false };
   var B = function (id) { return document.getElementById(id); };
   var bel = { bank: B("bkBank"), bankName: B("bkBankName"), bankCar: B("bkBankCar"), review: B("bkReview"), all: B("bkAll"), pendingN: B("bkPendingN"),
-    acc: B("bkAcc"), bulk: B("bkBulk"), status: B("bkStatus"), list: B("bkList"), empty: B("bkEmpty"), more: B("bkMore"),
+    acc: B("bkAcc"), status: B("bkStatus"), list: B("bkList"), empty: B("bkEmpty"), more: B("bkMore"),
     sheet: B("txSheet"), back: B("txBack"), close: B("txClose"), title: B("txTitle"), amt: B("txAmt"), meta: B("txMeta"), rem: B("txRem"), sugg: B("txSugg"),
     cats: B("txCats"), note: B("txNote"), ok: B("txOk"), left: B("txLeft"), bankSheet: B("bkBankSheet"), bankBack: B("bkBankBack"), bankClose: B("bkBankClose"), bankList: B("bkBankList") };
   function bkStatus(t, kind) { bel.status.textContent = t || ""; bel.status.className = "status" + (kind ? " " + kind : ""); }
@@ -899,7 +897,6 @@ body.tab-bank .gear { visibility: hidden; }
     var banks = d.banks || [];
     bel.bankName.textContent = d.bank || "Банк"; bel.bankCar.hidden = banks.length < 2; bel.bank.setAttribute("aria-disabled", banks.length < 2 ? "true" : "false");
     var pending = items.filter(function (t) { return !t.category && String(t.date) >= d.review_from; });
-    var high = pending.filter(function (t) { return t.sugg && t.sugg.level === "high"; });
     bel.pendingN.textContent = pending.length ? " " + pending.length : "";
     // точность подсказок: этот месяц и прошлый (его цель — с каждым месяцем точнее, до полной автономности)
     var ms = (d.stats && d.stats.months) || [], line = [];
@@ -909,8 +906,6 @@ body.tab-bank .gear { visibility: hidden; }
       line.push(i === 0 ? "<b>" + pct + "%</b> в " + mn + " (" + m.correct + " из " + m.suggested + ")" : pct + "% в " + mn);
     });
     bel.acc.innerHTML = line.length ? "Точность подсказок: " + line.join(" · ") : "Подтверждай категории — Claude учится на каждом твоём решении и комментарии";
-    bel.bulk.hidden = bk.filter !== "review" || !high.length;
-    bel.bulk.textContent = "✓ Подтвердить уверенные · " + high.length;
     var vis = bkVisible();
     bel.list.textContent = "";
     var lastM = "";
@@ -1050,13 +1045,6 @@ body.tab-bank .gear { visibility: hidden; }
   bel.review.addEventListener("click", function () { bk.filter = "review"; prefs.bkFilter = "review"; ls("cash_prefs", prefs); bkRender(); window.scrollTo(0, 0); });
   bel.all.addEventListener("click", function () { bk.filter = "all"; prefs.bkFilter = "all"; ls("cash_prefs", prefs); bkRender(); window.scrollTo(0, 0); });
   bel.more.addEventListener("click", function () { var p = bkPrevMonth(); if (!p) return; bel.more.disabled = true; bkLoad(p).then(function () { bel.more.disabled = false; }); });
-  bel.bulk.addEventListener("click", function () {
-    var d = bk.data; if (!d) return;
-    var high = bkItems().filter(function (t) { return !t.category && String(t.date) >= d.review_from && t.sugg && t.sugg.level === "high"; });
-    if (!high.length) return;
-    if (!window.confirm("Подтвердить " + high.length + " уверенных подсказок? Каждую потом можно изменить в разделе «Все».")) return;
-    high.forEach(function (t) { bkDecide(t.id, { category: t.sugg.category }); });
-  });
   bel.bank.addEventListener("click", function () { // выбор банка — когда их больше одного
     var banks = (bk.data && bk.data.banks) || []; if (banks.length < 2) return;
     bel.bankList.textContent = "";
