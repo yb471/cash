@@ -61,6 +61,62 @@ body.locked .tabbar { display: none; }
 body.tab-other .app > :not(.top):not(#soon) { display: none !important; }
 body.tab-other #soon { display: flex; }
 body.tab-other .gear { visibility: hidden; }
+/* раздел Bank: разметка категорий операций банка (его слово 02.11.2026) */
+#bankPage { display: none; flex-direction: column; gap: 12px; }
+body.tab-bank .app > :not(.top):not(#bankPage) { display: none !important; }
+body.tab-bank #bankPage { display: flex; }
+body.tab-bank .gear { visibility: hidden; }
+.bk-top { display: flex; flex-direction: column; gap: 10px; }
+.bk-bank { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--fg); font-weight: 700; font-size: calc(15 * var(--u)); }
+.bk-bank[aria-disabled="true"] { pointer-events: none; }
+.bk-bank .car { color: var(--muted); font-size: calc(12 * var(--u)); }
+.seg-btn .n { font-variant-numeric: tabular-nums; color: var(--accent); margin-left: 4px; }
+.bk-card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+.bk-acc { font-size: calc(14 * var(--u)); color: var(--muted); line-height: 1.35; }
+.bk-acc b { color: var(--fg); font-variant-numeric: tabular-nums; }
+.bk-bulk { height: 46px; border: 0; border-radius: 12px; background: var(--accent); color: var(--accent-fg); font-weight: 700; font-size: calc(15 * var(--u)); }
+.bk-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.bk-list .mh { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 1; display: flex; justify-content: space-between; gap: 10px; padding: 12px 4px 6px; background: var(--bg); border-bottom: 1px solid var(--line); font-size: calc(14 * var(--u)); font-weight: 700; }
+.bk-list .mh span:last-child { color: var(--muted); font-weight: 600; white-space: nowrap; }
+.bk-item { position: relative; border-bottom: 1px solid color-mix(in srgb, var(--line) 55%, transparent); transition: opacity .35s, transform .35s; }
+.bk-item.done { opacity: 0; transform: translateX(24px); }
+.bk-row { width: 100%; display: grid; grid-template-columns: 44px 1fr auto; gap: 8px; align-items: start; padding: 10px 4px; border: 0; background: transparent; text-align: left; color: var(--fg); font-size: calc(14 * var(--u)); }
+.bk-row:active { background: var(--chip); }
+.bk-row .d { color: var(--muted); font-variant-numeric: tabular-nums; padding-top: 1px; }
+.bk-main { min-width: 0; display: flex; flex-direction: column; gap: 3px; padding-right: 0; }
+.bk-cp { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bk-rem { color: var(--muted); font-size: calc(12.5 * var(--u)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bk-chipline { display: flex; align-items: center; min-height: 34px; }
+.bk-row .a { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+.bk-row .a.minus { color: var(--minus); }
+.bk-row .a.plus { color: var(--plus); }
+.chip { display: inline-block; max-width: 100%; padding: 4px 10px; border-radius: 12px; font-size: calc(13 * var(--u)); font-weight: 600; line-height: 1.25; overflow-wrap: anywhere; border: 1px solid transparent; } /* длинное имя переносится, не режется */
+.chip.ok { background: color-mix(in srgb, var(--plus) 14%, transparent); color: var(--plus); }
+.chip.high { background: color-mix(in srgb, var(--accent) 12%, transparent); border-color: color-mix(in srgb, var(--accent) 45%, transparent); color: var(--accent); }
+.chip.medium { border: 1px dashed color-mix(in srgb, var(--accent) 65%, transparent); color: var(--accent); }
+.chip.low, .chip.none { border: 1px dashed var(--line); color: var(--muted); }
+.chip.wait { opacity: .7; }
+.bk-ok { position: absolute; right: 4px; bottom: 9px; width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid var(--accent); background: var(--surface); color: var(--accent); font-size: 18px; font-weight: 700; line-height: 1; display: flex; align-items: center; justify-content: center; }
+.bk-ok:active { background: var(--accent); color: var(--accent-fg); }
+.bk-empty { text-align: center; color: var(--muted); padding: 28px 8px; font-size: calc(15 * var(--u)); line-height: 1.4; }
+.bk-empty b { display: block; color: var(--plus); font-size: calc(17 * var(--u)); margin-bottom: 4px; }
+.tx-body { padding-bottom: 0; }
+.tx-info { padding: 2px 14px 10px; display: flex; flex-direction: column; gap: 4px; }
+.tx-amt { font-size: calc(26 * var(--u)); font-weight: 700; font-variant-numeric: tabular-nums; }
+.tx-amt.minus { color: var(--minus); } .tx-amt.plus { color: var(--plus); }
+.tx-meta, .tx-rem { color: var(--muted); font-size: calc(13.5 * var(--u)); overflow-wrap: anywhere; }
+.tx-sugg { margin-top: 6px; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--accent) 9%, transparent); color: var(--fg); font-size: calc(14 * var(--u)); line-height: 1.35; }
+.tx-sugg:empty { display: none; }
+.tx-sugg .src { color: var(--accent); font-weight: 700; }
+.tx-sugg .why { color: var(--muted); }
+.tx-sugg .yb { display: block; margin-top: 4px; color: var(--muted); font-style: italic; }
+.tx-label { padding: 6px 14px 4px; color: var(--muted); font-size: calc(13 * var(--u)); font-weight: 600; }
+.sheet-list .tag { flex: none; font-size: calc(11.5 * var(--u)); font-weight: 700; color: var(--accent); }
+.tx-foot { position: sticky; bottom: 0; z-index: 1; display: flex; flex-direction: column; gap: 8px; padding: 10px 4px calc(12px + env(safe-area-inset-bottom, 0px)); background: var(--surface); border-top: 1px solid var(--line); }
+.tx-foot .comment { padding-right: 12px; }
+.tx-left { text-align: center; color: var(--muted); font-size: calc(12.5 * var(--u)); }
+.tx-left:empty { display: none; }
+.save:disabled { opacity: .45; }
 .section { margin-left: auto; color: var(--muted); font-weight: 600; font-size: calc(14 * var(--u)); white-space: nowrap; } /* раздел приложения (его слово 31.10.2026: вместо итога месяца) */
 .gear { width: 44px; height: 44px; margin-right: -8px; border: 0; background: transparent; border-radius: 10px; font-size: calc(20 * var(--u)); color: var(--muted); }
 .editbar { display: flex; align-items: center; gap: 8px; background: var(--edit); color: var(--edit-fg); border-radius: 14px; padding: 10px 8px 10px 14px; font-size: calc(15 * var(--u)); box-shadow: 0 4px 14px rgba(242,194,27,.35); }
@@ -266,6 +322,24 @@ body.tab-other .gear { visibility: hidden; }
   </section>
 
   <section id="soon">Раздел в работе</section>
+
+  <section id="bankPage" aria-label="Банк">
+    <div class="bk-top">
+      <button class="bk-bank" id="bkBank" type="button" aria-disabled="true"><span id="bkBankName">YB Revolut</span><span class="car" id="bkBankCar" hidden>▾</span></button>
+      <div class="seg" role="group" aria-label="Какие операции">
+        <button class="seg-btn neutral on" id="bkReview" type="button">К проверке<span class="n" id="bkPendingN"></span></button>
+        <button class="seg-btn neutral" id="bkAll" type="button">Все</button>
+      </div>
+    </div>
+    <div class="bk-card" id="bkCard">
+      <div class="bk-acc" id="bkAcc">Загружаю операции…</div>
+      <button class="bk-bulk" id="bkBulk" type="button" hidden></button>
+    </div>
+    <div class="status" id="bkStatus"></div>
+    <ul class="bk-list" id="bkList"></ul>
+    <div class="bk-empty" id="bkEmpty" hidden></div>
+    <button class="more-btn" id="bkMore" type="button" hidden></button>
+  </section>
 </div>
 
 <nav class="tabbar" aria-label="Разделы"><div class="tabbar-in">
@@ -280,6 +354,34 @@ body.tab-other .gear { visibility: hidden; }
   <div class="sheet-body" role="dialog" aria-label="Категория">
     <div class="sheet-head"><span>Категория</span><button id="sheetClose" type="button">Закрыть</button></div>
     <ul class="sheet-list" id="sheetList"></ul>
+  </div>
+</div>
+
+<div class="sheet" id="txSheet" hidden>
+  <div class="sheet-back" id="txBack"></div>
+  <div class="sheet-body tx-body" role="dialog" aria-label="Операция банка">
+    <div class="sheet-head"><span id="txTitle">Операция</span><button id="txClose" type="button">Закрыть</button></div>
+    <div class="tx-info">
+      <div class="tx-amt" id="txAmt"></div>
+      <div class="tx-meta" id="txMeta"></div>
+      <div class="tx-rem" id="txRem"></div>
+      <div class="tx-sugg" id="txSugg"></div>
+    </div>
+    <div class="tx-label">Категория</div>
+    <ul class="sheet-list" id="txCats"></ul>
+    <div class="tx-foot">
+      <input id="txNote" class="comment" type="text" placeholder="Комментарий для Claude: почему так (по желанию)" maxlength="500" autocomplete="off" enterkeyhint="done">
+      <button class="save" id="txOk" type="button" disabled>Выбери категорию</button>
+      <div class="tx-left" id="txLeft"></div>
+    </div>
+  </div>
+</div>
+
+<div class="sheet" id="bkBankSheet" hidden>
+  <div class="sheet-back" id="bkBankBack"></div>
+  <div class="sheet-body" role="dialog" aria-label="Банк">
+    <div class="sheet-head"><span>Банк</span><button id="bkBankClose" type="button">Закрыть</button></div>
+    <ul class="sheet-list" id="bkBankList"></ul>
   </div>
 </div>
 
@@ -301,7 +403,7 @@ body.tab-other .gear { visibility: hidden; }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "62"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "63"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -349,7 +451,7 @@ body.tab-other .gear { visibility: hidden; }
   function token(v) {
     if (v === undefined) return ls("cash_token");
     ls("cash_token", v);
-    if (v === null) { ls("cash_recent", null); ls("cash_balance", null); ls("cash_months", null); state.recent = []; state.balance = {}; state.months = {}; } // без кода — никаких чужих данных на экране и в памяти
+    if (v === null) { ls("cash_recent", null); ls("cash_balance", null); ls("cash_months", null); state.recent = []; state.balance = {}; state.months = {}; ls("bank_cache", null); if (typeof bk !== "undefined" && bk) { bk.data = null; bk.loaded = false; } } // без кода — никаких чужих данных на экране и в памяти
   }
   (function fromLink() {
     var m = (location.hash || "").match(/^#t=([0-9a-f]{48})$/i);
@@ -430,6 +532,7 @@ body.tab-other .gear { visibility: hidden; }
   }
   // «Последние» по дате записи, свежие сверху (его слово 31.10.2026)
   function sortRecent() { state.recent.sort(function (a, b) { return String(b.booking_date).localeCompare(String(a.booking_date)) || (b.id - a.id); }); }
+  var MONTHS_IN = ["январе", "феврале", "марте", "апреле", "мае", "июне", "июле", "августе", "сентябре", "октябре", "ноябре", "декабре"];
   var MONTHS = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
   function monthHead(m) { // «Октябрь 2026 · −626,00 €»: итог месяца с сервера, пока его нет — по загруженным записям
     var t = state.months && state.months[m];
@@ -734,7 +837,229 @@ body.tab-other .gear { visibility: hidden; }
   el.cat.addEventListener("click", sheetOpen);
   el.sheetBack.addEventListener("click", sheetClose);
   el.sheetClose.addEventListener("click", sheetClose);
-  // меню разделов: пока работает только Cash, остальные — заглушка (его слово 02.11.2026)
+  // ---------- раздел Bank: подтверждение категорий операций банка (его слово 02.11.2026) ----------
+  // Решения копятся на телефоне (bank_queue) и уходят пачкой через секунду тишины; ответ сервера — свежий список с подсказками
+  var bk = { data: ls("bank_cache"), filter: prefs.bkFilter === "all" ? "all" : "review", queue: ls("bank_queue") || [], timer: null, sending: false,
+    loaded: false, done: {}, cur: null, pick: "", busy: false };
+  var B = function (id) { return document.getElementById(id); };
+  var bel = { bank: B("bkBank"), bankName: B("bkBankName"), bankCar: B("bkBankCar"), review: B("bkReview"), all: B("bkAll"), pendingN: B("bkPendingN"),
+    acc: B("bkAcc"), bulk: B("bkBulk"), status: B("bkStatus"), list: B("bkList"), empty: B("bkEmpty"), more: B("bkMore"),
+    sheet: B("txSheet"), back: B("txBack"), close: B("txClose"), title: B("txTitle"), amt: B("txAmt"), meta: B("txMeta"), rem: B("txRem"), sugg: B("txSugg"),
+    cats: B("txCats"), note: B("txNote"), ok: B("txOk"), left: B("txLeft"), bankSheet: B("bkBankSheet"), bankBack: B("bkBankBack"), bankClose: B("bkBankClose"), bankList: B("bkBankList") };
+  function bkStatus(t, kind) { bel.status.textContent = t || ""; bel.status.className = "status" + (kind ? " " + kind : ""); }
+  function bkOverlay(t) { // операция с его ещё не отправленными решениями поверх ответа сервера
+    var q = null; for (var i = 0; i < bk.queue.length; i++) if (bk.queue[i].id === t.id) q = bk.queue[i];
+    if (!q) return t;
+    var o = {}; for (var k in t) o[k] = t[k];
+    if (q.category !== undefined) o.category = q.category;
+    if (q.note !== undefined) o.note = q.note;
+    o.wait = true;
+    return o;
+  }
+  function bkItems() { return bk.data && bk.data.items ? bk.data.items.map(bkOverlay) : []; }
+  function bkVisible() {
+    var from = bk.data ? bk.data.review_from : "", now = Date.now();
+    return bkItems().filter(function (t) {
+      if (bk.filter === "all") return true;
+      return String(t.date) >= from && (!t.category || (bk.done[t.id] && now - bk.done[t.id] < 900)); // подтверждённая — уезжает через миг
+    });
+  }
+  function catLabel(c) { var p = catSplit(c); return (p.em ? p.em + " " : "") + p.nm; } // эмодзи вперёд: короче и читается быстрее
+  function bkChip(t) {
+    var c = document.createElement("span"), sg = t.sugg;
+    if (t.category) { c.className = "chip ok" + (t.wait ? " wait" : ""); c.textContent = "✓ " + catLabel(t.category); }
+    else if (sg) { c.className = "chip " + sg.level; c.textContent = (sg.source === "ai" ? "✦ " : "") + catLabel(sg.category); c.title = sg.source === "ai" ? "подсказка Claude" : "по твоим прошлым решениям"; }
+    else { c.className = "chip none"; c.textContent = "Выбрать категорию"; }
+    return c;
+  }
+  function bkMonthHead(m, list) {
+    var li = document.createElement("li"), a = document.createElement("span"), b = document.createElement("span");
+    li.className = "mh"; a.textContent = MONTHS[Number(m.slice(5, 7)) - 1] + " " + m.slice(0, 4);
+    var all = bkItems().filter(function (t) { return String(t.date).slice(0, 7) === m; }), ok = all.filter(function (t) { return t.category; }).length;
+    b.textContent = bk.filter === "all" ? "размечено " + ok + " из " + all.length : "к проверке " + list.filter(function (t) { return !t.category; }).length;
+    li.appendChild(a); li.appendChild(b);
+    return li;
+  }
+  function bkRender() {
+    var d = bk.data, items = bkItems();
+    bel.review.classList.toggle("on", bk.filter === "review"); bel.all.classList.toggle("on", bk.filter === "all");
+    if (!d) { bel.acc.textContent = token() ? "Загружаю операции…" : "Сначала введи код доступа"; bel.list.textContent = ""; return; }
+    var banks = d.banks || [];
+    bel.bankName.textContent = d.bank || "Банк"; bel.bankCar.hidden = banks.length < 2; bel.bank.setAttribute("aria-disabled", banks.length < 2 ? "true" : "false");
+    var pending = items.filter(function (t) { return !t.category && String(t.date) >= d.review_from; });
+    var high = pending.filter(function (t) { return t.sugg && t.sugg.level === "high"; });
+    bel.pendingN.textContent = pending.length ? " " + pending.length : "";
+    // точность подсказок: этот месяц и прошлый (его цель — с каждым месяцем точнее, до полной автономности)
+    var ms = (d.stats && d.stats.months) || [], line = [];
+    ms.slice(0, 2).forEach(function (m, i) {
+      if (!m.suggested) return;
+      var pct = Math.round(m.correct / m.suggested * 100), mn = MONTHS_IN[Number(m.month.slice(5, 7)) - 1];
+      line.push(i === 0 ? "<b>" + pct + "%</b> в " + mn + " (" + m.correct + " из " + m.suggested + ")" : pct + "% в " + mn);
+    });
+    bel.acc.innerHTML = line.length ? "Точность подсказок: " + line.join(" · ") : "Подтверждай категории — Claude учится на каждом твоём решении и комментарии";
+    bel.bulk.hidden = bk.filter !== "review" || !high.length;
+    bel.bulk.textContent = "✓ Подтвердить уверенные · " + high.length;
+    var vis = bkVisible();
+    bel.list.textContent = "";
+    var lastM = "";
+    vis.forEach(function (t) {
+      var m = String(t.date).slice(0, 7);
+      if (m !== lastM) { bel.list.appendChild(bkMonthHead(m, vis.filter(function (x) { return String(x.date).slice(0, 7) === m; }))); lastM = m; }
+      var li = document.createElement("li"), b = document.createElement("button"), dd = document.createElement("span"), main = document.createElement("span"), a = document.createElement("span");
+      li.className = "bk-item" + (bk.filter === "review" && t.category ? " done" : "");
+      b.type = "button"; b.className = "bk-row";
+      dd.className = "d"; dd.textContent = dmy(t.date);
+      main.className = "bk-main";
+      var cp = document.createElement("span"); cp.className = "bk-cp"; cp.textContent = t.counterparty || t.remittance || "—"; main.appendChild(cp);
+      if (t.remittance && t.remittance !== t.counterparty) { var r = document.createElement("span"); r.className = "bk-rem"; r.textContent = t.remittance; main.appendChild(r); }
+      var cl = document.createElement("span"); cl.className = "bk-chipline"; cl.appendChild(bkChip(t)); main.appendChild(cl);
+      a.className = "a " + (t.amount < 0 ? "minus" : "plus"); a.textContent = money(t.amount, t.currency);
+      b.appendChild(dd); b.appendChild(main); b.appendChild(a);
+      b.addEventListener("click", function () { txOpen(t.id); });
+      li.appendChild(b);
+      if (!t.category && t.sugg) {
+        var ok = document.createElement("button"); ok.type = "button"; ok.className = "bk-ok"; ok.textContent = "✓";
+        ok.setAttribute("aria-label", "Подтвердить: " + t.sugg.category);
+        ok.addEventListener("click", function () { bkDecide(t.id, { category: t.sugg.category }); });
+        li.appendChild(ok);
+      }
+      bel.list.appendChild(li);
+    });
+    var empty = !vis.length;
+    bel.empty.hidden = !empty;
+    bel.empty.innerHTML = bk.filter === "review" ? "<b>Всё размечено ✓</b>Новые операции придут с ночной выгрузкой банка" : "Операций пока нет";
+    var prev = bkPrevMonth();
+    bel.more.hidden = bk.filter !== "all" || !prev;
+    if (prev) bel.more.textContent = "Показать " + MONTHS[Number(prev.slice(5, 7)) - 1].toLowerCase() + " " + prev.slice(0, 4);
+  }
+  function bkPrevMonth() { // месяц до самого раннего загруженного
+    if (!bk.data || !bk.data.from) return "";
+    var y = Number(bk.data.from.slice(0, 4)), m = Number(bk.data.from.slice(5, 7)) - 1;
+    if (m < 1) { m = 12; y--; }
+    return y + "-" + String(m).padStart(2, "0") + "-01";
+  }
+  function bkApply(j) { bk.data = j; bk.loaded = true; ls("bank_cache", j); prefs.bank = j.bank; ls("cash_prefs", prefs); bkRender(); if (!bel.sheet.hidden && bk.cur) txFill(); }
+  function bkLoad(from) {
+    if (!token()) { bkRender(); return Promise.resolve(false); }
+    var f = from || (bk.data && bk.data.from) || undefined;
+    return api("bank_list", { bank: prefs.bank, from: f }).then(function (j) { bkApply(j); bkStatus("", ""); if (bk.queue.length) bkSend(); return true; })
+      .catch(function (e) { if (e && e.code === "unauthorized") { token(null); showSetup("Код не подошёл"); } bkStatus(explain(e), "err"); bkRender(); return false; });
+  }
+  function bkDecide(id, v) { // его решение: сразу на экране, в базу — пачкой
+    var q = null; for (var i = 0; i < bk.queue.length; i++) if (bk.queue[i].id === id) q = bk.queue[i];
+    if (!q) { q = { id: id, v: 0 }; bk.queue.push(q); }
+    if (v.category !== undefined) q.category = v.category;
+    if (v.note !== undefined) q.note = v.note;
+    q.v++;
+    if (v.category !== undefined) bk.done[id] = Date.now();
+    ls("bank_queue", bk.queue);
+    bkRender();
+    setTimeout(bkRender, 950);
+    clearTimeout(bk.timer); bk.timer = setTimeout(bkSend, 900);
+  }
+  function bkSend() {
+    if (bk.sending || !bk.queue.length || !token()) return;
+    bk.sending = true;
+    var batch = bk.queue.slice(0, 300).map(function (q) { var o = { id: q.id }; if (q.category !== undefined) o.category = q.category; if (q.note !== undefined) o.note = q.note; return { op: o, q: q, v: q.v }; });
+    api("bank_set", { bank: prefs.bank, from: bk.data && bk.data.from, items: batch.map(function (x) { return x.op; }) }).then(function (j) {
+      bk.queue = bk.queue.filter(function (q) { return !batch.some(function (x) { return x.q === q && x.v === q.v; }); }); // поправленное за время отправки уйдёт следующим
+      ls("bank_queue", bk.queue); bk.sending = false; bkApply(j); bkStatus("", "");
+      if (bk.queue.length) { clearTimeout(bk.timer); bk.timer = setTimeout(bkSend, 400); }
+    }).catch(function (e) {
+      bk.sending = false;
+      if (e && (e.code === "bad" || e.code === "gone")) { bk.queue = bk.queue.filter(function (q) { return !batch.some(function (x) { return x.q === q; }); }); ls("bank_queue", bk.queue); bkStatus(explain(e), "err"); bkLoad(); return; }
+      bkStatus(e && e.code === "network" ? "Нет связи: решения сохранены на телефоне и уйдут сами" : explain(e), "warn");
+      clearTimeout(bk.timer); bk.timer = setTimeout(bkSend, 15000);
+    });
+  }
+  window.addEventListener("online", function () { if (bk.queue.length) bkSend(); });
+  // лист операции: подробности, подсказка с объяснением, категории, комментарий для Claude
+  function bkFind(id) { var it = bkItems(); for (var i = 0; i < it.length; i++) if (it[i].id === id) return it[i]; return null; }
+  function txOpen(id) {
+    var t = bkFind(id); if (!t) return;
+    bk.cur = id; bk.pick = t.category || (t.sugg ? t.sugg.category : "");
+    bel.note.value = t.note || "";
+    txFill(); bel.sheet.hidden = false;
+    var body = bel.sheet.querySelector(".sheet-body"); if (body) body.scrollTop = 0;
+  }
+  function txFill() {
+    var t = bkFind(bk.cur); if (!t) { txClose(); return; }
+    bel.title.textContent = t.counterparty || t.remittance || "Операция";
+    bel.amt.textContent = money(t.amount, t.currency); bel.amt.className = "tx-amt " + (t.amount < 0 ? "minus" : "plus");
+    bel.meta.textContent = dmy(t.date) + "." + String(t.date).slice(0, 4) + " · " + (t.account || "");
+    bel.rem.textContent = t.remittance && t.remittance !== t.counterparty ? t.remittance : "";
+    bel.sugg.textContent = "";
+    var sg = t.sugg;
+    if (t.category) { var c0 = document.createElement("span"); c0.className = "src"; c0.textContent = "✓ Подтверждено: " + t.category; bel.sugg.appendChild(c0); }
+    else if (sg) {
+      var src = document.createElement("span"), why = document.createElement("span");
+      src.className = "src"; src.textContent = (sg.source === "ai" ? "✦ Claude: " : "≈ Подсказка: ") + sg.category;
+      why.className = "why"; why.textContent = " — " + (sg.why || "");
+      bel.sugg.appendChild(src); bel.sugg.appendChild(why);
+    }
+    if (sg && sg.note) { var yb = document.createElement("span"); yb.className = "yb"; yb.textContent = "Ты писал: «" + sg.note + "»"; bel.sugg.appendChild(yb); }
+    bel.cats.textContent = "";
+    ((bk.data && bk.data.categories) || []).forEach(function (c) {
+      var li = document.createElement("li"), b = document.createElement("button"), p = catSplit(c), em = document.createElement("span"), nm = document.createElement("span");
+      b.type = "button"; em.className = "em"; em.textContent = p.em; nm.className = "nm"; nm.textContent = p.nm;
+      b.appendChild(em); b.appendChild(nm);
+      if (sg && !t.category && sg.category === c) { var tg = document.createElement("span"); tg.className = "tag"; tg.textContent = "подсказка"; b.appendChild(tg); }
+      b.className = bk.pick === c ? "on" : ""; b.setAttribute("aria-pressed", bk.pick === c ? "true" : "false");
+      b.addEventListener("click", function () { bk.pick = c; txFill(); });
+      li.appendChild(b); bel.cats.appendChild(li);
+    });
+    var same = t.category && bk.pick === t.category;
+    bel.ok.disabled = !bk.pick;
+    bel.ok.textContent = !bk.pick ? "Выбери категорию" : same ? "Сохранить комментарий" : (t.category ? "Изменить на " : "Подтвердить · ") + catSplit(bk.pick).nm;
+    var left = bkItems().filter(function (x) { return !x.category && x.id !== t.id && String(x.date) >= (bk.data ? bk.data.review_from : ""); }).length;
+    bel.left.textContent = !t.category && left ? "Дальше — следующая к проверке, осталось " + left : "";
+  }
+  function txNext(afterId) { // следующая неразмеченная ниже по списку, потом сверху
+    var vis = bkItems().filter(function (x) { return !x.category && String(x.date) >= (bk.data ? bk.data.review_from : ""); }), all = bkItems(), pos = -1;
+    for (var i = 0; i < all.length; i++) if (all[i].id === afterId) pos = i;
+    for (var j = pos + 1; j < all.length; j++) if (vis.indexOf(all[j]) >= 0) return all[j].id;
+    return vis.length ? vis[0].id : null;
+  }
+  function txClose() {
+    var t = bkFind(bk.cur), n = bel.note.value.trim();
+    if (t && n !== (t.note || "")) bkDecide(t.id, { note: n }); // комментарий без подтверждения тоже сохраняется
+    bel.sheet.hidden = true; bk.cur = null; bel.note.blur();
+  }
+  bel.ok.addEventListener("click", function () {
+    var t = bkFind(bk.cur); if (!t || !bk.pick) return;
+    var n = bel.note.value.trim(), wasNew = !t.category, v = { category: bk.pick };
+    if (n !== (t.note || "")) v.note = n;
+    bkDecide(t.id, v);
+    var nx = wasNew ? txNext(t.id) : null;
+    if (nx) { txOpen(nx); } else { bel.sheet.hidden = true; bk.cur = null; bel.note.blur(); }
+  });
+  bel.close.addEventListener("click", txClose); bel.back.addEventListener("click", txClose);
+  bel.note.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); bel.note.blur(); } });
+  bel.review.addEventListener("click", function () { bk.filter = "review"; prefs.bkFilter = "review"; ls("cash_prefs", prefs); bkRender(); window.scrollTo(0, 0); });
+  bel.all.addEventListener("click", function () { bk.filter = "all"; prefs.bkFilter = "all"; ls("cash_prefs", prefs); bkRender(); window.scrollTo(0, 0); });
+  bel.more.addEventListener("click", function () { var p = bkPrevMonth(); if (!p) return; bel.more.disabled = true; bkLoad(p).then(function () { bel.more.disabled = false; }); });
+  bel.bulk.addEventListener("click", function () {
+    var d = bk.data; if (!d) return;
+    var high = bkItems().filter(function (t) { return !t.category && String(t.date) >= d.review_from && t.sugg && t.sugg.level === "high"; });
+    if (!high.length) return;
+    if (!window.confirm("Подтвердить " + high.length + " уверенных подсказок? Каждую потом можно изменить в разделе «Все».")) return;
+    high.forEach(function (t) { bkDecide(t.id, { category: t.sugg.category }); });
+  });
+  bel.bank.addEventListener("click", function () { // выбор банка — когда их больше одного
+    var banks = (bk.data && bk.data.banks) || []; if (banks.length < 2) return;
+    bel.bankList.textContent = "";
+    banks.forEach(function (x) {
+      var li = document.createElement("li"), b = document.createElement("button"), nm = document.createElement("span");
+      b.type = "button"; nm.className = "nm"; nm.textContent = x.label; b.appendChild(nm); b.className = x.label === bk.data.bank ? "on" : "";
+      b.addEventListener("click", function () { prefs.bank = x.label; ls("cash_prefs", prefs); bel.bankSheet.hidden = true; bk.data = null; bkRender(); bkLoad(); });
+      li.appendChild(b); bel.bankList.appendChild(li);
+    });
+    bel.bankSheet.hidden = false;
+  });
+  bel.bankClose.addEventListener("click", function () { bel.bankSheet.hidden = true; }); bel.bankBack.addEventListener("click", function () { bel.bankSheet.hidden = true; });
+  function bankOpen() { bkRender(); if (!bk.loaded) bkLoad(); else if (bk.queue.length) bkSend(); }
+
+  // меню разделов: Cash и Bank работают, остальные — заглушка (его слово 02.11.2026)
   // клавиатура открыта — видимая часть окна заметно ниже окна (фокус без касания на iOS клавиатуру не открывает, по нему не судим)
   if (window.visualViewport) { var vv = window.visualViewport; vv.addEventListener("resize", function () { document.body.classList.toggle("kb", vv.height < window.innerHeight * 0.8); }); }
   var SECTIONS = { dashboard: "Dashboard", cash: "Cash YB", bank: "Bank", invest: "Invest" };
@@ -742,13 +1067,15 @@ body.tab-other .gear { visibility: hidden; }
     b.addEventListener("click", function () {
       var t = b.getAttribute("data-tab");
       Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (x) { var on = x === b; x.classList.toggle("on", on); if (on) x.setAttribute("aria-current", "page"); else x.removeAttribute("aria-current"); });
-      document.body.classList.toggle("tab-other", t !== "cash");
+      document.body.classList.toggle("tab-other", t === "dashboard" || t === "invest");
+      document.body.classList.toggle("tab-bank", t === "bank");
       $("section").textContent = SECTIONS[t];
       window.scrollTo(0, 0);
+      if (t === "bank") bankOpen();
     });
   });
   el.btnMoreRecent.addEventListener("click", function () { state.shown = state.rendered + 10; renderRecent(); }); // по 10 за раз (его слово 27.10.2026), месяц целиком
-  document.addEventListener("keydown", function (e) { if (e.key === "Escape") { if (!el.sheet.hidden) sheetClose(); if (!el.countSheet.hidden) countClose(); } });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") { if (!el.sheet.hidden) sheetClose(); if (!el.countSheet.hidden) countClose(); if (!bel.sheet.hidden) txClose(); if (!bel.bankSheet.hidden) bel.bankSheet.hidden = true; } });
   el.comment.addEventListener("input", renderTpl);
   el.btnClear.addEventListener("pointerdown", function (e) { e.preventDefault(); }); // не ронять клавиатуру, если она открыта
   el.btnClear.addEventListener("click", function () { el.comment.value = ""; renderTpl(); if (document.activeElement === el.comment) el.comment.focus(); });
@@ -786,7 +1113,9 @@ body.tab-other .gear { visibility: hidden; }
   }
   function ptrRefresh() {
     ptr.busy = true; ptr.ring.style.strokeDashoffset = ""; ptr.svg.style.transform = ""; el.ptr.classList.add("spin"); ptrDraw(56, true);
-    Promise.all([refreshInit(), swUpdate()]).then(function (r) {
+    var inBank = document.body.classList.contains("tab-bank");
+    Promise.all([inBank ? bkLoad() : refreshInit(), swUpdate()]).then(function (r) {
+      if (inBank) { setTimeout(function () { ptrDraw(0, true); setTimeout(function () { el.ptr.classList.remove("spin"); ptr.busy = false; }, 350); }, 500); return; }
       if (r[0] && state.queue.length) flushQueue();
       setTimeout(function () { ptrDraw(0, true); setTimeout(function () { el.ptr.classList.remove("spin"); ptr.busy = false; }, 350); }, 500);
     });
@@ -811,7 +1140,7 @@ body.tab-other .gear { visibility: hidden; }
 
   if (!token()) token(null); // старые записи без кода не показываем
   renderAll();
-  if (token()) { el.amount.focus(); refreshInit().then(flushQueue); } else { showSetup(""); }
+  if (token()) { el.amount.focus(); refreshInit().then(function () { flushQueue(); if (bk.queue.length) bkSend(); }); } else { showSetup(""); }
 
   if ("serviceWorker" in navigator) {
     var hadSw = !!navigator.serviceWorker.controller;
