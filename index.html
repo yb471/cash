@@ -116,7 +116,8 @@ body.tab-bank .gear { visibility: hidden; }
 .tx-sugg .why { color: var(--muted); }
 .tx-sugg .yb { display: block; margin-top: 4px; color: var(--muted); font-style: italic; }
 .tx-label { padding: 6px 14px 4px; color: var(--muted); font-size: calc(13 * var(--u)); font-weight: 600; }
-.sheet-list .tag { flex: none; font-size: calc(11.5 * var(--u)); font-weight: 700; color: var(--accent); }
+.sheet-list .tag { flex: none; min-width: 26px; height: 22px; padding: 0 6px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); font-size: calc(13 * var(--u)); font-weight: 700; line-height: 22px; text-align: center; } /* значок подсказки вместо слова — имя категории в одну строку (его слово 02.11.2026) */
+.tx-cats .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* низ листа — компактный (его слово 02.11.2026): поле и кнопка по одной строке, отступ снизу — только под полоску «Домой» */
 .tx-foot { flex: none; display: flex; flex-direction: column; gap: 6px; padding: 8px 2px max(8px, calc(env(safe-area-inset-bottom, 0px) - 12px)); background: var(--surface); border-top: 1px solid var(--line); }
 .tx-foot .comment { height: 42px; padding-right: 12px; }
@@ -377,7 +378,7 @@ body.tab-bank .gear { visibility: hidden; }
         <div class="tx-sugg" id="txSugg"></div>
       </div>
       <div class="tx-label">Категория</div>
-      <ul class="sheet-list" id="txCats"></ul>
+      <ul class="sheet-list tx-cats" id="txCats"></ul>
     </div>
     <div class="tx-foot">
       <input id="txNote" class="comment" type="text" placeholder="Комментарий для Claude (по желанию)" maxlength="500" autocomplete="off" enterkeyhint="done">
@@ -412,7 +413,7 @@ body.tab-bank .gear { visibility: hidden; }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "65"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "66"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -1014,7 +1015,7 @@ body.tab-bank .gear { visibility: hidden; }
       var li = document.createElement("li"), b = document.createElement("button"), p = catSplit(c), em = document.createElement("span"), nm = document.createElement("span");
       b.type = "button"; em.className = "em"; em.textContent = p.em; nm.className = "nm"; nm.textContent = p.nm;
       b.appendChild(em); b.appendChild(nm);
-      if (sg && !t.category && sg.category === c) { var tg = document.createElement("span"); tg.className = "tag"; tg.textContent = "подсказка"; b.appendChild(tg); }
+      if (sg && !t.category && sg.category === c) { var tg = document.createElement("span"); tg.className = "tag"; tg.textContent = sg.source === "ai" ? "✦" : "≈"; tg.title = "подсказка"; b.appendChild(tg); }
       b.className = bk.pick === c ? "on" : ""; b.setAttribute("aria-pressed", bk.pick === c ? "true" : "false");
       b.addEventListener("click", function () { bk.pick = c; txFill(); });
       li.appendChild(b); bel.cats.appendChild(li);
