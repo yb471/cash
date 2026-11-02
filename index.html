@@ -90,6 +90,7 @@ body.tab-bank .gear { visibility: hidden; }
 .bk-row .a { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
 .bk-row .a.minus { color: var(--minus); }
 .bk-row .a.plus { color: var(--plus); }
+.bk-row .a.zero { color: var(--muted); }
 .chip { display: inline-block; max-width: 100%; padding: 4px 10px; border-radius: 12px; font-size: calc(13 * var(--u)); font-weight: 600; line-height: 1.25; overflow-wrap: anywhere; border: 1px solid transparent; } /* длинное имя переносится, не режется */
 .chip.ok { background: color-mix(in srgb, var(--plus) 14%, transparent); color: var(--plus); }
 .chip.high { background: color-mix(in srgb, var(--accent) 12%, transparent); border-color: color-mix(in srgb, var(--accent) 45%, transparent); color: var(--accent); }
@@ -100,7 +101,11 @@ body.tab-bank .gear { visibility: hidden; }
 .bk-ok:active { background: var(--accent); color: var(--accent-fg); }
 .bk-empty { text-align: center; color: var(--muted); padding: 28px 8px; font-size: calc(15 * var(--u)); line-height: 1.4; }
 .bk-empty b { display: block; color: var(--plus); font-size: calc(17 * var(--u)); margin-bottom: 4px; }
-.tx-body { padding-bottom: 0; }
+/* лист операции: шапка, прокручиваемая середина, низ с комментарием и кнопкой — отдельный блок, без sticky (на iOS он
+   внутри прокрутки съезжал вверх, его снимок 02.11.2026) */
+.sheet-body.tx-body { display: flex; flex-direction: column; overflow: hidden; padding: 6px 10px 0; }
+.tx-body .sheet-head { position: static; flex: none; }
+.tx-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 .tx-info { padding: 2px 14px 10px; display: flex; flex-direction: column; gap: 4px; }
 .tx-amt { font-size: calc(26 * var(--u)); font-weight: 700; font-variant-numeric: tabular-nums; }
 .tx-amt.minus { color: var(--minus); } .tx-amt.plus { color: var(--plus); }
@@ -112,7 +117,7 @@ body.tab-bank .gear { visibility: hidden; }
 .tx-sugg .yb { display: block; margin-top: 4px; color: var(--muted); font-style: italic; }
 .tx-label { padding: 6px 14px 4px; color: var(--muted); font-size: calc(13 * var(--u)); font-weight: 600; }
 .sheet-list .tag { flex: none; font-size: calc(11.5 * var(--u)); font-weight: 700; color: var(--accent); }
-.tx-foot { position: sticky; bottom: 0; z-index: 1; display: flex; flex-direction: column; gap: 8px; padding: 10px 4px calc(12px + env(safe-area-inset-bottom, 0px)); background: var(--surface); border-top: 1px solid var(--line); }
+.tx-foot { flex: none; display: flex; flex-direction: column; gap: 8px; padding: 10px 4px calc(10px + env(safe-area-inset-bottom, 0px)); background: var(--surface); border-top: 1px solid var(--line); }
 .tx-foot .comment { padding-right: 12px; }
 .tx-left { text-align: center; color: var(--muted); font-size: calc(12.5 * var(--u)); }
 .tx-left:empty { display: none; }
@@ -361,14 +366,16 @@ body.tab-bank .gear { visibility: hidden; }
   <div class="sheet-back" id="txBack"></div>
   <div class="sheet-body tx-body" role="dialog" aria-label="Операция банка">
     <div class="sheet-head"><span id="txTitle">Операция</span><button id="txClose" type="button">Закрыть</button></div>
-    <div class="tx-info">
-      <div class="tx-amt" id="txAmt"></div>
-      <div class="tx-meta" id="txMeta"></div>
-      <div class="tx-rem" id="txRem"></div>
-      <div class="tx-sugg" id="txSugg"></div>
+    <div class="tx-scroll" id="txScroll">
+      <div class="tx-info">
+        <div class="tx-amt" id="txAmt"></div>
+        <div class="tx-meta" id="txMeta"></div>
+        <div class="tx-rem" id="txRem"></div>
+        <div class="tx-sugg" id="txSugg"></div>
+      </div>
+      <div class="tx-label">Категория</div>
+      <ul class="sheet-list" id="txCats"></ul>
     </div>
-    <div class="tx-label">Категория</div>
-    <ul class="sheet-list" id="txCats"></ul>
     <div class="tx-foot">
       <input id="txNote" class="comment" type="text" placeholder="Комментарий для Claude: почему так (по желанию)" maxlength="500" autocomplete="off" enterkeyhint="done">
       <button class="save" id="txOk" type="button" disabled>Выбери категорию</button>
@@ -403,7 +410,7 @@ body.tab-bank .gear { visibility: hidden; }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "63"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "64"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -856,6 +863,8 @@ body.tab-bank .gear { visibility: hidden; }
     o.wait = true;
     return o;
   }
+  function bkRemOwn(t) { return t.remittance && String(t.remittance).trim().toLowerCase() !== String(t.counterparty || "").trim().toLowerCase(); } // назначение, если не повторяет продавца
+  function bkMoney(n, cur) { return n ? money(n, cur) : "0,00 " + (SYM[cur] || cur); } // проверка карты на 0 — без знака и цвета
   function bkItems() { return bk.data && bk.data.items ? bk.data.items.map(bkOverlay) : []; }
   function bkVisible() {
     var from = bk.data ? bk.data.review_from : "", now = Date.now();
@@ -911,9 +920,9 @@ body.tab-bank .gear { visibility: hidden; }
       dd.className = "d"; dd.textContent = dmy(t.date);
       main.className = "bk-main";
       var cp = document.createElement("span"); cp.className = "bk-cp"; cp.textContent = t.counterparty || t.remittance || "—"; main.appendChild(cp);
-      if (t.remittance && t.remittance !== t.counterparty) { var r = document.createElement("span"); r.className = "bk-rem"; r.textContent = t.remittance; main.appendChild(r); }
+      if (bkRemOwn(t)) { var r = document.createElement("span"); r.className = "bk-rem"; r.textContent = t.remittance; main.appendChild(r); }
       var cl = document.createElement("span"); cl.className = "bk-chipline"; cl.appendChild(bkChip(t)); main.appendChild(cl);
-      a.className = "a " + (t.amount < 0 ? "minus" : "plus"); a.textContent = money(t.amount, t.currency);
+      a.className = "a " + (t.amount < 0 ? "minus" : t.amount > 0 ? "plus" : "zero"); a.textContent = bkMoney(t.amount, t.currency);
       b.appendChild(dd); b.appendChild(main); b.appendChild(a);
       b.addEventListener("click", function () { txOpen(t.id); });
       li.appendChild(b);
@@ -980,14 +989,14 @@ body.tab-bank .gear { visibility: hidden; }
     bk.cur = id; bk.pick = t.category || (t.sugg ? t.sugg.category : "");
     bel.note.value = t.note || "";
     txFill(); bel.sheet.hidden = false;
-    var body = bel.sheet.querySelector(".sheet-body"); if (body) body.scrollTop = 0;
+    B("txScroll").scrollTop = 0;
   }
   function txFill() {
     var t = bkFind(bk.cur); if (!t) { txClose(); return; }
     bel.title.textContent = t.counterparty || t.remittance || "Операция";
-    bel.amt.textContent = money(t.amount, t.currency); bel.amt.className = "tx-amt " + (t.amount < 0 ? "minus" : "plus");
+    bel.amt.textContent = bkMoney(t.amount, t.currency); bel.amt.className = "tx-amt " + (t.amount < 0 ? "minus" : t.amount > 0 ? "plus" : "");
     bel.meta.textContent = dmy(t.date) + "." + String(t.date).slice(0, 4) + " · " + (t.account || "");
-    bel.rem.textContent = t.remittance && t.remittance !== t.counterparty ? t.remittance : "";
+    bel.rem.textContent = bkRemOwn(t) ? t.remittance : "";
     bel.sugg.textContent = "";
     var sg = t.sugg;
     if (t.category) { var c0 = document.createElement("span"); c0.className = "src"; c0.textContent = "✓ Подтверждено: " + t.category; bel.sugg.appendChild(c0); }
