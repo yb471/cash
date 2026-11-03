@@ -65,7 +65,6 @@ body.tab-other .gear { visibility: hidden; }
 #bankPage { display: none; flex-direction: column; gap: 12px; }
 body.tab-bank .app > :not(.top):not(#bankPage) { display: none !important; }
 body.tab-bank #bankPage { display: flex; }
-body.tab-bank .gear { visibility: hidden; }
 .bk-top { display: flex; flex-direction: column; gap: 10px; }
 /* строка банка: поле выбора как «Категория» в Cash (лист снизу), справа «Сделать выгрузку» с датой (его слово 03.11.2026) */
 /* две строки одной сеткой: колонка кнопок — по ширине «Сделать выгрузку», как в версии 71; сводка — шириной поля банка
@@ -77,7 +76,7 @@ body.tab-bank .gear { visibility: hidden; }
 .seg-btn .n { font-variant-numeric: tabular-nums; color: var(--accent); margin-left: 4px; }
 
 /* верх раздела — две строки одной сетки (его слово 03.11.2026): слева поле той же ширины, справа кнопка той же ширины.
-   Сводка — две короткие строки: «Определено: X% из N» (доля неразобранных с подсказкой) и «Точность: Y% · 30 д Z%» (его слово 03.11.2026); шрифт — по блоку */
+   Сводка — две короткие строки: «Связано: X% из N» (доля неразобранных с подсказкой) и «Точность: Y% · 30 д Z%» (его слово 03.11.2026); шрифт — по блоку */
 /* подписи — колонкой, значения — второй колонкой, проценты строго друг под другом; текст начинается там же, где «YB Revolut» в поле банка (отступ 12px) */
 .bk-statbox { min-width: 0; min-height: 50px; display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: .3em; row-gap: 2px; align-content: center; padding: 5px 8px 5px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); font-size: calc(13.5 * var(--u) * var(--k, 1)); letter-spacing: -.01em; }
 /* шрифт сводки подгоняется под блок (его слово 03.11.2026): --k ставит bkFitStats — самый крупный, при котором обе строки видны целиком */
@@ -352,11 +351,17 @@ body.tab-bank .gear { visibility: hidden; }
 
   <section id="soon">Раздел в работе</section>
 
-  <section id="bankPage" aria-label="Банк"> <!-- карточка точности — сразу под названием (его слово 02.11.2026) -->
+  <section id="bankPage" aria-label="Банк"> <!-- сводка — сразу под названием (его слово 02.11.2026) -->
+    <section class="card" id="bkMenu" hidden> <!-- меню «⋯» раздела, как в Cash (его слово 03.11.2026) -->
+      <div class="line"><span>Связь с базой</span><span id="bkConn">—</span></div>
+      <div class="line"><span>Не отправлено</span><span><span id="bkQueueN">0</span> <button id="bkFlush" type="button" hidden>Отправить</button></span></div>
+      <div class="line"><span>Версия</span><span id="bkVer"></span></div>
+      <div class="line"><a id="bkSheetLink" href="https://docs.google.com/spreadsheets/d/1cKYM1-z92p6Q14BxznyrYuXFfWDnJfb1w0Dj51CcAhk/edit#gid=0" target="_blank" rel="noopener">Открыть вкладку YB Revolut</a></div>
+    </section>
     <div class="bk-head">
       <div class="bk-bankrow">
         <div class="bk-statbox" id="bkStatBox">
-          <span class="lb">Определено:</span><span class="ln"><b id="stSuggP">—</b><span class="m" id="stPend"></span></span>
+          <span class="lb">Связано:</span><span class="ln"><b id="stSuggP">—</b><span class="m" id="stPend"></span></span>
           <span class="lb">Точность:</span><span class="ln"><b id="stAll">—</b><span class="m" id="stD30"></span></span>
         </div>
         <button class="bk-act" id="bkAiBtn" type="button"><span class="t">Связать категории</span><span class="s" id="bkAiSt"></span></button>
@@ -442,7 +447,7 @@ body.tab-bank .gear { visibility: hidden; }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "83"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "84"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -686,7 +691,7 @@ body.tab-bank .gear { visibility: hidden; }
     if (c === "gone") return "Записи уже нет";
     return "Ошибка базы: " + (e && e.message || "");
   }
-  function connected(ok) { el.connState.textContent = ok ? "есть" : "нет"; }
+  function connected(ok) { el.connState.textContent = ok ? "есть" : "нет"; var b = $("bkConn"); if (b) b.textContent = el.connState.textContent; }
   function refreshInit() {
     if (!token()) { showSetup(""); renderCats(); return Promise.resolve(false); }
     return api("init").then(function (j) {
@@ -881,7 +886,7 @@ body.tab-bank .gear { visibility: hidden; }
     loaded: false, done: {}, cur: null, pick: "", busy: false };
   var B = function (id) { return document.getElementById(id); };
   var bel = { bankBtn: B("bkBankBtn"), bankSheet: B("bkBankSheet"), bankList: B("bkBankList"), sync: B("bkSync"), syncSt: B("bkSyncSt"), review: B("bkReview"), all: B("bkAll"), pendingN: B("bkPendingN"),
-    stPend: B("stPend"), stSuggP: B("stSuggP"), stAll: B("stAll"), stD30: B("stD30"), statBox: B("bkStatBox"), aiBtn: B("bkAiBtn"), aiSt: B("bkAiSt"), status: B("bkStatus"), list: B("bkList"), empty: B("bkEmpty"), more: B("bkMore"),
+    stPend: B("stPend"), stSuggP: B("stSuggP"), stAll: B("stAll"), stD30: B("stD30"), statBox: B("bkStatBox"), menu: B("bkMenu"), queueN: B("bkQueueN"), flush: B("bkFlush"), sheetLink: B("bkSheetLink"), aiBtn: B("bkAiBtn"), aiSt: B("bkAiSt"), status: B("bkStatus"), list: B("bkList"), empty: B("bkEmpty"), more: B("bkMore"),
     sheet: B("txSheet"), back: B("txBack"), close: B("txClose"), title: B("txTitle"), amt: B("txAmt"), meta: B("txMeta"), rem: B("txRem"), sugg: B("txSugg"),
     cats: B("txCats"), note: B("txNote"), ok: B("txOk"), left: B("txLeft") };
   function bkStatus(t, kind) { bel.status.textContent = t || ""; bel.status.className = "status" + (kind ? " " + kind : ""); }
@@ -935,8 +940,17 @@ body.tab-bank .gear { visibility: hidden; }
       if (!over || k === 0.6) break;
     }
   }
+  // вкладки таблицы по банкам: прямая ссылка на лист выбранного банка; банка нет в списке — вся таблица
+  var BK_SHEET = "https://docs.google.com/spreadsheets/d/1cKYM1-z92p6Q14BxznyrYuXFfWDnJfb1w0Dj51CcAhk/edit", BK_TABS = { "YB Revolut": 0 };
+  function bkMenuRender() {
+    bel.queueN.textContent = String(bk.queue.length); bel.flush.hidden = !bk.queue.length;
+    var b = bk.data && bk.data.bank, gid = b && Object.prototype.hasOwnProperty.call(BK_TABS, b) ? BK_TABS[b] : null;
+    bel.sheetLink.href = BK_SHEET + (gid !== null ? "#gid=" + gid : "");
+    bel.sheetLink.textContent = gid !== null ? "Открыть вкладку " + b : "Открыть таблицу";
+  }
   function bkRender() {
     var d = bk.data, items = bkItems();
+    bkMenuRender();
     bel.review.classList.toggle("on", bk.filter === "review"); bel.all.classList.toggle("on", bk.filter === "all");
     if (!d) { bel.aiSt.textContent = token() ? "Загружаю операции…" : "Сначала введи код доступа"; bel.list.textContent = ""; return; }
     var banks = d.banks || [];
@@ -950,7 +964,7 @@ body.tab-bank .gear { visibility: hidden; }
     bel.stSuggP.textContent = pending.length ? Math.round(withSugg / pending.length * 100) + "%" : "—"; // доля неразобранных с подсказкой
     var pct = function (a) { return a && a.n ? Math.round(a.ok / a.n * 100) + "%" : "—"; }, sa = d.stats && d.stats.all, s30 = d.stats && d.stats.d30;
     bel.stAll.textContent = pct(sa); bel.stD30.textContent = s30 && s30.n ? " · 30 д " + pct(s30) : "";
-    bel.statBox.title = "Определено " + withSugg + " из " + pending.length + "; верных подсказок " + (sa ? sa.ok + " из " + sa.n : "—") + " всего, " + (s30 ? s30.ok + " из " + s30.n : "—") + " за 30 дней";
+    bel.statBox.title = "Связано " + withSugg + " из " + pending.length + "; верных подсказок " + (sa ? sa.ok + " из " + sa.n : "—") + " всего, " + (s30 ? s30.ok + " из " + s30.n : "—") + " за 30 дней";
     bkFitStats();
     bkAiRender();
     var vis = bkVisible();
@@ -1015,6 +1029,7 @@ body.tab-bank .gear { visibility: hidden; }
       }).catch(function () { bkAiPoll(); });
     }, 3000);
   }
+  bel.flush.addEventListener("click", function () { clearTimeout(bk.timer); bkSend(); });
   bel.aiBtn.addEventListener("click", function () {
     if (!bk.data || bk.aiStarting) return;
     bk.aiStarting = true; bkAiRender();
@@ -1031,12 +1046,12 @@ body.tab-bank .gear { visibility: hidden; }
     if (m < 1) { m = 12; y--; }
     return y + "-" + String(m).padStart(2, "0") + "-01";
   }
-  function bkApply(j) { bk.data = j; bk.loaded = true; ls("bank_cache", j); prefs.bank = j.bank; ls("cash_prefs", prefs); bkRender(); if (!bel.sheet.hidden && bk.cur) txFill(); }
+  function bkApply(j) { connected(true); bk.data = j; bk.loaded = true; ls("bank_cache", j); prefs.bank = j.bank; ls("cash_prefs", prefs); bkRender(); if (!bel.sheet.hidden && bk.cur) txFill(); }
   function bkLoad(from) {
     if (!token()) { bkRender(); return Promise.resolve(false); }
     var f = from || (bk.data && bk.data.from) || undefined;
     return api("bank_list", { bank: prefs.bank, from: f }).then(function (j) { bkApply(j); bkStatus("", ""); if (bk.queue.length) bkSend(); return true; })
-      .catch(function (e) { if (e && e.code === "unauthorized") { token(null); showSetup("Код не подошёл"); } bkStatus(explain(e), "err"); bkRender(); return false; });
+      .catch(function (e) { if (e && e.code === "network") connected(false); if (e && e.code === "unauthorized") { token(null); showSetup("Код не подошёл"); } bkStatus(explain(e), "err"); bkRender(); return false; });
   }
   function bkDecide(id, v) { // его решение: сразу на экране, в базу — пачкой
     var q = null; for (var i = 0; i < bk.queue.length; i++) if (bk.queue[i].id === id) q = bk.queue[i];
@@ -1059,7 +1074,7 @@ body.tab-bank .gear { visibility: hidden; }
       ls("bank_queue", bk.queue); bk.sending = false; bkApply(j); bkStatus("", "");
       if (bk.queue.length) { clearTimeout(bk.timer); bk.timer = setTimeout(bkSend, 400); }
     }).catch(function (e) {
-      bk.sending = false;
+      bk.sending = false; if (e && e.code === "network") connected(false); bkRender();
       if (e && (e.code === "bad" || e.code === "gone")) { bk.queue = bk.queue.filter(function (q) { return !batch.some(function (x) { return x.q === q; }); }); ls("bank_queue", bk.queue); bkStatus(explain(e), "err"); bkLoad(); return; }
       bkStatus(e && e.code === "network" ? "Нет связи: решения сохранены на телефоне и уйдут сами" : explain(e), "warn");
       clearTimeout(bk.timer); bk.timer = setTimeout(bkSend, 15000);
@@ -1203,8 +1218,8 @@ body.tab-bank .gear { visibility: hidden; }
   el.btnSave.addEventListener("click", onSave);
   el.btnDelete.addEventListener("click", onDelete);
   el.btnCancel.addEventListener("click", editCancel);
-  el.btnMore.addEventListener("click", function () { el.more.hidden = !el.more.hidden; });
-  el.ver.textContent = APP_VERSION;
+  el.btnMore.addEventListener("click", function () { if (document.body.classList.contains("tab-bank")) bel.menu.hidden = !bel.menu.hidden; else el.more.hidden = !el.more.hidden; }); // в Bank — своё меню
+  el.ver.textContent = APP_VERSION; $("bkVer").textContent = APP_VERSION;
   el.btnToken.addEventListener("click", function () {
     var v = el.tokenInput.value.trim().toLowerCase();
     if (!/^[0-9a-f]{48}$/.test(v)) { el.setupMsg.textContent = "Код: 48 знаков 0–9 и a–f"; return; }
