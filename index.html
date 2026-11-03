@@ -75,8 +75,8 @@ body.tab-bank #bankPage { display: flex; }
 
 .seg-btn .n { font-variant-numeric: tabular-nums; color: var(--accent); margin-left: 4px; }
 
-/* верх раздела (его слово 03.11.2026): сводка с кнопкой «Связать категории» внутри — тот же блок .bal, что «В наличии» в Cash;
-   ниже строка банка: поле выбора и кнопка «Сделать выгрузку» с датой. Сводка: «Связано: X% из N» (доля неразобранных с
+/* верх раздела (его слово 03.11.2026): строка банка — поле выбора и кнопка «Сделать выгрузку» с датой; под ней сводка с кнопкой
+   «Связать категории» внутри — тот же блок .bal, что «В наличии» в Cash. Сводка: «Связано: X% из N» (доля неразобранных с
    подсказкой) и «Точность: Y% · 30 д Z%» */
 .app.editing .bk-bal { display: flex; } /* правка записи в Cash прячет свою сводку, банковскую — нет */
 /* «Связать категории» длиннее «Сделать сверку»: не влезает строка — сначала только отступы уже (.snug, шрифты как в Cash),
@@ -373,18 +373,18 @@ body.tab-bank #bankPage { display: flex; }
       <div class="line"><span>Версия</span><span id="bkVer"></span></div>
       <div class="line"><a id="bkSheetLink" href="https://docs.google.com/spreadsheets/d/1cKYM1-z92p6Q14BxznyrYuXFfWDnJfb1w0Dj51CcAhk/edit#gid=0" target="_blank" rel="noopener">Открыть вкладку YB Revolut</a></div>
     </section>
+    <div class="bk-head"> <!-- сверху банк, под ним сводка со «Связать категории» (его слово 03.11.2026) -->
+      <div class="bk-bankrow">
+        <div class="catwrap"><button class="catsel set" id="bkBankBtn" type="button" aria-haspopup="dialog">YB Revolut</button></div>
+        <button class="bk-act" id="bkSync" type="button"><span class="t">Сделать выгрузку</span><span class="s" id="bkSyncSt"></span></button>
+      </div>
+    </div>
     <div class="bal bk-bal" id="bkStatBox">
       <div class="bal-info">
         <div class="bal-l"><span class="k">Связано:</span><b id="stSuggP">—</b><span class="k" id="stPend"></span></div>
         <div class="bal-l"><span class="k">Точность:</span><b id="stAll">—</b><span class="k" id="stD30"></span></div>
       </div>
       <button id="bkAiBtn" type="button"><span class="lbl">Связать категории</span><span class="prog" id="bkAiProg"></span></button>
-    </div>
-    <div class="bk-head">
-      <div class="bk-bankrow">
-        <div class="catwrap"><button class="catsel set" id="bkBankBtn" type="button" aria-haspopup="dialog">YB Revolut</button></div>
-        <button class="bk-act" id="bkSync" type="button"><span class="t">Сделать выгрузку</span><span class="s" id="bkSyncSt"></span></button>
-      </div>
     </div>
     <div class="bk-top">
       <div class="seg" role="group" aria-label="Какие операции">
@@ -462,7 +462,7 @@ body.tab-bank #bankPage { display: flex; }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "87"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "88"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
