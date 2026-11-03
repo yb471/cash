@@ -68,19 +68,22 @@ body.tab-bank #bankPage { display: flex; }
 body.tab-bank .gear { visibility: hidden; }
 .bk-top { display: flex; flex-direction: column; gap: 10px; }
 /* строка банка: поле выбора как «Категория» в Cash (лист снизу), справа «Сделать выгрузку» с датой (его слово 03.11.2026) */
-.bk-bankrow { display: flex; align-items: stretch; gap: 10px; } /* левые поля по высоте кнопок справа */
-.bk-bankrow .catwrap { flex: 1; min-width: 0; display: flex; }
-.bk-bankrow .catsel { height: auto; min-height: 50px; }
-.bk-bankrow .bk-act { flex: none; width: 114px; padding: 6px 6px; }
+/* две строки одной сеткой: колонка кнопок — по ширине «Сделать выгрузку», как в версии 71; сводка — шириной поля банка
+   (его слово 03.11.2026: строку банка не трогать, первую строку — по ней) */
+.bk-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 10px; }
+.bk-bankrow { display: contents; }
+.bk-bankrow .catwrap { min-width: 0; align-self: center; }
+
 .seg-btn .n { font-variant-numeric: tabular-nums; color: var(--accent); margin-left: 4px; }
-.bk-head { display: flex; flex-direction: column; gap: 8px; }
+
 /* верх раздела — две строки одной сетки (его слово 03.11.2026): слева поле той же ширины, справа кнопка той же ширины.
    Сводка — две короткие строки: «Неразобрано: N · подсказки X%» и «Точность Claude: Y% · 30 дн. Z%» */
-.bk-statbox { flex: 1; min-width: 0; min-height: 50px; display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 5px 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
-.bk-statbox .ln { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: calc(12.5 * var(--u)); color: var(--muted); letter-spacing: -.005em; }
+.bk-statbox { min-width: 0; min-height: 50px; display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 5px 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.bk-statbox .ln { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: calc(12 * var(--u)); color: var(--muted); letter-spacing: -.01em; }
 .bk-statbox b { color: var(--fg); font-variant-numeric: tabular-nums; }
-.bk-statbox .m { font-size: calc(11.5 * var(--u)); font-variant-numeric: tabular-nums; }
-@media (max-width: 385px) { .bk-statbox .ln { font-size: calc(11.5 * var(--u)); } .bk-statbox .m { font-size: calc(10.5 * var(--u)); } .bk-statbox { padding: 5px 8px; } }
+.bk-statbox .m { font-size: calc(10.5 * var(--u)); font-variant-numeric: tabular-nums; }
+@media (max-width: 420px) { .bk-statbox .ln { font-size: calc(11.5 * var(--u)); } .bk-statbox { padding: 5px 8px; } }
+@media (max-width: 385px) { .bk-statbox { padding: 5px 6px; } .bk-statbox .ln { font-size: calc(10.75 * var(--u)); letter-spacing: -.02em; } .bk-statbox .m { font-size: calc(10 * var(--u)); } }
 /* кнопка действия с датой: две строки — что делает и когда было в последний раз (или ход работы) */
 .bk-act { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 50px; padding: 6px 12px; border: 1.5px solid var(--accent); border-radius: 14px; background: transparent; color: var(--accent); }
 .bk-act .t { font-weight: 700; font-size: calc(13.5 * var(--u)); line-height: 1.2; text-align: center; }
@@ -352,7 +355,7 @@ body.tab-bank .gear { visibility: hidden; }
           <div class="ln">Неразобрано: <b id="stPend">—</b><span class="m" id="stSuggP"></span></div>
           <div class="ln">Точность Claude: <b id="stAll">—</b><span class="m" id="stD30"></span></div>
         </div>
-        <button class="bk-act" id="bkAiBtn" type="button"><span class="t">Проставить категории</span><span class="s" id="bkAiSt"></span></button>
+        <button class="bk-act" id="bkAiBtn" type="button"><span class="t">Проставить<br>категории</span><span class="s" id="bkAiSt"></span></button>
       </div>
       <div class="bk-bankrow">
         <div class="catwrap"><button class="catsel set" id="bkBankBtn" type="button" aria-haspopup="dialog">YB Revolut</button></div>
@@ -435,7 +438,7 @@ body.tab-bank .gear { visibility: hidden; }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "72"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "73"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -925,9 +928,9 @@ body.tab-bank .gear { visibility: hidden; }
     // сводка: неразобрано, с подсказкой — по экрану (с его неотправленными решениями), точность — с сервера
     bel.stPend.textContent = String(pending.length);
     var withSugg = pending.filter(function (t) { return t.sugg; }).length;
-    bel.stSuggP.textContent = pending.length ? " · подсказки " + Math.round(withSugg / pending.length * 100) + "%" : ""; // доля неразобранных с подсказкой
+    bel.stSuggP.textContent = pending.length ? " · подск. " + Math.round(withSugg / pending.length * 100) + "%" : ""; // доля неразобранных с подсказкой
     var pct = function (a) { return a && a.n ? Math.round(a.ok / a.n * 100) + "%" : "—"; }, sa = d.stats && d.stats.all, s30 = d.stats && d.stats.d30;
-    bel.stAll.textContent = pct(sa); bel.stD30.textContent = s30 && s30.n ? " · 30 дн. " + pct(s30) : "";
+    bel.stAll.textContent = pct(sa); bel.stD30.textContent = s30 && s30.n ? " · 30 д " + pct(s30) : "";
     bel.statBox.title = "С подсказкой " + withSugg + " из " + pending.length + "; верных подсказок " + (sa ? sa.ok + " из " + sa.n : "—") + " всего, " + (s30 ? s30.ok + " из " + s30.n : "—") + " за 30 дней";
     bkAiRender();
     var vis = bkVisible();
