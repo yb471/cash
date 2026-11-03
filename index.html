@@ -67,24 +67,27 @@ body.tab-bank .app > :not(.top):not(#bankPage) { display: none !important; }
 body.tab-bank #bankPage { display: flex; }
 body.tab-bank .gear { visibility: hidden; }
 .bk-top { display: flex; flex-direction: column; gap: 10px; }
-.bk-bank { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--fg); font-weight: 700; font-size: calc(15 * var(--u)); }
-.bk-bank[aria-disabled="true"] { pointer-events: none; }
-.bk-bank .car { color: var(--muted); font-size: calc(12 * var(--u)); }
+/* строка банка: поле выбора как «Категория» в Cash (лист снизу), справа «Сделать выгрузку» с датой (его слово 03.11.2026) */
+.bk-bankrow { display: flex; align-items: center; gap: 10px; }
+.bk-bankrow .catwrap { flex: 1; min-width: 0; }
+.bk-bankrow .bk-act { flex: none; }
 .seg-btn .n { font-variant-numeric: tabular-nums; color: var(--accent); margin-left: 4px; }
 .bk-card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
-/* сводка разбора и подход Claude (его слово 03.11.2026): неразобрано, с подсказкой, точность всего и за 30 дней */
-.bk-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; }
-.bk-stats .st { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.bk-stats b { font-size: calc(21 * var(--u)); font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.15; }
-.bk-stats span { font-size: calc(12.5 * var(--u)); color: var(--muted); line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.bk-stats i { font-style: normal; font-variant-numeric: tabular-nums; }
-.bk-ai { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; border-top: 1px solid var(--line); padding-top: 10px; }
-.bk-ai-btn { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 14px; border: 1.5px solid var(--accent); border-radius: 999px; background: transparent; color: var(--accent); font-weight: 700; font-size: calc(14 * var(--u)); white-space: nowrap; }
-.bk-ai-btn:disabled { opacity: .55; }
-.bk-ai-btn .ic { display: inline-block; font-size: 16px; line-height: 1; }
-.bk-ai-btn.run .ic { animation: ptrspin .9s linear infinite; }
-.bk-ai-st { min-width: 0; font-size: calc(12.5 * var(--u)); color: var(--muted); line-height: 1.3; }
-.bk-ai-st.ok { color: var(--plus); } .bk-ai-st.warn { color: var(--warn); } .bk-ai-st.err { color: var(--minus); }
+/* верхний блок компактно (его слово 03.11.2026): слева цифры, справа «Проставить категории» с датой последнего разбора */
+.bk-card { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px; padding: 10px 12px; }
+.bk-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; min-width: 0; }
+.bk-stats .st { display: flex; flex-direction: column; min-width: 0; }
+.bk-stats .n { display: flex; align-items: baseline; gap: 4px; white-space: nowrap; }
+.bk-stats b { font-size: calc(18 * var(--u)); font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.15; }
+.bk-stats i { font-style: normal; font-size: calc(11.5 * var(--u)); color: var(--muted); font-variant-numeric: tabular-nums; }
+.bk-stats span { font-size: calc(11.5 * var(--u)); color: var(--muted); line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* кнопка действия с датой: две строки — что делает и когда было в последний раз (или ход работы) */
+.bk-act { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 50px; padding: 6px 12px; border: 1.5px solid var(--accent); border-radius: 14px; background: transparent; color: var(--accent); }
+.bk-act .t { font-weight: 700; font-size: calc(13.5 * var(--u)); line-height: 1.2; text-align: center; }
+.bk-act .s { font-size: calc(11 * var(--u)); color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bk-act .s.ok { color: var(--plus); } .bk-act .s.warn { color: var(--warn); } .bk-act .s.err { color: var(--minus); }
+.bk-act:disabled { opacity: .65; }
+.bk-act.run .t::before { content: "↻ "; display: inline-block; animation: ptrspin .9s linear infinite; }
 .bk-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
 .bk-list .mh { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 1; display: flex; justify-content: space-between; gap: 10px; padding: 12px 4px 6px; background: var(--bg); border-bottom: 1px solid var(--line); font-size: calc(14 * var(--u)); font-weight: 700; }
 .bk-list .mh span:last-child { color: var(--muted); font-weight: 600; white-space: nowrap; }
@@ -345,18 +348,18 @@ body.tab-bank .gear { visibility: hidden; }
   <section id="bankPage" aria-label="Банк"> <!-- карточка точности — сразу под названием (его слово 02.11.2026) -->
     <div class="bk-card" id="bkCard">
       <div class="bk-stats">
-        <div class="st"><b id="stPend">—</b><span>неразобрано</span></div>
-        <div class="st"><b id="stSugg">—</b><span>с подсказкой<i id="stSuggP"></i></span></div>
-        <div class="st"><b id="stAll">—</b><span>верно всего<i id="stAllN"></i></span></div>
-        <div class="st"><b id="stD30">—</b><span>за 30 дней<i id="stD30N"></i></span></div>
+        <div class="st"><div class="n"><b id="stPend">—</b></div><span>неразобрано</span></div>
+        <div class="st"><div class="n"><b id="stSugg">—</b><i id="stSuggP"></i></div><span>с подсказкой</span></div>
+        <div class="st"><div class="n"><b id="stAll">—</b><i id="stAllN"></i></div><span>верно всего</span></div>
+        <div class="st"><div class="n"><b id="stD30">—</b><i id="stD30N"></i></div><span>за 30 дней</span></div>
       </div>
-      <div class="bk-ai">
-        <button class="bk-ai-btn" id="bkAiBtn" type="button"><span class="ic">↻</span>Обновить подсказки</button>
-        <div class="bk-ai-st" id="bkAiSt"></div>
-      </div>
+      <button class="bk-act" id="bkAiBtn" type="button"><span class="t">Проставить<br>категории</span><span class="s" id="bkAiSt"></span></button>
     </div>
     <div class="bk-top">
-      <button class="bk-bank" id="bkBank" type="button" aria-disabled="true"><span id="bkBankName">YB Revolut</span><span class="car" id="bkBankCar" hidden>▾</span></button>
+      <div class="bk-bankrow">
+        <div class="catwrap"><button class="catsel set" id="bkBankBtn" type="button" aria-haspopup="dialog">YB Revolut</button></div>
+        <button class="bk-act" id="bkSync" type="button"><span class="t">Сделать выгрузку</span><span class="s" id="bkSyncSt"></span></button>
+      </div>
       <div class="seg" role="group" aria-label="Какие операции">
         <button class="seg-btn neutral on" id="bkReview" type="button">К проверке<span class="n" id="bkPendingN"></span></button>
         <button class="seg-btn neutral" id="bkAll" type="button">Все</button>
@@ -405,6 +408,7 @@ body.tab-bank .gear { visibility: hidden; }
   </div>
 </div>
 
+
 <div class="sheet" id="bkBankSheet" hidden>
   <div class="sheet-back" id="bkBankBack"></div>
   <div class="sheet-body" role="dialog" aria-label="Банк">
@@ -431,7 +435,7 @@ body.tab-bank .gear { visibility: hidden; }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "70"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "71"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -650,11 +654,11 @@ body.tab-bank .gear { visibility: hidden; }
   function renderAll() { renderTpl(); renderSign(); renderCur(); renderCats(); renderDate(); renderEdit(); renderQueue(); renderBal(); }
 
   // ---------- the function in Supabase ----------
-  function api(action, payload) {
+  function api(action, payload, ms) {
     var t = token();
     if (!t) return Promise.reject({ code: "no_token" });
     var ctrl = typeof AbortController === "function" ? new AbortController() : null;
-    var tm = ctrl ? setTimeout(function () { ctrl.abort(); }, 30000) : null;
+    var tm = ctrl ? setTimeout(function () { ctrl.abort(); }, ms || 30000) : null; // выгрузка из банка ждёт дольше
     return fetch(FN, { method: "POST", headers: { "content-type": "application/json", "x-cash-token": t }, body: JSON.stringify(Object.assign({ action: action }, payload || {})), signal: ctrl ? ctrl.signal : undefined })
       .then(function (r) {
         if (tm) clearTimeout(tm);
@@ -869,10 +873,10 @@ body.tab-bank .gear { visibility: hidden; }
   var bk = { data: ls("bank_cache"), filter: prefs.bkFilter === "all" ? "all" : "review", queue: ls("bank_queue") || [], timer: null, sending: false,
     loaded: false, done: {}, cur: null, pick: "", busy: false };
   var B = function (id) { return document.getElementById(id); };
-  var bel = { bank: B("bkBank"), bankName: B("bkBankName"), bankCar: B("bkBankCar"), review: B("bkReview"), all: B("bkAll"), pendingN: B("bkPendingN"),
+  var bel = { bankBtn: B("bkBankBtn"), bankSheet: B("bkBankSheet"), bankList: B("bkBankList"), sync: B("bkSync"), syncSt: B("bkSyncSt"), review: B("bkReview"), all: B("bkAll"), pendingN: B("bkPendingN"),
     stPend: B("stPend"), stSugg: B("stSugg"), stSuggP: B("stSuggP"), stAll: B("stAll"), stAllN: B("stAllN"), stD30: B("stD30"), stD30N: B("stD30N"), aiBtn: B("bkAiBtn"), aiSt: B("bkAiSt"), status: B("bkStatus"), list: B("bkList"), empty: B("bkEmpty"), more: B("bkMore"),
     sheet: B("txSheet"), back: B("txBack"), close: B("txClose"), title: B("txTitle"), amt: B("txAmt"), meta: B("txMeta"), rem: B("txRem"), sugg: B("txSugg"),
-    cats: B("txCats"), note: B("txNote"), ok: B("txOk"), left: B("txLeft"), bankSheet: B("bkBankSheet"), bankBack: B("bkBankBack"), bankClose: B("bkBankClose"), bankList: B("bkBankList") };
+    cats: B("txCats"), note: B("txNote"), ok: B("txOk"), left: B("txLeft") };
   function bkStatus(t, kind) { bel.status.textContent = t || ""; bel.status.className = "status" + (kind ? " " + kind : ""); }
   function bkOverlay(t) { // операция с его ещё не отправленными решениями поверх ответа сервера
     var q = null; for (var i = 0; i < bk.queue.length; i++) if (bk.queue[i].id === t.id) q = bk.queue[i];
@@ -914,15 +918,16 @@ body.tab-bank .gear { visibility: hidden; }
     bel.review.classList.toggle("on", bk.filter === "review"); bel.all.classList.toggle("on", bk.filter === "all");
     if (!d) { bel.aiSt.textContent = token() ? "Загружаю операции…" : "Сначала введи код доступа"; bel.list.textContent = ""; return; }
     var banks = d.banks || [];
-    bel.bankName.textContent = d.bank || "Банк"; bel.bankCar.hidden = banks.length < 2; bel.bank.setAttribute("aria-disabled", banks.length < 2 ? "true" : "false");
+    bel.bankBtn.textContent = d.bank || "Банк";
+    bkSyncRender();
     var pending = items.filter(function (t) { return !t.category && String(t.date) >= d.review_from; });
     bel.pendingN.textContent = pending.length ? " " + pending.length : "";
     // сводка: неразобрано, с подсказкой — по экрану (с его неотправленными решениями), точность — с сервера
     bel.stPend.textContent = String(pending.length);
     var withSugg = pending.filter(function (t) { return t.sugg; }).length;
     bel.stSugg.textContent = String(withSugg);
-    bel.stSuggP.textContent = pending.length ? " · " + Math.round(withSugg / pending.length * 100) + "%" : ""; // доля неразобранных с подсказкой (его слово 03.11.2026)
-    var acc = function (a, b, n) { b.textContent = a && a.n ? Math.round(a.ok / a.n * 100) + "%" : "—"; n.textContent = a && a.n ? " · " + a.ok + " из " + a.n : ""; };
+    bel.stSuggP.textContent = pending.length ? Math.round(withSugg / pending.length * 100) + "%" : ""; // доля неразобранных с подсказкой (его слово 03.11.2026)
+    var acc = function (a, b, n) { b.textContent = a && a.n ? Math.round(a.ok / a.n * 100) + "%" : "—"; n.textContent = a && a.n ? a.ok + "/" + a.n : ""; };
     acc(d.stats && d.stats.all, bel.stAll, bel.stAllN); acc(d.stats && d.stats.d30, bel.stD30, bel.stD30N);
     bkAiRender();
     var vis = bkVisible();
@@ -960,17 +965,19 @@ body.tab-bank .gear { visibility: hidden; }
   }
   // подход Claude: кнопка и понятное состояние — работает (с ходом) или закончил (когда и что изменил)
   function hm(iso) { var t = new Date(iso); return isNaN(t) ? "" : String(t.getHours()).padStart(2, "0") + ":" + String(t.getMinutes()).padStart(2, "0"); }
-  function bkAiRender() {
+  function dmhm(iso) { var t = new Date(iso); return isNaN(t) ? "" : String(t.getDate()).padStart(2, "0") + "." + String(t.getMonth() + 1).padStart(2, "0") + " " + hm(iso); }
+  function bkAiRender() { // под «Проставить категории»: ход работы или когда разбирал последний раз
     var d = bk.data || {}, a = d.ai || null, run = !!(a && a.state === "running");
-    bel.aiBtn.disabled = run || bk.aiStarting; bel.aiBtn.classList.toggle("run", run || bk.aiStarting);
+    var busy = !!(run || bk.aiStarting); // toggle с undefined переключал бы класс, а не снимал
+    bel.aiBtn.disabled = busy; bel.aiBtn.classList.toggle("run", busy);
     var t = "", k = "";
-    if (bk.aiStarting) t = "Запускаю Claude…";
-    else if (run) t = "Claude разбирает" + (a.total ? ": " + Math.min(a.done || 0, a.total) + " из " + a.total : "…");
-    else if (a && a.state === "done") { t = "✓ Готово в " + hm(a.finished) + (a.changed ? ": обновил " + a.changed : ": без изменений") + (a.skipped ? ", пропустил " + a.skipped : ""); k = "ok"; }
-    else if (a && a.state === "error") { t = "Не вышло: " + (a.error || "ошибка"); k = "err"; }
-    else if (d.ai_ready === false) { t = "Подключу после твоего выбора в чате: API или рутинная сессия"; k = "warn"; }
-    else t = "Claude пересмотрит подсказки по твоим решениям и комментариям";
-    bel.aiSt.textContent = t; bel.aiSt.className = "bk-ai-st" + (k ? " " + k : "");
+    if (bk.aiStarting) t = "запускаю…";
+    else if (run) t = "работаю" + (a.total ? ": " + Math.min(a.done || 0, a.total) + " из " + a.total : "…");
+    else if (d.ai_ready === false) { t = "не подключено"; k = "warn"; }
+    else if (a && a.state === "done") { t = dmhm(a.finished) + (a.changed ? " · изменил " + a.changed : ""); k = "ok"; }
+    else if (a && a.state === "error") { t = "ошибка " + dmhm(a.finished || a.started); k = "err"; }
+    else t = "ещё не было";
+    bel.aiSt.textContent = t; bel.aiSt.className = "s" + (k ? " " + k : "");
     if (run) bkAiPoll();
   }
   function bkAiPoll() {
@@ -988,7 +995,11 @@ body.tab-bank .gear { visibility: hidden; }
   bel.aiBtn.addEventListener("click", function () {
     if (!bk.data || bk.aiStarting) return;
     bk.aiStarting = true; bkAiRender();
-    api("bank_ai_run").then(function (j) { bk.aiStarting = false; bk.data.ai = j.ai; bk.data.ai_ready = j.ai_ready; bkAiRender(); })
+    api("bank_ai_run").then(function (j) {
+      bk.aiStarting = false; bk.data.ai = j.ai; bk.data.ai_ready = j.ai_ready; bkAiRender();
+      if (j.ai_ready === false) bkStatus("«Проставить категории» подключу после твоего выбора в чате: API или рутинная сессия", "warn");
+      else if (j.ai && j.ai.state === "error") bkStatus("Claude: " + (j.ai.error || "ошибка"), "err");
+    })
       .catch(function (e) { bk.aiStarting = false; bkAiRender(); bkStatus(explain(e), "err"); });
   });
   function bkPrevMonth() { // месяц до самого раннего загруженного
@@ -1097,18 +1108,48 @@ body.tab-bank .gear { visibility: hidden; }
   bel.review.addEventListener("click", function () { bk.filter = "review"; prefs.bkFilter = "review"; ls("cash_prefs", prefs); bkRender(); window.scrollTo(0, 0); });
   bel.all.addEventListener("click", function () { bk.filter = "all"; prefs.bkFilter = "all"; ls("cash_prefs", prefs); bkRender(); window.scrollTo(0, 0); });
   bel.more.addEventListener("click", function () { var p = bkPrevMonth(); if (!p) return; bel.more.disabled = true; bkLoad(p).then(function () { bel.more.disabled = false; }); });
-  bel.bank.addEventListener("click", function () { // выбор банка — когда их больше одного
-    var banks = (bk.data && bk.data.banks) || []; if (banks.length < 2) return;
+  bel.bankBtn.addEventListener("click", function () { // выбор банка — лист снизу, как категории в Cash
+    var banks = (bk.data && bk.data.banks) || [];
+    if (!banks.length) return;
     bel.bankList.textContent = "";
     banks.forEach(function (x) {
-      var li = document.createElement("li"), b = document.createElement("button"), nm = document.createElement("span");
-      b.type = "button"; nm.className = "nm"; nm.textContent = x.label; b.appendChild(nm); b.className = x.label === bk.data.bank ? "on" : "";
-      b.addEventListener("click", function () { prefs.bank = x.label; ls("cash_prefs", prefs); bel.bankSheet.hidden = true; bk.data = null; bkRender(); bkLoad(); });
+      var li = document.createElement("li"), b = document.createElement("button"), em = document.createElement("span"), nm = document.createElement("span"), on = x.label === bk.data.bank;
+      b.type = "button"; em.className = "em"; em.textContent = "🏦"; nm.className = "nm"; nm.textContent = x.label;
+      b.appendChild(em); b.appendChild(nm); b.className = on ? "on" : ""; b.setAttribute("aria-pressed", on ? "true" : "false");
+      b.addEventListener("click", function () {
+        bel.bankSheet.hidden = true;
+        if (on) return;
+        prefs.bank = x.label; ls("cash_prefs", prefs); bk.data = null; bk.syncRes = null; bkRender(); bkLoad();
+      });
       li.appendChild(b); bel.bankList.appendChild(li);
     });
     bel.bankSheet.hidden = false;
   });
-  bel.bankClose.addEventListener("click", function () { bel.bankSheet.hidden = true; }); bel.bankBack.addEventListener("click", function () { bel.bankSheet.hidden = true; });
+  B("bkBankClose").addEventListener("click", function () { bel.bankSheet.hidden = true; });
+  B("bkBankBack").addEventListener("click", function () { bel.bankSheet.hidden = true; });
+  // «Обновить» — выгрузка операций из банка сейчас (как ночная, но по его просьбе): сервер берёт только проведённые банком
+  function bkSyncRender() { // под «Сделать выгрузку»: ход, итог или когда выгружалось последний раз
+    var d = bk.data || {}, x = bk.syncRes, t = "", k = "", last = d.synced_at ? dmhm(d.synced_at) : "";
+    bel.sync.disabled = !!bk.syncing; bel.sync.classList.toggle("run", !!bk.syncing);
+    if (bk.syncing) t = "загружаю…";
+    else if (x && x.error) { t = "ошибка"; k = "err"; }
+    else if (x && x.skipped === "recent") { t = "только что · " + last; k = "warn"; }
+    else if (x && x.skipped) { t = "банк занят"; k = "warn"; }
+    else if (x) { t = last + " · " + (x.inserted ? "новых " + x.inserted : "новых нет"); k = x.errors && x.errors.length ? "warn" : "ok"; }
+    else t = last || "ещё не было";
+    bel.syncSt.textContent = t; bel.syncSt.className = "s" + (k ? " " + k : "");
+  }
+  bel.sync.addEventListener("click", function () {
+    if (bk.syncing || !token()) return;
+    bk.syncing = true; bk.syncRes = null; bkSyncRender();
+    api("bank_sync", { bank: prefs.bank, from: bk.data && bk.data.from }, 130000).then(function (j) {
+      bk.syncing = false; bk.syncRes = j.sync || null; bkApply(j);
+      var x = j.sync || {};
+      if (x.error) bkStatus("Выгрузка: банк не ответил — " + x.error, "err");
+      else if (x.errors && x.errors.length) bkStatus("Выгрузка: " + x.errors.join("; "), "warn");
+      else if (x.skipped === "busy") bkStatus("Банк сейчас занят ночной выгрузкой — попробуй через минуту", "warn");
+    }).catch(function (e) { bk.syncing = false; bk.syncRes = { error: explain(e) }; bkSyncRender(); bkStatus(explain(e), "err"); });
+  });
   function bankOpen() { bkRender(); if (!bk.loaded) bkLoad(); else if (bk.queue.length) bkSend(); }
 
   // меню разделов: Cash и Bank работают, остальные — заглушка (его слово 02.11.2026)
