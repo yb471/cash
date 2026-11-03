@@ -77,7 +77,7 @@ body.tab-bank .gear { visibility: hidden; }
 .seg-btn .n { font-variant-numeric: tabular-nums; color: var(--accent); margin-left: 4px; }
 
 /* верх раздела — две строки одной сетки (его слово 03.11.2026): слева поле той же ширины, справа кнопка той же ширины.
-   Сводка — две короткие строки: «Неразобрано: N (связано X%)» и «Точность связи: Y% (30 д Z%)» (его слово 03.11.2026); шрифт — по блоку */
+   Сводка — две короткие строки: «Определено: X% из N» (доля неразобранных с подсказкой) и «Точность: Y% · 30 д Z%» (его слово 03.11.2026); шрифт — по блоку */
 .bk-statbox { min-width: 0; min-height: 50px; display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 5px 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
 /* шрифт сводки подгоняется под блок (его слово 03.11.2026): --k ставит bkFitStats — самый крупный, при котором обе строки видны целиком */
 .bk-statbox .ln { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: calc(13.5 * var(--u) * var(--k, 1)); color: var(--muted); letter-spacing: -.01em; }
@@ -356,8 +356,8 @@ body.tab-bank .gear { visibility: hidden; }
     <div class="bk-head">
       <div class="bk-bankrow">
         <div class="bk-statbox" id="bkStatBox">
-          <div class="ln">Неразобрано: <b id="stPend">—</b><span class="m" id="stSuggP"></span></div>
-          <div class="ln">Точность связи: <b id="stAll">—</b><span class="m" id="stD30"></span></div>
+          <div class="ln">Определено: <b id="stSuggP">—</b><span class="m" id="stPend"></span></div>
+          <div class="ln">Точность: <b id="stAll">—</b><span class="m" id="stD30"></span></div>
         </div>
         <button class="bk-act" id="bkAiBtn" type="button"><span class="t">Связать категории</span><span class="s" id="bkAiSt"></span></button>
       </div>
@@ -442,7 +442,7 @@ body.tab-bank .gear { visibility: hidden; }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "81"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "82"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -944,12 +944,12 @@ body.tab-bank .gear { visibility: hidden; }
     var pending = items.filter(function (t) { return !t.category && String(t.date) >= d.review_from; });
     bel.pendingN.textContent = pending.length ? " " + pending.length : "";
     // сводка: неразобрано, с подсказкой — по экрану (с его неотправленными решениями), точность — с сервера
-    bel.stPend.textContent = String(pending.length);
+    bel.stPend.textContent = " из " + pending.length;
     var withSugg = pending.filter(function (t) { return t.sugg; }).length;
-    bel.stSuggP.textContent = pending.length ? " (связано " + Math.round(withSugg / pending.length * 100) + "%)" : ""; // доля неразобранных с подсказкой
+    bel.stSuggP.textContent = pending.length ? Math.round(withSugg / pending.length * 100) + "%" : "—"; // доля неразобранных с подсказкой
     var pct = function (a) { return a && a.n ? Math.round(a.ok / a.n * 100) + "%" : "—"; }, sa = d.stats && d.stats.all, s30 = d.stats && d.stats.d30;
-    bel.stAll.textContent = pct(sa); bel.stD30.textContent = s30 && s30.n ? " (30 д " + pct(s30) + ")" : "";
-    bel.statBox.title = "Связано " + withSugg + " из " + pending.length + "; верных подсказок " + (sa ? sa.ok + " из " + sa.n : "—") + " всего, " + (s30 ? s30.ok + " из " + s30.n : "—") + " за 30 дней";
+    bel.stAll.textContent = pct(sa); bel.stD30.textContent = s30 && s30.n ? " · 30 д " + pct(s30) : "";
+    bel.statBox.title = "Определено " + withSugg + " из " + pending.length + "; верных подсказок " + (sa ? sa.ok + " из " + sa.n : "—") + " всего, " + (s30 ? s30.ok + " из " + s30.n : "—") + " за 30 дней";
     bkFitStats();
     bkAiRender();
     var vis = bkVisible();
