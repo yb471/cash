@@ -346,7 +346,7 @@ body.tab-bank .gear { visibility: hidden; }
     <div class="bk-card" id="bkCard">
       <div class="bk-stats">
         <div class="st"><b id="stPend">—</b><span>неразобрано</span></div>
-        <div class="st"><b id="stSugg">—</b><span>с подсказкой</span></div>
+        <div class="st"><b id="stSugg">—</b><span>с подсказкой<i id="stSuggP"></i></span></div>
         <div class="st"><b id="stAll">—</b><span>верно всего<i id="stAllN"></i></span></div>
         <div class="st"><b id="stD30">—</b><span>за 30 дней<i id="stD30N"></i></span></div>
       </div>
@@ -431,7 +431,7 @@ body.tab-bank .gear { visibility: hidden; }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "69"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "70"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -870,7 +870,7 @@ body.tab-bank .gear { visibility: hidden; }
     loaded: false, done: {}, cur: null, pick: "", busy: false };
   var B = function (id) { return document.getElementById(id); };
   var bel = { bank: B("bkBank"), bankName: B("bkBankName"), bankCar: B("bkBankCar"), review: B("bkReview"), all: B("bkAll"), pendingN: B("bkPendingN"),
-    stPend: B("stPend"), stSugg: B("stSugg"), stAll: B("stAll"), stAllN: B("stAllN"), stD30: B("stD30"), stD30N: B("stD30N"), aiBtn: B("bkAiBtn"), aiSt: B("bkAiSt"), status: B("bkStatus"), list: B("bkList"), empty: B("bkEmpty"), more: B("bkMore"),
+    stPend: B("stPend"), stSugg: B("stSugg"), stSuggP: B("stSuggP"), stAll: B("stAll"), stAllN: B("stAllN"), stD30: B("stD30"), stD30N: B("stD30N"), aiBtn: B("bkAiBtn"), aiSt: B("bkAiSt"), status: B("bkStatus"), list: B("bkList"), empty: B("bkEmpty"), more: B("bkMore"),
     sheet: B("txSheet"), back: B("txBack"), close: B("txClose"), title: B("txTitle"), amt: B("txAmt"), meta: B("txMeta"), rem: B("txRem"), sugg: B("txSugg"),
     cats: B("txCats"), note: B("txNote"), ok: B("txOk"), left: B("txLeft"), bankSheet: B("bkBankSheet"), bankBack: B("bkBankBack"), bankClose: B("bkBankClose"), bankList: B("bkBankList") };
   function bkStatus(t, kind) { bel.status.textContent = t || ""; bel.status.className = "status" + (kind ? " " + kind : ""); }
@@ -919,7 +919,9 @@ body.tab-bank .gear { visibility: hidden; }
     bel.pendingN.textContent = pending.length ? " " + pending.length : "";
     // сводка: неразобрано, с подсказкой — по экрану (с его неотправленными решениями), точность — с сервера
     bel.stPend.textContent = String(pending.length);
-    bel.stSugg.textContent = String(pending.filter(function (t) { return t.sugg; }).length);
+    var withSugg = pending.filter(function (t) { return t.sugg; }).length;
+    bel.stSugg.textContent = String(withSugg);
+    bel.stSuggP.textContent = pending.length ? " · " + Math.round(withSugg / pending.length * 100) + "%" : ""; // доля неразобранных с подсказкой (его слово 03.11.2026)
     var acc = function (a, b, n) { b.textContent = a && a.n ? Math.round(a.ok / a.n * 100) + "%" : "—"; n.textContent = a && a.n ? " · " + a.ok + " из " + a.n : ""; };
     acc(d.stats && d.stats.all, bel.stAll, bel.stAllN); acc(d.stats && d.stats.d30, bel.stD30, bel.stD30N);
     bkAiRender();
