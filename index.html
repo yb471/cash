@@ -78,15 +78,17 @@ body.tab-bank #bankPage { display: flex; }
 /* верх раздела — две строки одной сетки (его слово 03.11.2026): слева поле той же ширины, справа кнопка той же ширины.
    Сводка — две короткие строки: «Связано: X% из N» (доля неразобранных с подсказкой) и «Точность: Y% · 30 д Z%» (его слово 03.11.2026); шрифт — по блоку */
 /* подписи — колонкой, значения — второй колонкой, проценты строго друг под другом; текст начинается там же, где «YB Revolut» в поле банка (отступ 12px) */
-.bk-statbox { min-width: 0; min-height: 50px; display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: .3em; row-gap: 2px; align-content: center; padding: 5px 8px 5px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); font-size: calc(13.5 * var(--u) * var(--k, 1)); letter-spacing: -.01em; }
+/* как сводка «В наличии» в Cash (.bal), чтобы при переключении вкладок не было разницы (его слово 03.11.2026): рамка, радиус, отступы,
+   подписи 13px серые, значения 14px полужирные; --k ужимает только если на узком экране не влезает */
+.bk-statbox { min-width: 0; min-height: 50px; display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 6px; row-gap: 2px; align-content: center; padding: 8px 8px 8px 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); font-size: calc(13 * var(--u) * var(--k, 1)); line-height: calc(18.2 * var(--u) * var(--k, 1)); }
 /* шрифт сводки подгоняется под блок (его слово 03.11.2026): --k ставит bkFitStats — самый крупный, при котором обе строки видны целиком */
 .bk-statbox .lb { white-space: nowrap; color: var(--muted); }
 .bk-statbox .ln { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--muted); }
-.bk-statbox b { color: var(--fg); font-variant-numeric: tabular-nums; font-size: calc(12.5 * var(--u) * var(--k, 1)); } /* жирные цифры — на размер меньше подписи (его слово 03.11.2026) */
-.bk-statbox .m { font-size: calc(11 * var(--u) * var(--k, 1)); font-variant-numeric: tabular-nums; }
+.bk-statbox b { color: var(--fg); font-weight: 600; font-variant-numeric: tabular-nums; font-size: calc(14 * var(--u) * var(--k, 1)); }
+.bk-statbox .m { font-size: calc(13 * var(--u) * var(--k, 1)); font-variant-numeric: tabular-nums; }
 /* кнопка действия с датой: две строки — что делает и когда было в последний раз (или ход работы) */
-.bk-act { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 50px; padding: 6px 12px; border: 1.5px solid var(--accent); border-radius: 14px; background: transparent; color: var(--accent); }
-.bk-act .t { font-weight: 700; font-size: calc(13.5 * var(--u)); line-height: 1.2; text-align: center; }
+.bk-act { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 50px; padding: 6px 11px; border: 1.5px solid var(--accent); border-radius: 14px; background: transparent; color: var(--accent); }
+.bk-act .t { font-weight: 700; font-size: calc(14 * var(--u)); line-height: 1.2; text-align: center; letter-spacing: -.015em; } /* как «Сделать сверку» в Cash */
 .bk-act .s { font-size: calc(11 * var(--u)); color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .bk-act .s.ok { color: var(--plus); } .bk-act .s.warn { color: var(--warn); } .bk-act .s.err { color: var(--minus); }
 .bk-act:disabled { opacity: .65; }
@@ -99,16 +101,16 @@ body.tab-bank #bankPage { display: flex; }
 .bk-act.run .t::before { content: "↻ "; display: inline-block; animation: ptrspin .9s linear infinite; }
 .bk-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
 .bk-list .mh { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 1; display: flex; justify-content: space-between; gap: 10px; padding: 12px 4px 6px; background: var(--bg); border-bottom: 1px solid var(--line); font-size: calc(14 * var(--u)); font-weight: 700; }
-.bk-list .mh span:last-child { color: var(--muted); font-weight: 600; white-space: nowrap; }
+.bk-list .mh span:last-child { color: var(--muted); white-space: nowrap; } /* жирность — как итог месяца в Cash */
 .bk-item { position: relative; border-bottom: 1px solid color-mix(in srgb, var(--line) 55%, transparent); transition: opacity .35s, transform .35s; }
 .bk-item.done { opacity: 0; transform: translateX(24px); }
 .bk-row { width: 100%; display: grid; grid-template-columns: 44px 1fr auto; gap: 8px; align-items: start; padding: 10px 4px; border: 0; background: transparent; text-align: left; color: var(--fg); font-size: calc(14 * var(--u)); }
 .bk-row:active { background: var(--chip); }
-.bk-row .d { color: var(--muted); font-variant-numeric: tabular-nums; padding-top: 1px; }
-.bk-main { min-width: 0; display: flex; flex-direction: column; gap: 3px; padding-right: 0; }
-.bk-cp { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.bk-rem { color: var(--muted); font-size: calc(12.5 * var(--u)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.bk-chipline { display: flex; align-items: center; min-height: 34px; }
+.bk-row .d { color: var(--muted); font-variant-numeric: tabular-nums; }
+.bk-main { min-width: 0; display: flex; flex-direction: column; gap: 1px; padding-right: 0; } /* как строка записи в Cash */
+.bk-cp { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bk-rem { color: var(--muted); font-size: calc(13 * var(--u)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bk-chipline { display: flex; align-items: center; min-height: 34px; margin-top: 2px; }
 .bk-row .a { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
 .bk-row .a.minus { color: var(--minus); }
 .bk-row .a.plus { color: var(--plus); }
@@ -452,7 +454,7 @@ body.tab-bank #bankPage { display: flex; }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "85"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "86"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
