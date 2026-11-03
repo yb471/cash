@@ -966,7 +966,7 @@ body.tab-bank .gear { visibility: hidden; }
     else if (run) t = "Claude разбирает" + (a.total ? ": " + Math.min(a.done || 0, a.total) + " из " + a.total : "…");
     else if (a && a.state === "done") { t = "✓ Готово в " + hm(a.finished) + (a.changed ? ": обновил " + a.changed : ": без изменений") + (a.skipped ? ", пропустил " + a.skipped : ""); k = "ok"; }
     else if (a && a.state === "error") { t = "Не вышло: " + (a.error || "ошибка"); k = "err"; }
-    else if (a && a.state === "no_key" || d.ai_ready === false) { t = "Нужен ключ API — подробности в чате"; k = "warn"; }
+    else if (d.ai_ready === false) { t = "Подключу после твоего выбора в чате: API или рутинная сессия"; k = "warn"; }
     else t = "Claude пересмотрит подсказки по твоим решениям и комментариям";
     bel.aiSt.textContent = t; bel.aiSt.className = "bk-ai-st" + (k ? " " + k : "");
     if (run) bkAiPoll();
