@@ -82,7 +82,7 @@ body.tab-bank #bankPage { display: flex; }
 /* шрифт сводки подгоняется под блок (его слово 03.11.2026): --k ставит bkFitStats — самый крупный, при котором обе строки видны целиком */
 .bk-statbox .lb { white-space: nowrap; color: var(--muted); }
 .bk-statbox .ln { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--muted); }
-.bk-statbox b { color: var(--fg); font-variant-numeric: tabular-nums; }
+.bk-statbox b { color: var(--fg); font-variant-numeric: tabular-nums; font-size: calc(12.5 * var(--u) * var(--k, 1)); } /* жирные цифры — на размер меньше подписи (его слово 03.11.2026) */
 .bk-statbox .m { font-size: calc(11 * var(--u) * var(--k, 1)); font-variant-numeric: tabular-nums; }
 /* кнопка действия с датой: две строки — что делает и когда было в последний раз (или ход работы) */
 .bk-act { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 50px; padding: 6px 12px; border: 1.5px solid var(--accent); border-radius: 14px; background: transparent; color: var(--accent); }
@@ -90,6 +90,9 @@ body.tab-bank #bankPage { display: flex; }
 .bk-act .s { font-size: calc(11 * var(--u)); color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .bk-act .s.ok { color: var(--plus); } .bk-act .s.warn { color: var(--warn); } .bk-act .s.err { color: var(--minus); }
 .bk-act:disabled { opacity: .65; }
+/* срок доступа к банку: за 10 дней (как напоминание в календаре) — оранжевый и как продлить, истёк — красный */
+#bkAccess.warn { color: var(--warn); font-weight: 600; } #bkAccess.err { color: var(--minus); font-weight: 600; }
+.bk-hint { margin: -4px 0 0; font-size: calc(13 * var(--u)); color: var(--muted); }
 /* «Связать категории» не задаёт ширину колонки — её держит «Сделать выгрузку»; надпись в одну строку */
 #bkAiBtn { width: 0; min-width: 100%; padding-left: 6px; padding-right: 6px; }
 #bkAiBtn .t { white-space: nowrap; letter-spacing: -.01em; }
@@ -355,6 +358,8 @@ body.tab-bank #bankPage { display: flex; }
     <section class="card" id="bkMenu" hidden> <!-- меню «⋯» раздела, как в Cash (его слово 03.11.2026) -->
       <div class="line"><span>Связь с базой</span><span id="bkConn">—</span></div>
       <div class="line"><span>Не отправлено</span><span><span id="bkQueueN">0</span> <button id="bkFlush" type="button" hidden>Отправить</button></span></div>
+      <div class="line"><span>Доступ к банку</span><span id="bkAccess">—</span></div>
+      <p class="bk-hint" id="bkAccessHint" hidden></p>
       <div class="line"><span>Версия</span><span id="bkVer"></span></div>
       <div class="line"><a id="bkSheetLink" href="https://docs.google.com/spreadsheets/d/1cKYM1-z92p6Q14BxznyrYuXFfWDnJfb1w0Dj51CcAhk/edit#gid=0" target="_blank" rel="noopener">Открыть вкладку YB Revolut</a></div>
     </section>
@@ -447,7 +452,7 @@ body.tab-bank #bankPage { display: flex; }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "84"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "85"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -886,7 +891,7 @@ body.tab-bank #bankPage { display: flex; }
     loaded: false, done: {}, cur: null, pick: "", busy: false };
   var B = function (id) { return document.getElementById(id); };
   var bel = { bankBtn: B("bkBankBtn"), bankSheet: B("bkBankSheet"), bankList: B("bkBankList"), sync: B("bkSync"), syncSt: B("bkSyncSt"), review: B("bkReview"), all: B("bkAll"), pendingN: B("bkPendingN"),
-    stPend: B("stPend"), stSuggP: B("stSuggP"), stAll: B("stAll"), stD30: B("stD30"), statBox: B("bkStatBox"), menu: B("bkMenu"), queueN: B("bkQueueN"), flush: B("bkFlush"), sheetLink: B("bkSheetLink"), aiBtn: B("bkAiBtn"), aiSt: B("bkAiSt"), status: B("bkStatus"), list: B("bkList"), empty: B("bkEmpty"), more: B("bkMore"),
+    stPend: B("stPend"), stSuggP: B("stSuggP"), stAll: B("stAll"), stD30: B("stD30"), statBox: B("bkStatBox"), menu: B("bkMenu"), queueN: B("bkQueueN"), flush: B("bkFlush"), sheetLink: B("bkSheetLink"), access: B("bkAccess"), accessHint: B("bkAccessHint"), aiBtn: B("bkAiBtn"), aiSt: B("bkAiSt"), status: B("bkStatus"), list: B("bkList"), empty: B("bkEmpty"), more: B("bkMore"),
     sheet: B("txSheet"), back: B("txBack"), close: B("txClose"), title: B("txTitle"), amt: B("txAmt"), meta: B("txMeta"), rem: B("txRem"), sugg: B("txSugg"),
     cats: B("txCats"), note: B("txNote"), ok: B("txOk"), left: B("txLeft") };
   function bkStatus(t, kind) { bel.status.textContent = t || ""; bel.status.className = "status" + (kind ? " " + kind : ""); }
@@ -947,6 +952,14 @@ body.tab-bank #bankPage { display: flex; }
     var b = bk.data && bk.data.bank, gid = b && Object.prototype.hasOwnProperty.call(BK_TABS, b) ? BK_TABS[b] : null;
     bel.sheetLink.href = BK_SHEET + (gid !== null ? "#gid=" + gid : "");
     bel.sheetLink.textContent = gid !== null ? "Открыть вкладку " + b : "Открыть таблицу";
+    var a = bk.data && bk.data.access, t = a && a.until ? Date.parse(a.until) : NaN, left = (t - Date.now()) / 86400000, st = "";
+    var day = isFinite(t) ? new Date(t).toLocaleDateString("ru-RU", { timeZone: "Europe/Berlin", day: "2-digit", month: "2-digit", year: "numeric" }) : "";
+    if (!a) bel.access.textContent = "—";
+    else if (a.expired || !isFinite(t) || left <= 0) { bel.access.textContent = "истёк"; st = "err"; }
+    else { bel.access.textContent = "до " + day; if (left <= 10) st = "warn"; }
+    bel.access.className = st;
+    bel.accessHint.hidden = !st;
+    bel.accessHint.textContent = st ? "Чтобы продлить, напиши Claude «продли " + String(b || "банк").replace(/ /g, "\u00a0") + "» — пришлёт ссылку, подтвердишь в банке за минуту." : "";
   }
   function bkRender() {
     var d = bk.data, items = bkItems();
