@@ -77,13 +77,14 @@ body.tab-bank .gear { visibility: hidden; }
 .seg-btn .n { font-variant-numeric: tabular-nums; color: var(--accent); margin-left: 4px; }
 
 /* верх раздела — две строки одной сетки (его слово 03.11.2026): слева поле той же ширины, справа кнопка той же ширины.
-   Сводка — две короткие строки: «Неразобрано: N · со связью X%» (его слово 03.11.2026) и «Точность связи: Y% · 30 д Z%» */
+   Сводка — две короткие строки: «Неразобрано: N · со связью X%» (его слово 03.11.2026) и «Точность связи: Y% · 30 д Z%»; шрифт — по блоку */
 .bk-statbox { min-width: 0; min-height: 50px; display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 5px 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
-.bk-statbox .ln { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: calc(12 * var(--u)); color: var(--muted); letter-spacing: -.01em; }
+/* шрифт сводки подгоняется под блок (его слово 03.11.2026): --k ставит bkFitStats — самый крупный, при котором обе строки видны целиком */
+.bk-statbox .ln { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: calc(13.5 * var(--u) * var(--k, 1)); color: var(--muted); letter-spacing: -.01em; }
 .bk-statbox b { color: var(--fg); font-variant-numeric: tabular-nums; }
-.bk-statbox .m { font-size: calc(10.5 * var(--u)); font-variant-numeric: tabular-nums; }
-@media (max-width: 420px) { .bk-statbox .ln { font-size: calc(10.75 * var(--u)); letter-spacing: -.02em; } .bk-statbox .m { font-size: calc(9.75 * var(--u)); } .bk-statbox { padding: 5px 5px 5px 7px; } }
-@media (max-width: 385px) { .bk-statbox .ln { font-size: calc(10.25 * var(--u)); letter-spacing: -.025em; } .bk-statbox .m { font-size: calc(9.25 * var(--u)); } .bk-statbox { padding: 5px 4px 5px 6px; } }
+.bk-statbox .m { font-size: calc(12 * var(--u) * var(--k, 1)); font-variant-numeric: tabular-nums; }
+@media (max-width: 420px) { .bk-statbox { padding: 5px 5px 5px 7px; } }
+@media (max-width: 385px) { .bk-statbox { padding: 5px 4px 5px 6px; } }
 /* кнопка действия с датой: две строки — что делает и когда было в последний раз (или ход работы) */
 .bk-act { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 50px; padding: 6px 12px; border: 1.5px solid var(--accent); border-radius: 14px; background: transparent; color: var(--accent); }
 .bk-act .t { font-weight: 700; font-size: calc(13.5 * var(--u)); line-height: 1.2; text-align: center; }
@@ -441,7 +442,7 @@ body.tab-bank .gear { visibility: hidden; }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "77"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "78"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -919,6 +920,20 @@ body.tab-bank .gear { visibility: hidden; }
     li.appendChild(a); li.appendChild(b);
     return li;
   }
+  // самый крупный шрифт сводки, при котором обе строки помещаются в блок; блок скрыт (другой раздел) — подгоним при открытии
+  function bkFitStats() {
+    var box = bel.statBox, ls = box.querySelectorAll(".ln"), k = 1, i, n;
+    if (!box.clientWidth) return;
+    box.style.setProperty("--k", "1");
+    for (i = 0; i < ls.length; i++) if (ls[i].scrollWidth > ls[i].clientWidth) k = Math.min(k, ls[i].clientWidth / ls[i].scrollWidth);
+    for (n = 0; n < 6 && k < 1; n++) { // округление размеров шрифта — дожимаем, пока не влезет
+      k = Math.max(0.6, Math.floor(k * 100) / 100 - (n ? 0.02 : 0.01));
+      box.style.setProperty("--k", String(k));
+      var over = false;
+      for (i = 0; i < ls.length; i++) if (ls[i].scrollWidth > ls[i].clientWidth) over = true;
+      if (!over || k === 0.6) break;
+    }
+  }
   function bkRender() {
     var d = bk.data, items = bkItems();
     bel.review.classList.toggle("on", bk.filter === "review"); bel.all.classList.toggle("on", bk.filter === "all");
@@ -935,6 +950,7 @@ body.tab-bank .gear { visibility: hidden; }
     var pct = function (a) { return a && a.n ? Math.round(a.ok / a.n * 100) + "%" : "—"; }, sa = d.stats && d.stats.all, s30 = d.stats && d.stats.d30;
     bel.stAll.textContent = pct(sa); bel.stD30.textContent = s30 && s30.n ? " · 30 д " + pct(s30) : "";
     bel.statBox.title = "Со связью " + withSugg + " из " + pending.length + "; верных подсказок " + (sa ? sa.ok + " из " + sa.n : "—") + " всего, " + (s30 ? s30.ok + " из " + s30.n : "—") + " за 30 дней";
+    bkFitStats();
     bkAiRender();
     var vis = bkVisible();
     bel.list.textContent = "";
@@ -1160,6 +1176,7 @@ body.tab-bank .gear { visibility: hidden; }
 
   // меню разделов: Cash и Bank работают, остальные — заглушка (его слово 02.11.2026)
   // клавиатура открыта — видимая часть окна заметно ниже окна (фокус без касания на iOS клавиатуру не открывает, по нему не судим)
+  window.addEventListener("resize", bkFitStats); // поворот, смена размера текста
   if (window.visualViewport) { var vv = window.visualViewport; vv.addEventListener("resize", function () { document.body.classList.toggle("kb", vv.height < window.innerHeight * 0.8); }); }
   var SECTIONS = { dashboard: "Dashboard", cash: "Cash YB", bank: "Bank", invest: "Invest" };
   Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (b) {
