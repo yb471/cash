@@ -162,7 +162,6 @@ body.tab-bank #bankPage { display: flex; }
 .tx-foot .save { height: 46px; padding: 0 14px; font-size: calc(16 * var(--u)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* шапка листа операции (его слово 04.11.2026): название целиком — переносится на 2–3 строки, а не обрезается; «ещё N» — в строке
    суммы справа, чтобы названию хватало ширины и шапка оставалась компактной */
-.tx-body .sheet-head { gap: 10px; }
 .tx-body .sheet-head span:first-child { min-width: 0; line-height: 1.2; overflow-wrap: anywhere; }
 .tx-amtline { display: flex; align-items: baseline; gap: 10px; }
 .tx-left { margin-left: auto; margin-right: -8px; color: var(--muted); font-size: calc(13 * var(--u)); font-weight: 600; white-space: nowrap; }
@@ -197,8 +196,10 @@ body.tab-bank #bankPage { display: flex; }
 .sheet-back { position: absolute; inset: 0; background: rgba(0,0,0,.38); animation: fadein .2s ease-out; }
 .sheet-body { position: absolute; left: 0; right: 0; bottom: 0; max-height: 86%; overflow-y: auto; -webkit-overflow-scrolling: touch; background: var(--surface); border-radius: 20px 20px 0 0;
   padding: 6px 10px calc(14px + env(safe-area-inset-bottom, 0px)); box-shadow: 0 -8px 30px rgba(0,0,0,.18); animation: sheetup .24s cubic-bezier(.2,.8,.2,1); }
-.sheet-head { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between; padding: 6px 6px 4px 14px; background: var(--surface); font-weight: 700; font-size: calc(17 * var(--u)); }
-.sheet-head button { height: 44px; padding: 0 16px; border: 0; border-radius: 999px; background: var(--chip); color: var(--fg); font-size: calc(15 * var(--u)); font-weight: 600; }
+/* шапка листа (его слово 04.11.2026): заголовок 15px, справа круглый ✕; лист закрывается и свайпом вниз (sheetSwipe) */
+.sheet-head { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 6px 4px 14px; background: var(--surface); font-weight: 700; font-size: calc(15 * var(--u)); }
+.sheet-head button { flex: none; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 50%; background: var(--chip); color: var(--fg); font-size: calc(16 * var(--u)); font-weight: 700; line-height: 1; display: flex; align-items: center; justify-content: center; position: relative; }
+.sheet-head button::after { content: ""; position: absolute; inset: -4px; } /* касание — 44px, как советует iOS */
 .sheet-list { list-style: none; margin: 0; padding: 0; }
 .sheet-list button { width: 100%; min-height: 48px; display: flex; align-items: center; gap: 10px; padding: 4px 10px; border: 0; border-radius: 12px; background: transparent; color: var(--fg); font-size: calc(16 * var(--u)); text-align: left; }
 .sheet-list button:active { background: var(--chip); }
@@ -420,7 +421,7 @@ body.tab-bank #bankPage { display: flex; }
 <div class="sheet" id="sheet" hidden>
   <div class="sheet-back" id="sheetBack"></div>
   <div class="sheet-body" role="dialog" aria-label="Категория">
-    <div class="sheet-head"><span>Категория</span><button id="sheetClose" type="button">Закрыть</button></div>
+    <div class="sheet-head"><span>Категория</span><button id="sheetClose" type="button" aria-label="Закрыть">✕</button></div>
     <ul class="sheet-list" id="sheetList"></ul>
   </div>
 </div>
@@ -428,7 +429,7 @@ body.tab-bank #bankPage { display: flex; }
 <div class="sheet" id="txSheet" hidden>
   <div class="sheet-back" id="txBack"></div>
   <div class="sheet-body tx-body" role="dialog" aria-label="Операция банка">
-    <div class="sheet-head"><span id="txTitle">Операция</span><button id="txClose" type="button">Закрыть</button></div>
+    <div class="sheet-head"><span id="txTitle">Операция</span><button id="txClose" type="button" aria-label="Закрыть">✕</button></div>
     <div class="tx-scroll" id="txScroll">
       <div class="tx-info">
         <div class="tx-amtline"><div class="tx-amt" id="txAmt"></div><span class="tx-left" id="txLeft"></span></div>
@@ -450,7 +451,7 @@ body.tab-bank #bankPage { display: flex; }
 <div class="sheet" id="bkBankSheet" hidden>
   <div class="sheet-back" id="bkBankBack"></div>
   <div class="sheet-body" role="dialog" aria-label="Банк">
-    <div class="sheet-head"><span>Банк</span><button id="bkBankClose" type="button">Закрыть</button></div>
+    <div class="sheet-head"><span>Банк</span><button id="bkBankClose" type="button" aria-label="Закрыть">✕</button></div>
     <ul class="sheet-list" id="bkBankList"></ul>
   </div>
 </div>
@@ -458,7 +459,7 @@ body.tab-bank #bankPage { display: flex; }
 <div class="sheet" id="countSheet" hidden>
   <div class="sheet-back" id="countBack"></div>
   <div class="sheet-body" role="dialog" aria-label="Сверка наличных">
-    <div class="sheet-head"><span id="countTitle">Сверка наличных</span><button id="countClose" type="button">Закрыть</button></div>
+    <div class="sheet-head"><span id="countTitle">Сверка наличных</span><button id="countClose" type="button" aria-label="Закрыть">✕</button></div>
     <div class="count-body">
       <p>Укажи сколько наличных у тебя на руках:</p>
       <div class="seg" role="group" aria-label="Валюта"><button class="seg-btn neutral on" id="cEUR" type="button">EUR</button><button class="seg-btn neutral" id="cUSD" type="button">USD</button></div>
@@ -473,7 +474,7 @@ body.tab-bank #bankPage { display: flex; }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "94"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "95"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -1249,6 +1250,44 @@ body.tab-bank #bankPage { display: flex; }
     });
   });
   el.btnMoreRecent.addEventListener("click", function () { state.shown = state.rendered + 10; renderRecent(); }); // по 10 за раз (его слово 27.10.2026), месяц целиком
+  // лист закрывается свайпом вниз (его слово 04.11.2026): тянется за пальцем от шапки или когда список листа в самом верху;
+  // отпустил ниже 90px или резким движением — уезжает и закрывается, иначе возвращается на место
+  function sheetSwipe(sheet, scroller, close) {
+    var body = sheet.querySelector(".sheet-body"), back = sheet.querySelector(".sheet-back"), sc = scroller ? sheet.querySelector(scroller) : body;
+    var y0 = null, t0 = 0, dy = 0, on = false, timer = 0;
+    var reset = function () { body.style.transform = body.style.transition = ""; back.style.opacity = back.style.transition = ""; }; // анимацию открытия не трогаем
+    var inHead = function (e) { return !!(e.target && e.target.closest && e.target.closest(".sheet-head")); };
+    body.addEventListener("touchstart", function (e) {
+      if (timer) { clearTimeout(timer); timer = 0; reset(); } // новое касание во время отъезда или возврата
+      y0 = e.touches.length === 1 && (inHead(e) || sc.scrollTop <= 0) ? e.touches[0].clientY : null; t0 = Date.now(); dy = 0; on = false;
+    }, { passive: true });
+    body.addEventListener("touchmove", function (e) {
+      if (y0 === null) return;
+      var d = e.touches[0].clientY - y0;
+      if (!on) {
+        if (d < -4 || (!inHead(e) && sc.scrollTop > 0)) { y0 = null; return; } // вверх — это прокрутка списка
+        if (d < 8) return;
+        on = true; body.style.transition = "none"; back.style.transition = "none";
+      }
+      if (e.cancelable) e.preventDefault();
+      dy = Math.max(0, d - 8);
+      body.style.transform = "translateY(" + dy + "px)"; back.style.opacity = String(Math.max(0, 1 - dy / 400));
+    }, { passive: false });
+    var end = function () {
+      if (y0 === null) return;
+      y0 = null; if (!on) return; on = false;
+      body.style.transition = "transform .2s ease-out"; back.style.transition = "opacity .2s";
+      if (dy > 90 || (dy > 24 && Date.now() - t0 < 250)) { // далеко или резко
+        body.style.transform = "translateY(100%)"; back.style.opacity = "0";
+        timer = setTimeout(function () { timer = 0; if (!sheet.hidden) close(); reset(); }, 200);
+      } else { body.style.transform = ""; back.style.opacity = ""; timer = setTimeout(function () { timer = 0; reset(); }, 220); }
+    };
+    body.addEventListener("touchend", end); body.addEventListener("touchcancel", end);
+  }
+  sheetSwipe(el.sheet, null, sheetClose);
+  sheetSwipe(el.countSheet, null, countClose);
+  sheetSwipe(bel.sheet, ".tx-scroll", txClose);
+  sheetSwipe(bel.bankSheet, null, function () { bel.bankSheet.hidden = true; });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") { if (!el.sheet.hidden) sheetClose(); if (!el.countSheet.hidden) countClose(); if (!bel.sheet.hidden) txClose(); if (!bel.bankSheet.hidden) bel.bankSheet.hidden = true; } });
   el.comment.addEventListener("input", renderTpl);
   el.btnClear.addEventListener("pointerdown", function (e) { e.preventDefault(); }); // не ронять клавиатуру, если она открыта
@@ -1295,7 +1334,8 @@ body.tab-bank #bankPage { display: flex; }
     });
   }
   document.addEventListener("touchstart", function (e) {
-    ptr.y0 = (!ptr.busy && window.scrollY <= 0 && e.touches.length === 1) ? e.touches[0].clientY : null; ptr.p = 0;
+    var anySheet = !!document.querySelector(".sheet:not([hidden])"); // открыт лист — свайп вниз закрывает его, а не обновляет
+    ptr.y0 = (!ptr.busy && !anySheet && window.scrollY <= 0 && e.touches.length === 1) ? e.touches[0].clientY : null; ptr.p = 0;
   }, { passive: true });
   document.addEventListener("touchmove", function (e) {
     if (ptr.y0 === null) return;
