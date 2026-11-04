@@ -85,7 +85,7 @@ body.tab-bank #bankPage { display: flex; }
 .bk-bal .bal-l > :last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .bk-bal .bal-l > :not(:last-child) { flex: none; }
 .bk-bal.snug { gap: 8px; } .bk-bal.snug .bal-l { gap: 4px; } .bk-bal.snug button { padding: 0 12px; } /* левый край — 12px, как в Cash и у «YB Revolut» */
-.bk-bal.hide30 #stD30 { display: none; }
+.bk-bal.hide30 #stD30, .bk-bal.hide30 #stPend .pct { display: none; } /* самый узкий экран: без «· 30 д» и «(N%)», числа целиком */
 .bk-bal.tight { gap: 6px; padding-left: 10px; } .bk-bal.tight .bal-l { gap: 4px; } .bk-bal.tight .bal-info b { font-size: calc(13 * var(--u)); }
 .bk-bal.tight .bal-info .k { font-size: calc(12 * var(--u)); } .bk-bal.tight button { padding: 0 12px; }
 .bal button:disabled { opacity: .65; }
@@ -484,7 +484,7 @@ body.tab-bank #bankPage { display: flex; }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "98"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "99"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -998,9 +998,12 @@ body.tab-bank #bankPage { display: flex; }
     var pending = items.filter(function (t) { return !t.category && String(t.date) >= d.review_from; });
     bel.pendingN.textContent = pending.length ? " " + pending.length : "";
     // сводка: неразобрано, с подсказкой — по экрану (с его неотправленными решениями), точность — с сервера
-    bel.stPend.textContent = "из " + pending.length;
+    // «Связано: 14 (44%) из 33» (его слово 04.11.2026): сколько неразобранных с подсказкой, доля, всего неразобранных
     var withSugg = pending.filter(function (t) { return t.sugg; }).length;
-    bel.stSuggP.textContent = pending.length ? Math.round(withSugg / pending.length * 100) + "%" : "—"; // доля неразобранных с подсказкой
+    bel.stSuggP.textContent = String(withSugg);
+    bel.stPend.textContent = "";
+    var pc = document.createElement("span"); pc.className = "pct"; pc.textContent = pending.length ? "(" + Math.round(withSugg / pending.length * 100) + "%) " : "";
+    bel.stPend.appendChild(pc); bel.stPend.appendChild(document.createTextNode("из " + pending.length));
     var pct = function (a) { return a && a.n ? Math.round(a.ok / a.n * 100) + "%" : "—"; }, sa = d.stats && d.stats.all, s30 = d.stats && d.stats.d30;
     bel.stAll.textContent = pct(sa); bel.stD30.textContent = s30 && s30.n ? "· 30 д " + pct(s30) : "";
     bel.statBox.title = "Связано " + withSugg + " из " + pending.length + "; верных подсказок " + (sa ? sa.ok + " из " + sa.n : "—") + " всего, " + (s30 ? s30.ok + " из " + s30.n : "—") + " за 30 дней";
