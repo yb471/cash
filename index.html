@@ -109,8 +109,10 @@ body.tab-bank #bankPage { display: flex; }
 .bk-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
 .bk-list .mh { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 1; display: flex; justify-content: space-between; gap: 10px; padding: 12px 4px 6px; background: var(--bg); border-bottom: 1px solid var(--line); font-size: calc(14 * var(--u)); font-weight: 700; }
 .bk-list .mh span:last-child { color: var(--muted); white-space: nowrap; } /* жирность — как итог месяца в Cash */
-.bk-item { position: relative; border-bottom: 1px solid color-mix(in srgb, var(--line) 55%, transparent); transition: opacity .35s, transform .35s; }
-.bk-item.done { opacity: 0; transform: translateX(24px); }
+.bk-item { position: relative; border-bottom: 1px solid color-mix(in srgb, var(--line) 55%, transparent); }
+/* ✓ — строка за 0,2 с уезжает вправо и схлопывается, следующие сразу поднимаются (его слово 04.11.2026; было: место держалось ~1 с) */
+.bk-item.going { overflow: hidden; height: 0 !important; opacity: 0; transform: translateX(24px); border-bottom-color: transparent;
+  transition: opacity .12s ease-out, transform .12s ease-out, height .16s ease-in .04s; pointer-events: none; }
 .bk-row { width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(44px, auto); gap: 3px 6px; align-items: start; padding: 10px 4px; border: 0; background: transparent; text-align: left; color: var(--fg); font-size: calc(14 * var(--u)); }
 .bk-row:active { background: var(--chip); }
 .bk-row .d { color: var(--muted); font-variant-numeric: tabular-nums; }
@@ -467,7 +469,7 @@ body.tab-bank #bankPage { display: flex; }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "92"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "93"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -903,7 +905,7 @@ body.tab-bank #bankPage { display: flex; }
   // ---------- раздел Bank: подтверждение категорий операций банка (его слово 02.11.2026) ----------
   // Решения копятся на телефоне (bank_queue) и уходят пачкой через секунду тишины; ответ сервера — свежий список с подсказками
   var bk = { data: ls("bank_cache"), filter: prefs.bkFilter === "all" ? "all" : "review", queue: ls("bank_queue") || [], timer: null, sending: false,
-    loaded: false, done: {}, cur: null, pick: "", busy: false };
+    loaded: false, cur: null, pick: "", busy: false, leaving: {} }; // leaving — строки, уезжающие после ✓ (0,2 с)
   var B = function (id) { return document.getElementById(id); };
   var bel = { bankBtn: B("bkBankBtn"), bankSheet: B("bkBankSheet"), bankList: B("bkBankList"), sync: B("bkSync"), syncSt: B("bkSyncSt"), review: B("bkReview"), all: B("bkAll"), pendingN: B("bkPendingN"),
     stPend: B("stPend"), stSuggP: B("stSuggP"), stAll: B("stAll"), stD30: B("stD30"), statBox: B("bkStatBox"), menu: B("bkMenu"), queueN: B("bkQueueN"), flush: B("bkFlush"), sheetLink: B("bkSheetLink"), access: B("bkAccess"), accessHint: B("bkAccessHint"), aiBtn: B("bkAiBtn"), aiProg: B("bkAiProg"), aiSt: B("bkAiSt"), status: B("bkStatus"), list: B("bkList"), empty: B("bkEmpty"), more: B("bkMore"),
@@ -923,10 +925,10 @@ body.tab-bank #bankPage { display: flex; }
   function bkMoney(n, cur) { return n ? money(n, cur) : "0,00 " + (SYM[cur] || cur); } // проверка карты на 0 — без знака и цвета
   function bkItems() { return bk.data && bk.data.items ? bk.data.items.map(bkOverlay) : []; }
   function bkVisible() {
-    var from = bk.data ? bk.data.review_from : "", now = Date.now();
+    var from = bk.data ? bk.data.review_from : "";
     return bkItems().filter(function (t) {
       if (bk.filter === "all") return true;
-      return String(t.date) >= from && (!t.category || (bk.done[t.id] && now - bk.done[t.id] < 900)); // подтверждённая — уезжает через миг
+      return String(t.date) >= from && !t.category && !bk.leaving[t.id]; // подтверждённая (и уезжающая после ✓) — не в «К проверке»
     });
   }
   function catLabel(c) { var p = catSplit(c); return (p.em ? p.em + " " : "") + p.nm; } // эмодзи вперёд: короче и читается быстрее
@@ -996,7 +998,7 @@ body.tab-bank #bankPage { display: flex; }
       var m = String(t.date).slice(0, 7);
       if (m !== lastM) { bel.list.appendChild(bkMonthHead(m, vis.filter(function (x) { return String(x.date).slice(0, 7) === m; }))); lastM = m; }
       var li = document.createElement("li"), b = document.createElement("button"), dd = document.createElement("span"), main = document.createElement("span"), a = document.createElement("span");
-      li.className = "bk-item" + (bk.filter === "review" && t.category ? " done" : "");
+      li.className = "bk-item";
       b.type = "button"; b.className = "bk-row";
       dd.className = "d"; dd.textContent = dmy(t.date);
       main.className = "bk-main";
@@ -1017,7 +1019,13 @@ body.tab-bank #bankPage { display: flex; }
       if (!t.category && t.sugg) {
         var ok = document.createElement("button"); ok.type = "button"; ok.className = "bk-ok"; ok.textContent = "✓";
         ok.setAttribute("aria-label", "Подтвердить: " + t.sugg.category);
-        ok.addEventListener("click", function () { bkDecide(t.id, { category: t.sugg.category }); });
+        ok.addEventListener("click", function () {
+          if (bk.filter !== "review") { bkDecide(t.id, { category: t.sugg.category }); return; } // во «Все» строка остаётся
+          if (li.classList.contains("going")) return;
+          bk.leaving[t.id] = 1; // перерисовка в эти 0,2 с не вернёт строку и не даст нажать ✓ второй раз
+          li.style.height = li.offsetHeight + "px"; void li.offsetHeight; li.classList.add("going"); // от текущей высоты к нулю
+          setTimeout(function () { delete bk.leaving[t.id]; bkDecide(t.id, { category: t.sugg.category }); }, 200);
+        });
         li.appendChild(ok);
       }
       bel.list.appendChild(li);
@@ -1091,10 +1099,8 @@ body.tab-bank #bankPage { display: flex; }
     if (v.category !== undefined) q.category = v.category;
     if (v.note !== undefined) q.note = v.note;
     q.v++;
-    if (v.category !== undefined) bk.done[id] = Date.now();
     ls("bank_queue", bk.queue);
     bkRender();
-    setTimeout(bkRender, 950);
     clearTimeout(bk.timer); bk.timer = setTimeout(bkSend, 900);
   }
   function bkSend() {
