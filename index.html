@@ -117,6 +117,7 @@ body.tab-bank #bankPage { display: flex; }
 .bk-main { min-width: 0; display: flex; flex-direction: column; gap: 1px; padding-right: 0; } /* как строка записи в Cash */
 .bk-cp { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .bk-rem { color: var(--muted); font-size: calc(13 * var(--u)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bk-rem.why { font-style: italic; } /* пояснение подсказки, не текст банка */
 /* колонки (его слово 04.11.2026): дата и сумма по своему тексту, узкие промежутки — средней колонке больше места; категория
    в одну строку и только в средней колонке — в колонку суммы не заходит, лишнее уходит в «…»; полное имя — в листе операции.
    Колонка суммы не уже 44px: под ней кнопка ✓ */
@@ -466,7 +467,7 @@ body.tab-bank #bankPage { display: flex; }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "91"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "92"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -1000,8 +1001,14 @@ body.tab-bank #bankPage { display: flex; }
       dd.className = "d"; dd.textContent = dmy(t.date);
       main.className = "bk-main";
       var cp = document.createElement("span"); cp.className = "bk-cp"; cp.textContent = t.counterparty || t.remittance || "—"; main.appendChild(cp);
-      // вторая строка есть всегда: нет своего назначения — пустая, чтобы все строки списка были одной высоты (его слово 04.11.2026)
-      var r = document.createElement("span"); r.className = "bk-rem"; if (bkRemOwn(t)) r.textContent = t.remittance; else { r.textContent = "\u00a0"; r.setAttribute("aria-hidden", "true"); } main.appendChild(r);
+      // вторая строка есть всегда (его слово 04.11.2026): назначение платежа; нет его — пояснение к подсказке категории
+      // («3 из 3 раз», комментарий Claude), курсивом; нет и его — пустая, чтобы все строки списка были одной высоты
+      var r = document.createElement("span"), why = !t.category && t.sugg && t.sugg.why && t.sugg.why !== "предложение Claude" ? t.sugg.why : "";
+      r.className = "bk-rem";
+      if (bkRemOwn(t)) r.textContent = t.remittance;
+      else if (why) { r.className += " why"; r.textContent = why; }
+      else { r.textContent = "\u00a0"; r.setAttribute("aria-hidden", "true"); }
+      main.appendChild(r);
       var cl = document.createElement("span"); cl.className = "bk-chipline"; cl.appendChild(bkChip(t));
       a.className = "a " + (t.amount < 0 ? "minus" : t.amount > 0 ? "plus" : "zero"); a.textContent = bkMoney(t.amount, t.currency);
       b.appendChild(dd); b.appendChild(main); b.appendChild(a); b.appendChild(cl);
