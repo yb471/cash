@@ -79,12 +79,15 @@ body.tab-bank #bankPage { display: flex; }
    категории» с датой последнего запуска (такая же плитка, отдельно от сводки). Сводка: «Связано: N (X%) из M» и «Точность:
    Y% · 30 д Z%», шрифты как «В наличии» в Cash (подписи 13px серые, значения 14px полужирные), рамка и радиус как у поля банка */
 .bk-statbox { min-width: 0; min-height: 50px; justify-content: center; padding: 8px 8px 8px 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); font-size: calc(14 * var(--u)); color: var(--muted); }
-/* не влезает строка — сначала уже промежутки (.snug), потом компактный вид, как у Cash на узком экране (.tight), потом прячутся
-   «· 30 д Z%» и «(X%)» (.hide30), числа целиком; многоточие — последняя страховка. Ступень ставит bkFitBal */
+/* не влезает строка — сначала уже промежутки (.snug), потом компактный вид, как у Cash на узком экране (.tight), потом текст
+   чуть мельче (--k до 0,76; его слово 04.11.2026: лучше мельче, чем прятать); только если и так не влезает — прячутся «· 30 д Z%»
+   и «(X%)» (.hide30); многоточие — последняя страховка. Ступень ставит bkFitBal */
+#bkStatBox .k { font-size: calc(13 * var(--u) * var(--k, 1)); } #bkStatBox b { font-size: calc(14 * var(--u) * var(--k, 1)); }
+#bkStatBox.tight .k { font-size: calc(12 * var(--u) * var(--k, 1)); } #bkStatBox.tight b { font-size: calc(13 * var(--u) * var(--k, 1)); }
 .bk-statbox .bal-l > :last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .bk-statbox .bal-l > :not(:last-child) { flex: none; }
 .bk-statbox.snug .bal-l { gap: 4px; }
-.bk-statbox.tight { padding-left: 10px; } .bk-statbox.tight b { font-size: calc(13 * var(--u)); } .bk-statbox.tight .k { font-size: calc(12 * var(--u)); }
+.bk-statbox.tight { padding-left: 10px; }
 .bk-statbox.hide30 #stD30, .bk-statbox.hide30 #stPend .pct { display: none; }
 /* «Связать категории» не задаёт ширину колонки — её держит «Сделать выгрузку»; название в одну строку */
 #bkAiBtn { width: 0; min-width: 100%; padding-left: 6px; padding-right: 6px; }
@@ -477,7 +480,7 @@ body.tab-bank #bankPage { display: flex; }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "100"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "101"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -959,9 +962,10 @@ body.tab-bank #bankPage { display: flex; }
   function bkFitBal() {
     var box = bel.statBox, ls = box.querySelectorAll(".bal-l > :last-child"), i, over = function () { for (i = 0; i < ls.length; i++) if (ls[i].scrollWidth > ls[i].clientWidth + 0.5) return true; return false; };
     if (!box.clientWidth) return;
-    box.classList.remove("snug", "tight", "hide30");
+    box.classList.remove("snug", "tight", "hide30"); box.style.setProperty("--k", "1");
     if (over()) box.classList.add("snug");
     if (over()) box.classList.add("tight");
+    for (var k = 0.96; over() && k > 0.75; k -= 0.04) box.style.setProperty("--k", k.toFixed(2)); // мельче, но всё видно
     if (over()) box.classList.add("hide30");
   }
   // вкладки таблицы по банкам: прямая ссылка на лист выбранного банка; банка нет в списке — вся таблица
