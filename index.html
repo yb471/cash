@@ -111,13 +111,17 @@ body.tab-bank #bankPage { display: flex; }
 .bk-list .mh span:last-child { color: var(--muted); white-space: nowrap; } /* жирность — как итог месяца в Cash */
 .bk-item { position: relative; border-bottom: 1px solid color-mix(in srgb, var(--line) 55%, transparent); transition: opacity .35s, transform .35s; }
 .bk-item.done { opacity: 0; transform: translateX(24px); }
-.bk-row { width: 100%; display: grid; grid-template-columns: 44px 1fr auto; gap: 8px; align-items: start; padding: 10px 4px; border: 0; background: transparent; text-align: left; color: var(--fg); font-size: calc(14 * var(--u)); }
+.bk-row { width: 100%; display: grid; grid-template-columns: 44px 1fr auto; gap: 3px 8px; align-items: start; padding: 10px 4px; border: 0; background: transparent; text-align: left; color: var(--fg); font-size: calc(14 * var(--u)); }
 .bk-row:active { background: var(--chip); }
 .bk-row .d { color: var(--muted); font-variant-numeric: tabular-nums; }
 .bk-main { min-width: 0; display: flex; flex-direction: column; gap: 1px; padding-right: 0; } /* как строка записи в Cash */
 .bk-cp { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .bk-rem { color: var(--muted); font-size: calc(13 * var(--u)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.bk-chipline { display: flex; align-items: center; min-height: 34px; margin-top: 2px; }
+/* категория — своей строкой под названием и суммой, во всю ширину до кнопки ✓, в одну строку (его слово 04.11.2026);
+   не влезает и так — многоточие, полное имя — в листе операции */
+.bk-chipline { grid-column: 2 / -1; display: flex; align-items: center; min-width: 0; min-height: 34px; }
+.bk-row.has-ok .bk-chipline { padding-right: 44px; }
+.bk-chipline .chip { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; overflow-wrap: normal; padding: 4px 8px; letter-spacing: -.015em; }
 .bk-row .a { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
 .bk-row .a.minus { color: var(--minus); }
 .bk-row .a.plus { color: var(--plus); }
@@ -462,7 +466,7 @@ body.tab-bank #bankPage { display: flex; }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "88"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "89"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -925,10 +929,10 @@ body.tab-bank #bankPage { display: flex; }
     });
   }
   function catLabel(c) { var p = catSplit(c); return (p.em ? p.em + " " : "") + p.nm; } // эмодзи вперёд: короче и читается быстрее
-  function bkChip(t) {
+  function bkChip(t) { // после ✦ узкий пробел — длинное имя категории влезает в строку
     var c = document.createElement("span"), sg = t.sugg;
     if (t.category) { c.className = "chip ok" + (t.wait ? " wait" : ""); c.textContent = "✓ " + catLabel(t.category); }
-    else if (sg) { c.className = "chip " + sg.level; c.textContent = (sg.source === "ai" ? "✦ " : "") + catLabel(sg.category); c.title = sg.source === "ai" ? "подсказка Claude" : "по твоим прошлым решениям"; }
+    else if (sg) { c.className = "chip " + sg.level; c.textContent = (sg.source === "ai" ? "✦\u2009" : "") + catLabel(sg.category); c.title = sg.source === "ai" ? "подсказка Claude" : "по твоим прошлым решениям"; }
     else { c.className = "chip none"; c.textContent = "Выбрать категорию"; }
     return c;
   }
@@ -997,9 +1001,10 @@ body.tab-bank #bankPage { display: flex; }
       main.className = "bk-main";
       var cp = document.createElement("span"); cp.className = "bk-cp"; cp.textContent = t.counterparty || t.remittance || "—"; main.appendChild(cp);
       if (bkRemOwn(t)) { var r = document.createElement("span"); r.className = "bk-rem"; r.textContent = t.remittance; main.appendChild(r); }
-      var cl = document.createElement("span"); cl.className = "bk-chipline"; cl.appendChild(bkChip(t)); main.appendChild(cl);
+      var cl = document.createElement("span"); cl.className = "bk-chipline"; cl.appendChild(bkChip(t));
       a.className = "a " + (t.amount < 0 ? "minus" : t.amount > 0 ? "plus" : "zero"); a.textContent = bkMoney(t.amount, t.currency);
-      b.appendChild(dd); b.appendChild(main); b.appendChild(a);
+      b.appendChild(dd); b.appendChild(main); b.appendChild(a); b.appendChild(cl);
+      if (!t.category && t.sugg) b.className += " has-ok";
       b.addEventListener("click", function () { txOpen(t.id); });
       li.appendChild(b);
       if (!t.category && t.sugg) {
