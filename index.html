@@ -141,25 +141,31 @@ body.tab-bank #bankPage { display: flex; }
 .bk-empty b { display: block; color: var(--plus); font-size: calc(17 * var(--u)); margin-bottom: 4px; }
 /* лист операции: шапка, прокручиваемая середина, низ с комментарием и кнопкой — отдельный блок, без sticky (на iOS он
    внутри прокрутки съезжал вверх, его снимок 02.11.2026) */
-.sheet-body.tx-body { display: flex; flex-direction: column; overflow: hidden; padding: 6px 10px 0; }
+.sheet-body.tx-body { display: flex; flex-direction: column; overflow: hidden; padding: 12px 10px 0; max-height: 92%; } /* выше обычного: больше категорий без прокрутки */
 .tx-body .sheet-head { position: static; flex: none; }
 .tx-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
-.tx-info { padding: 2px 14px 10px; display: flex; flex-direction: column; gap: 4px; }
+/* строка суммы липкая: сумма и «ещё N» видны, пока листаешь категории */
+.tx-amtline { position: sticky; top: 0; z-index: 1; background: var(--surface); padding: 2px 14px 4px; }
+.tx-info { padding: 0 14px 8px; display: flex; flex-direction: column; gap: 4px; }
 .tx-amt { font-size: calc(26 * var(--u)); font-weight: 700; font-variant-numeric: tabular-nums; }
 .tx-amt.minus { color: var(--minus); } .tx-amt.plus { color: var(--plus); }
-.tx-meta, .tx-rem { color: var(--muted); font-size: calc(13.5 * var(--u)); overflow-wrap: anywhere; }
+.tx-meta, .tx-rem { color: var(--muted); font-size: calc(13 * var(--u)); overflow-wrap: anywhere; }
+.tx-rem { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+.tx-rem:empty { display: none; }
+/* внизу списка, пока есть что листать, — затухание: видно, что категорий больше */
+.tx-scroll.more { -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent); }
 .tx-sugg { margin-top: 6px; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--accent) 9%, transparent); color: var(--fg); font-size: calc(14 * var(--u)); line-height: 1.35; }
 .tx-sugg:empty { display: none; }
 .tx-sugg .src { color: var(--accent); font-weight: 700; }
 .tx-sugg .why { color: var(--muted); }
-.tx-sugg .yb { display: block; margin-top: 4px; color: var(--muted); font-style: italic; }
-.tx-label { padding: 6px 14px 4px; color: var(--muted); font-size: calc(13 * var(--u)); font-weight: 600; }
+.tx-sugg .yb { display: block; margin-top: 4px; color: var(--fg); } /* его прежние слова — его голосом, не серым */
 .sheet-list .tag { flex: none; min-width: 26px; height: 22px; padding: 0 6px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); font-size: calc(13 * var(--u)); font-weight: 700; line-height: 22px; text-align: center; } /* значок подсказки вместо слова — имя категории в одну строку (его слово 02.11.2026) */
 .tx-cats .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* низ листа — компактный (его слово 02.11.2026): поле и кнопка по одной строке, отступ снизу — только под полоску «Домой» */
 .tx-foot { flex: none; display: flex; flex-direction: column; gap: 6px; padding: 8px 2px max(8px, calc(env(safe-area-inset-bottom, 0px) - 12px)); background: var(--surface); border-top: 1px solid var(--line); }
 .tx-foot .comment { height: 42px; padding-right: 12px; }
 .tx-foot .save { height: 46px; padding: 0 14px; font-size: calc(16 * var(--u)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tx-foot .save:disabled { background: var(--chip); color: var(--muted); opacity: 1; } /* нечего подтверждать — серая, не полупрозрачная бирюза */
 /* шапка листа операции (его слово 04.11.2026): название переносится, не больше 2 строк (общее правило шапки); «ещё N» — в строке
    суммы справа, чтобы названию хватало ширины */
 .tx-amtline { display: flex; align-items: baseline; gap: 10px; }
@@ -194,7 +200,9 @@ body.tab-bank #bankPage { display: flex; }
 .sheet { position: fixed; inset: 0; z-index: 10; }
 .sheet-back { position: absolute; inset: 0; background: rgba(0,0,0,.38); animation: fadein .2s ease-out; }
 .sheet-body { position: absolute; left: 0; right: 0; bottom: 0; max-height: 86%; overflow-y: auto; -webkit-overflow-scrolling: touch; background: var(--surface); border-radius: 20px 20px 0 0;
-  padding: 6px 10px calc(14px + env(safe-area-inset-bottom, 0px)); box-shadow: 0 -8px 30px rgba(0,0,0,.18); animation: sheetup .24s cubic-bezier(.2,.8,.2,1); }
+  padding: 12px 10px calc(14px + env(safe-area-inset-bottom, 0px)); box-shadow: 0 -8px 30px rgba(0,0,0,.18); animation: sheetup .24s cubic-bezier(.2,.8,.2,1); }
+/* полоска сверху — знак, что лист тянется вниз и закрывается (свайп, 04.11.2026) */
+.sheet-body::before { content: ""; position: absolute; top: 5px; left: 50%; width: 36px; height: 4px; margin-left: -18px; border-radius: 2px; background: var(--line); }
 /* шапка листа (его слово 04.11.2026): заголовок 16px, не больше 2 строк — остальное «…»; справа круглый ✕; лист закрывается и
    свайпом вниз (sheetSwipe) */
 .sheet-head { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 6px 4px 14px; background: var(--surface); font-weight: 700; font-size: calc(16 * var(--u)); }
@@ -202,10 +210,11 @@ body.tab-bank #bankPage { display: flex; }
 .sheet-head button { flex: none; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 50%; background: var(--chip); color: var(--fg); font-size: calc(16 * var(--u)); font-weight: 700; line-height: 1; display: flex; align-items: center; justify-content: center; position: relative; }
 .sheet-head button::after { content: ""; position: absolute; inset: -4px; } /* касание — 44px, как советует iOS */
 .sheet-list { list-style: none; margin: 0; padding: 0; }
-.sheet-list button { width: 100%; min-height: 48px; display: flex; align-items: center; gap: 10px; padding: 4px 10px; border: 0; border-radius: 12px; background: transparent; color: var(--fg); font-size: calc(16 * var(--u)); text-align: left; }
+.sheet-list button { width: 100%; min-height: 44px; display: flex; align-items: center; gap: 10px; padding: 4px 10px; border: 0; border-radius: 12px; background: transparent; color: var(--fg); font-size: calc(16 * var(--u)); text-align: left; }
 .sheet-list button:active { background: var(--chip); }
-.sheet-list button.on { background: var(--chip); font-weight: 600; }
-.sheet-list .em { flex: none; width: 64px; font-size: calc(17 * var(--u)); text-align: center; line-height: 1; white-space: nowrap; letter-spacing: -1px; }
+.sheet-list button.on { background: color-mix(in srgb, var(--accent) 12%, var(--surface)); font-weight: 600; } /* выбранная — бирюзовый фон и ✓ справа */
+.sheet-list button.on::after { content: "✓"; flex: none; margin-left: 4px; color: var(--accent); font-weight: 700; font-size: calc(17 * var(--u)); }
+.sheet-list .em { flex: none; width: 58px; font-size: calc(16 * var(--u)); text-align: center; line-height: 1; white-space: nowrap; letter-spacing: -2px; } /* три эмодзи влезают в колонку */
 .sheet-list .nm { flex: 1; min-width: 0; }
 @keyframes sheetup { from { transform: translateY(40px); opacity: .6; } to { transform: none; opacity: 1; } }
 @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
@@ -433,13 +442,12 @@ body.tab-bank #bankPage { display: flex; }
   <div class="sheet-body tx-body" role="dialog" aria-label="Операция банка">
     <div class="sheet-head"><span id="txTitle">Операция</span><button id="txClose" type="button" aria-label="Закрыть">✕</button></div>
     <div class="tx-scroll" id="txScroll">
+      <div class="tx-amtline"><div class="tx-amt" id="txAmt"></div><span class="tx-left" id="txLeft"></span></div>
       <div class="tx-info">
-        <div class="tx-amtline"><div class="tx-amt" id="txAmt"></div><span class="tx-left" id="txLeft"></span></div>
         <div class="tx-meta" id="txMeta"></div>
         <div class="tx-rem" id="txRem"></div>
         <div class="tx-sugg" id="txSugg"></div>
       </div>
-      <div class="tx-label">Категория</div>
       <ul class="sheet-list tx-cats" id="txCats"></ul>
     </div>
     <div class="tx-foot">
@@ -476,7 +484,7 @@ body.tab-bank #bankPage { display: flex; }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "97"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "98"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -912,7 +920,7 @@ body.tab-bank #bankPage { display: flex; }
   // ---------- раздел Bank: подтверждение категорий операций банка (его слово 02.11.2026) ----------
   // Решения копятся на телефоне (bank_queue) и уходят пачкой через секунду тишины; ответ сервера — свежий список с подсказками
   var bk = { data: ls("bank_cache"), filter: prefs.bkFilter === "all" ? "all" : "review", queue: ls("bank_queue") || [], timer: null, sending: false,
-    loaded: false, cur: null, pick: "", busy: false, leaving: {} }; // leaving — строки, уезжающие после ✓ (0,2 с)
+    loaded: false, cur: null, pick: "", busy: false, leaving: {}, okLock: 0 }; // leaving — строки, уезжающие после ✓ (0,2 с)
   var B = function (id) { return document.getElementById(id); };
   var bel = { bankBtn: B("bkBankBtn"), bankSheet: B("bkBankSheet"), bankList: B("bkBankList"), sync: B("bkSync"), syncSt: B("bkSyncSt"), review: B("bkReview"), all: B("bkAll"), pendingN: B("bkPendingN"),
     stPend: B("stPend"), stSuggP: B("stSuggP"), stAll: B("stAll"), stD30: B("stD30"), statBox: B("bkStatBox"), menu: B("bkMenu"), queueN: B("bkQueueN"), flush: B("bkFlush"), sheetLink: B("bkSheetLink"), access: B("bkAccess"), accessHint: B("bkAccessHint"), aiBtn: B("bkAiBtn"), aiProg: B("bkAiProg"), aiSt: B("bkAiSt"), status: B("bkStatus"), list: B("bkList"), empty: B("bkEmpty"), more: B("bkMore"),
@@ -1133,7 +1141,13 @@ body.tab-bank #bankPage { display: flex; }
     bk.cur = id; bk.pick = t.category || (t.sugg ? t.sugg.category : "");
     bel.note.value = t.note || "";
     txFill(); bel.sheet.hidden = false;
-    B("txScroll").scrollTop = 0;
+    var sc = B("txScroll"), on = bel.cats.querySelector("button.on");
+    sc.scrollTop = 0;
+    if (on) { // выбранная (подсказка) ниже края — прокрутить к ней, чтобы было видно, что подтверждаешь
+      var r = on.getBoundingClientRect(), v = sc.getBoundingClientRect();
+      if (r.bottom > v.bottom) sc.scrollTop += r.bottom - v.bottom + 36; // выше затухания (28px)
+    }
+    txFade();
   }
   function txFill() {
     var t = bkFind(bk.cur); if (!t) { txClose(); return; }
@@ -1143,30 +1157,39 @@ body.tab-bank #bankPage { display: flex; }
     bel.rem.textContent = bkRemOwn(t) ? t.remittance : "";
     bel.sugg.textContent = "";
     var sg = t.sugg;
-    if (t.category) { var c0 = document.createElement("span"); c0.className = "src"; c0.textContent = "✓ Подтверждено: " + t.category; bel.sugg.appendChild(c0); }
+    // откуда подсказка и почему; сама категория — подсвечена в списке и на кнопке, здесь не повторяется
+    if (t.category) { var c0 = document.createElement("span"); c0.className = "src"; c0.textContent = "✓ Подтверждено"; bel.sugg.appendChild(c0); }
     else if (sg) {
       var src = document.createElement("span"), why = document.createElement("span");
-      src.className = "src"; src.textContent = (sg.source === "ai" ? "✦ Claude: " : "≈ Подсказка: ") + sg.category;
-      why.className = "why"; why.textContent = " — " + (sg.why || "");
+      src.className = "src"; src.textContent = sg.source === "ai" ? "✦ Claude" : "≈ По твоим решениям";
+      why.className = "why"; why.textContent = sg.why && sg.why !== "предложение Claude" ? " — " + sg.why : "";
       bel.sugg.appendChild(src); bel.sugg.appendChild(why);
     }
-    if (sg && sg.note) { var yb = document.createElement("span"); yb.className = "yb"; yb.textContent = "Ты писал: «" + sg.note + "»"; bel.sugg.appendChild(yb); }
+    if (sg && sg.note) { var yb = document.createElement("span"); yb.className = "yb"; yb.textContent = "💬 Ты писал: «" + sg.note + "»"; bel.sugg.appendChild(yb); }
     bel.cats.textContent = "";
     ((bk.data && bk.data.categories) || []).forEach(function (c) {
       var li = document.createElement("li"), b = document.createElement("button"), p = catSplit(c), em = document.createElement("span"), nm = document.createElement("span");
       b.type = "button"; em.className = "em"; em.textContent = p.em; nm.className = "nm"; nm.textContent = p.nm;
       b.appendChild(em); b.appendChild(nm);
-      if (sg && !t.category && sg.category === c) { var tg = document.createElement("span"); tg.className = "tag"; tg.textContent = sg.source === "ai" ? "✦" : "≈"; tg.title = "подсказка"; b.appendChild(tg); }
+      if (sg && !t.category && sg.category === c) { var tg = document.createElement("span"); tg.className = "tag"; tg.textContent = sg.source === "ai" ? "✦" : "≈"; b.appendChild(tg); }
       b.className = bk.pick === c ? "on" : ""; b.setAttribute("aria-pressed", bk.pick === c ? "true" : "false");
       b.addEventListener("click", function () { bk.pick = c; txFill(); });
       li.appendChild(b); bel.cats.appendChild(li);
     });
-    var same = t.category && bk.pick === t.category;
-    bel.ok.disabled = !bk.pick;
-    bel.ok.textContent = !bk.pick ? "Выбери категорию" : same ? "Сохранить комментарий" : (t.category ? "Изменить: " : "✓ ") + catLabel(bk.pick);
+    txBtn();
     var left = bkItems().filter(function (x) { return !x.category && x.id !== t.id && String(x.date) >= (bk.data ? bk.data.review_from : ""); }).length;
     bel.left.textContent = !t.category && left ? "ещё " + left : ""; // после подтверждения откроется следующая
+    txFade();
   }
+  // кнопка внизу: что именно произойдёт; у подтверждённой без правок — «Без изменений» (закрыть — ✕ или свайп)
+  function txBtn() {
+    var t = bkFind(bk.cur); if (!t) return;
+    var same = t.category && bk.pick === t.category, noteNew = bel.note.value.trim() !== (t.note || "");
+    bel.ok.disabled = !bk.pick || (same && !noteNew);
+    bel.ok.textContent = !bk.pick ? "Выбери категорию" : same ? (noteNew ? "Сохранить комментарий" : "Без изменений") : (t.category ? "Изменить: " : "✓ ") + catLabel(bk.pick);
+  }
+  // затухание внизу списка, пока есть что листать
+  function txFade() { var sc = B("txScroll"); sc.classList.toggle("more", sc.scrollTop + sc.clientHeight < sc.scrollHeight - 4); }
   function txNext(afterId) { // следующая неразмеченная ниже по списку, потом сверху
     var vis = bkItems().filter(function (x) { return !x.category && String(x.date) >= (bk.data ? bk.data.review_from : ""); }), all = bkItems(), pos = -1;
     for (var i = 0; i < all.length; i++) if (all[i].id === afterId) pos = i;
@@ -1179,15 +1202,20 @@ body.tab-bank #bankPage { display: flex; }
     bel.sheet.hidden = true; bk.cur = null; bel.note.blur();
   }
   bel.ok.addEventListener("click", function () {
+    if (Date.now() < bk.okLock) return;
     var t = bkFind(bk.cur); if (!t || !bk.pick) return;
     var n = bel.note.value.trim(), wasNew = !t.category, v = { category: bk.pick };
     if (n !== (t.note || "")) v.note = n;
     bkDecide(t.id, v);
     var nx = wasNew ? txNext(t.id) : null;
-    if (nx) { txOpen(nx); } else { bel.sheet.hidden = true; bk.cur = null; bel.note.blur(); }
+    if (nx) { // следующая открывается на том же месте — 0,35 с нажатие кнопки не принимается, двойной тап не подтвердит её вслепую
+      bk.okLock = Date.now() + 350; txOpen(nx);
+    } else { bel.sheet.hidden = true; bk.cur = null; bel.note.blur(); }
   });
   bel.close.addEventListener("click", txClose); bel.back.addEventListener("click", txClose);
   bel.note.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); bel.note.blur(); } });
+  bel.note.addEventListener("input", txBtn);
+  B("txScroll").addEventListener("scroll", txFade, { passive: true });
   bel.review.addEventListener("click", function () { bk.filter = "review"; prefs.bkFilter = "review"; ls("cash_prefs", prefs); bkRender(); window.scrollTo(0, 0); });
   bel.all.addEventListener("click", function () { bk.filter = "all"; prefs.bkFilter = "all"; ls("cash_prefs", prefs); bkRender(); window.scrollTo(0, 0); });
   bel.more.addEventListener("click", function () { var p = bkPrevMonth(); if (!p) return; bel.more.disabled = true; bkLoad(p).then(function () { bel.more.disabled = false; }); });
