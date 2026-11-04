@@ -111,16 +111,16 @@ body.tab-bank #bankPage { display: flex; }
 .bk-list .mh span:last-child { color: var(--muted); white-space: nowrap; } /* жирность — как итог месяца в Cash */
 .bk-item { position: relative; border-bottom: 1px solid color-mix(in srgb, var(--line) 55%, transparent); transition: opacity .35s, transform .35s; }
 .bk-item.done { opacity: 0; transform: translateX(24px); }
-.bk-row { width: 100%; display: grid; grid-template-columns: 44px 1fr auto; gap: 3px 8px; align-items: start; padding: 10px 4px; border: 0; background: transparent; text-align: left; color: var(--fg); font-size: calc(14 * var(--u)); }
+.bk-row { width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(44px, auto); gap: 3px 6px; align-items: start; padding: 10px 4px; border: 0; background: transparent; text-align: left; color: var(--fg); font-size: calc(14 * var(--u)); }
 .bk-row:active { background: var(--chip); }
 .bk-row .d { color: var(--muted); font-variant-numeric: tabular-nums; }
 .bk-main { min-width: 0; display: flex; flex-direction: column; gap: 1px; padding-right: 0; } /* как строка записи в Cash */
 .bk-cp { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .bk-rem { color: var(--muted); font-size: calc(13 * var(--u)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* категория — своей строкой под названием и суммой, во всю ширину до кнопки ✓, в одну строку (его слово 04.11.2026);
-   не влезает и так — многоточие, полное имя — в листе операции */
-.bk-chipline { grid-column: 2 / -1; display: flex; align-items: center; min-width: 0; min-height: 34px; }
-.bk-row.has-ok .bk-chipline { padding-right: 44px; }
+/* колонки (его слово 04.11.2026): дата и сумма по своему тексту, узкие промежутки — средней колонке больше места; категория
+   в одну строку и только в средней колонке — в колонку суммы не заходит, лишнее уходит в «…»; полное имя — в листе операции.
+   Колонка суммы не уже 44px: под ней кнопка ✓ */
+.bk-chipline { grid-column: 2; display: flex; align-items: center; min-width: 0; min-height: 34px; }
 .bk-chipline .chip { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; overflow-wrap: normal; padding: 4px 8px; letter-spacing: -.015em; }
 .bk-row .a { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
 .bk-row .a.minus { color: var(--minus); }
@@ -231,7 +231,7 @@ body.tab-bank #bankPage { display: flex; }
 .recent { margin-top: 18px; } /* чуть больше воздуха после кнопки (его слово 27.10.2026); без полосы и заголовка (его слово 31.10.2026) */
 .recent-hint { font-size: calc(13 * var(--u)); color: var(--muted); padding: 0 4px 6px; }
 .recent-list { list-style: none; margin: 0; padding: 0 0 6px; display: flex; flex-direction: column; gap: 2px; }
-.recent-list button { width: 100%; display: grid; grid-template-columns: 44px 1fr auto; gap: 8px; font-size: calc(14 * var(--u)); align-items: start; border: 0; background: transparent; padding: 6px 4px; border-radius: 8px; text-align: left; } /* дата, категория и комментарий, сумма в конце (его слово 27.10.2026) */
+.recent-list button { width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 6px; font-size: calc(14 * var(--u)); align-items: start; border: 0; background: transparent; padding: 6px 4px; border-radius: 8px; text-align: left; } /* дата, категория и комментарий, сумма в конце (его слово 27.10.2026) */
 .recent-list button:active { background: var(--chip); }
 .recent-list button.editing { background: var(--chip); }
 .recent-list button.new { animation: rowin 1.2s ease-out; } /* новая запись подсвечивается на секунду */
@@ -466,7 +466,7 @@ body.tab-bank #bankPage { display: flex; }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "89"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "90"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -1004,7 +1004,6 @@ body.tab-bank #bankPage { display: flex; }
       var cl = document.createElement("span"); cl.className = "bk-chipline"; cl.appendChild(bkChip(t));
       a.className = "a " + (t.amount < 0 ? "minus" : t.amount > 0 ? "plus" : "zero"); a.textContent = bkMoney(t.amount, t.currency);
       b.appendChild(dd); b.appendChild(main); b.appendChild(a); b.appendChild(cl);
-      if (!t.category && t.sugg) b.className += " has-ok";
       b.addEventListener("click", function () { txOpen(t.id); });
       li.appendChild(b);
       if (!t.category && t.sugg) {
