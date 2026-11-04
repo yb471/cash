@@ -160,9 +160,13 @@ body.tab-bank #bankPage { display: flex; }
 .tx-foot { flex: none; display: flex; flex-direction: column; gap: 6px; padding: 8px 2px max(8px, calc(env(safe-area-inset-bottom, 0px) - 12px)); background: var(--surface); border-top: 1px solid var(--line); }
 .tx-foot .comment { height: 42px; padding-right: 12px; }
 .tx-foot .save { height: 46px; padding: 0 14px; font-size: calc(16 * var(--u)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tx-left { margin-left: auto; margin-right: 10px; color: var(--muted); font-size: calc(13 * var(--u)); font-weight: 600; white-space: nowrap; }
+/* шапка листа операции (его слово 04.11.2026): название целиком — переносится на 2–3 строки, а не обрезается; «ещё N» — в строке
+   суммы справа, чтобы названию хватало ширины и шапка оставалась компактной */
+.tx-body .sheet-head { gap: 10px; }
+.tx-body .sheet-head span:first-child { min-width: 0; line-height: 1.2; overflow-wrap: anywhere; }
+.tx-amtline { display: flex; align-items: baseline; gap: 10px; }
+.tx-left { margin-left: auto; margin-right: -8px; color: var(--muted); font-size: calc(13 * var(--u)); font-weight: 600; white-space: nowrap; }
 .tx-left:empty { display: none; }
-.tx-body .sheet-head span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .save:disabled { opacity: .45; }
 .section { margin-left: auto; color: var(--muted); font-weight: 600; font-size: calc(14 * var(--u)); white-space: nowrap; } /* раздел приложения (его слово 31.10.2026: вместо итога месяца) */
 .gear { width: 44px; height: 44px; margin-right: -8px; border: 0; background: transparent; border-radius: 10px; font-size: calc(20 * var(--u)); color: var(--muted); }
@@ -424,10 +428,10 @@ body.tab-bank #bankPage { display: flex; }
 <div class="sheet" id="txSheet" hidden>
   <div class="sheet-back" id="txBack"></div>
   <div class="sheet-body tx-body" role="dialog" aria-label="Операция банка">
-    <div class="sheet-head"><span id="txTitle">Операция</span><span class="tx-left" id="txLeft"></span><button id="txClose" type="button">Закрыть</button></div>
+    <div class="sheet-head"><span id="txTitle">Операция</span><button id="txClose" type="button">Закрыть</button></div>
     <div class="tx-scroll" id="txScroll">
       <div class="tx-info">
-        <div class="tx-amt" id="txAmt"></div>
+        <div class="tx-amtline"><div class="tx-amt" id="txAmt"></div><span class="tx-left" id="txLeft"></span></div>
         <div class="tx-meta" id="txMeta"></div>
         <div class="tx-rem" id="txRem"></div>
         <div class="tx-sugg" id="txSugg"></div>
@@ -469,7 +473,7 @@ body.tab-bank #bankPage { display: flex; }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "93"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "94"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
