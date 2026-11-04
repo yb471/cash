@@ -117,7 +117,7 @@ body.tab-bank #bankPage { display: flex; }
 .bk-row:active { background: var(--chip); }
 .bk-row .d { color: var(--muted); font-variant-numeric: tabular-nums; }
 .bk-main { min-width: 0; display: flex; flex-direction: column; gap: 1px; padding-right: 0; } /* как строка записи в Cash */
-.bk-cp { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bk-cp { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; } /* чуть жирнее текста — выделяется, не кричит (его слово 04.11.2026); так же в Cash */
 .bk-rem { color: var(--muted); font-size: calc(13 * var(--u)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .bk-rem.why { font-style: italic; } /* пояснение подсказки, не текст банка */
 /* колонки (его слово 04.11.2026): дата и сумма по своему тексту, узкие промежутки — средней колонке больше места; категория
@@ -253,6 +253,7 @@ body.tab-bank #bankPage { display: flex; }
 .recent-list .d { color: var(--muted); font-variant-numeric: tabular-nums; }
 .recent-list .c { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
 .recent-list .c span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.recent-list .c span:first-child { font-weight: 500; } /* заголовок строки — как в Bank */
 .recent-list .c .sub { color: var(--muted); font-size: calc(13 * var(--u)); }
 .recent-list .a { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
 .recent-list .a.minus { color: var(--minus); }
@@ -475,7 +476,7 @@ body.tab-bank #bankPage { display: flex; }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "96"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "97"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
