@@ -466,7 +466,7 @@ body.tab-bank #bankPage { display: flex; }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "90"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "91"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -1000,7 +1000,8 @@ body.tab-bank #bankPage { display: flex; }
       dd.className = "d"; dd.textContent = dmy(t.date);
       main.className = "bk-main";
       var cp = document.createElement("span"); cp.className = "bk-cp"; cp.textContent = t.counterparty || t.remittance || "—"; main.appendChild(cp);
-      if (bkRemOwn(t)) { var r = document.createElement("span"); r.className = "bk-rem"; r.textContent = t.remittance; main.appendChild(r); }
+      // вторая строка есть всегда: нет своего назначения — пустая, чтобы все строки списка были одной высоты (его слово 04.11.2026)
+      var r = document.createElement("span"); r.className = "bk-rem"; if (bkRemOwn(t)) r.textContent = t.remittance; else { r.textContent = "\u00a0"; r.setAttribute("aria-hidden", "true"); } main.appendChild(r);
       var cl = document.createElement("span"); cl.className = "bk-chipline"; cl.appendChild(bkChip(t));
       a.className = "a " + (t.amount < 0 ? "minus" : t.amount > 0 ? "plus" : "zero"); a.textContent = bkMoney(t.amount, t.currency);
       b.appendChild(dd); b.appendChild(main); b.appendChild(a); b.appendChild(cl);
