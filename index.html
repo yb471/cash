@@ -113,6 +113,24 @@ body.tab-bank #bankPage { display: flex; }
 /* ✓ — строка за 0,2 с уезжает вправо и схлопывается, следующие сразу поднимаются (его слово 04.11.2026; было: место держалось ~1 с) */
 .bk-item.going { overflow: hidden; height: 0 !important; opacity: 0; transform: translateX(24px); border-bottom-color: transparent;
   transition: opacity .12s ease-out, transform .12s ease-out, height .16s ease-in .04s; pointer-events: none; }
+/* «Отменить» 4 с после подтверждения категории (его слово 05.11.2026): решение это время ждёт на телефоне и в базу не уходит.
+   Плашка — как меню разделов (поверхность, рамка, тень), над ним; при открытом листе операции — над его кнопкой; полоска
+   внизу — сколько осталось. Вернувшаяся строка коротко подсвечивается */
+.bk-undo { position: fixed; left: 50%; z-index: 11; width: min(calc(100% - 32px), 420px); transform: translateX(-50%); display: flex; align-items: center; gap: 6px; min-height: 50px; padding: 3px 4px 3px 14px; overflow: hidden;
+  border-radius: 14px; background: var(--surface); border: 1px solid var(--line); box-shadow: 0 8px 28px rgba(0,0,0,.16), 0 1px 3px rgba(0,0,0,.08); animation: undoin .18s ease-out; }
+#txSheet.undo-on .tx-scroll { padding-bottom: 60px; } /* плашка над кнопкой листа — нижнюю категорию можно докрутить из-под неё */
+.bk-undo .t { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.2; } /* категория, под ней продавец — длинное имя не прячет второе */
+.bk-undo .t > * { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bk-undo .t b { color: var(--fg); font-weight: 600; font-size: calc(15 * var(--u)); }
+.bk-undo .t small { color: var(--muted); font-size: calc(12.5 * var(--u)); }
+.bk-undo button { flex: none; height: 44px; padding: 0 12px; border: 0; border-radius: 10px; background: transparent; color: var(--accent); font: inherit; font-size: calc(15 * var(--u)); font-weight: 700; }
+.bk-undo button:active { background: var(--chip); }
+.bk-undo::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--accent); opacity: .6; transform-origin: left center; animation: undobar 4s linear forwards; }
+@keyframes undoin { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+@keyframes undobar { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+body.locked .bk-undo { display: none; }
+.bk-item.back { animation: rowback 1.2s ease-out; }
+@keyframes rowback { from { background: color-mix(in srgb, var(--accent) 16%, transparent); } to { background: transparent; } }
 .bk-row { width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(44px, auto); gap: 3px 6px; align-items: start; padding: 10px 4px; border: 0; background: transparent; text-align: left; color: var(--fg); font-size: calc(14 * var(--u)); }
 .bk-row:active { background: var(--chip); }
 .bk-row .d { color: var(--muted); font-variant-numeric: tabular-nums; }
@@ -274,7 +292,7 @@ body.tab-bank #bankPage { display: flex; }
 .save.plus { background: var(--plus); color: #fff; }
 .save.edit { background: var(--edit); color: var(--edit-fg); }
 .save:disabled { opacity: .6; }
-@media (prefers-reduced-motion: reduce) { .catwrap.shake, .sheet-back, .sheet-body, .recent-list button.new, .ptr.spin svg { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .bk-undo, .catwrap.shake, .sheet-back, .sheet-body, .recent-list button.new, .ptr.spin svg { animation: none; } }
 /* остаток по записям от последнего пересчёта и кнопка пересчёта (его «да» 29.10.2026: сверка наличных раз в месяц) */
 /* сверка — своя карточка над формой: слева состояние (в наличии, Δ последней сверки), справа действие. Цвет сверки — фирменный
    бирюзовый, как кнопка «Записать сверку» в листе; красный и зелёный остаются за деньгами (расход, приход, Δ) */
@@ -436,6 +454,7 @@ body.tab-bank #bankPage { display: flex; }
   </div>
 </div>
 
+<div class="bk-undo" id="bkUndo" role="status" aria-live="polite" hidden><span class="t" id="bkUndoT"></span><button type="button" id="bkUndoBtn">Отменить</button></div>
 <div class="sheet" id="txSheet" hidden>
   <div class="sheet-back" id="txBack"></div>
   <div class="sheet-body tx-body" role="dialog" aria-label="Операция банка">
@@ -483,7 +502,7 @@ body.tab-bank #bankPage { display: flex; }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "102"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "103"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -920,6 +939,8 @@ body.tab-bank #bankPage { display: flex; }
   // Решения копятся на телефоне (bank_queue) и уходят пачкой через секунду тишины; ответ сервера — свежий список с подсказками
   var bk = { data: ls("bank_cache"), filter: prefs.bkFilter === "all" ? "all" : "review", queue: ls("bank_queue") || [], timer: null, sending: false,
     loaded: false, cur: null, pick: "", busy: false, leaving: {}, okLock: 0 }; // leaving — строки, уезжающие после ✓ (0,2 с)
+  var UNDO_MS = 4000, undo = null; // «Отменить» после подтверждения категории: столько решение ждёт на телефоне (его слово 05.11.2026)
+  bk.queue.forEach(function (q) { delete q.hold; }); // после перезапуска отменять нечем — ничего не задерживаем (и часы не застопорят)
   var B = function (id) { return document.getElementById(id); };
   var bel = { bankBtn: B("bkBankBtn"), bankSheet: B("bkBankSheet"), bankList: B("bkBankList"), sync: B("bkSync"), syncSt: B("bkSyncSt"), review: B("bkReview"), all: B("bkAll"), pendingN: B("bkPendingN"),
     stPend: B("stPend"), stSuggP: B("stSuggP"), stAll: B("stAll"), stD30: B("stD30"), statBox: B("bkStatBox"), menu: B("bkMenu"), queueN: B("bkQueueN"), flush: B("bkFlush"), sheetLink: B("bkSheetLink"), access: B("bkAccess"), accessHint: B("bkAccessHint"), aiBtn: B("bkAiBtn"), aiSt: B("bkAiSt"), status: B("bkStatus"), list: B("bkList"), empty: B("bkEmpty"), more: B("bkMore"),
@@ -1020,7 +1041,7 @@ body.tab-bank #bankPage { display: flex; }
       var m = String(t.date).slice(0, 7);
       if (m !== lastM) { bel.list.appendChild(bkMonthHead(m, vis.filter(function (x) { return String(x.date).slice(0, 7) === m; }))); lastM = m; }
       var li = document.createElement("li"), b = document.createElement("button"), dd = document.createElement("span"), main = document.createElement("span"), a = document.createElement("span");
-      li.className = "bk-item";
+      li.className = "bk-item"; li.setAttribute("data-id", t.id);
       b.type = "button"; b.className = "bk-row";
       dd.className = "d"; dd.textContent = dmy(t.date);
       main.className = "bk-main";
@@ -1042,11 +1063,11 @@ body.tab-bank #bankPage { display: flex; }
         var ok = document.createElement("button"); ok.type = "button"; ok.className = "bk-ok"; ok.textContent = "✓";
         ok.setAttribute("aria-label", "Подтвердить: " + t.sugg.category);
         ok.addEventListener("click", function () {
-          if (bk.filter !== "review") { bkDecide(t.id, { category: t.sugg.category }); return; } // во «Все» строка остаётся
+          if (bk.filter !== "review") { bkUndoShow(t, t.sugg.category, bkDecide(t.id, { category: t.sugg.category }, true), false); return; } // во «Все» строка остаётся
           if (li.classList.contains("going")) return;
           bk.leaving[t.id] = 1; // перерисовка в эти 0,2 с не вернёт строку и не даст нажать ✓ второй раз
           li.style.height = li.offsetHeight + "px"; void li.offsetHeight; li.classList.add("going"); // от текущей высоты к нулю
-          setTimeout(function () { delete bk.leaving[t.id]; bkDecide(t.id, { category: t.sugg.category }); }, 200);
+          setTimeout(function () { delete bk.leaving[t.id]; bkUndoShow(t, t.sugg.category, bkDecide(t.id, { category: t.sugg.category }, true), false); }, 200);
         });
         li.appendChild(ok);
       }
@@ -1089,7 +1110,9 @@ body.tab-bank #bankPage { display: flex; }
       }).catch(function () { bkAiPoll(); });
     }, 3000);
   }
-  bel.flush.addEventListener("click", function () { clearTimeout(bk.timer); bkSend(); });
+  bel.flush.addEventListener("click", function () { // «Отправить» — сразу всё, и то, что ещё можно было отменить
+    bkUndoHide(); bk.queue.forEach(function (q) { delete q.hold; }); ls("bank_queue", bk.queue); clearTimeout(bk.timer); bkSend();
+  });
   bel.aiBtn.addEventListener("click", function () {
     if (!bk.data || bk.aiStarting) return;
     bk.aiStarting = true; bkAiRender();
@@ -1113,32 +1136,80 @@ body.tab-bank #bankPage { display: flex; }
     return api("bank_list", { bank: prefs.bank, from: f }).then(function (j) { bkApply(j); bkStatus("", ""); if (bk.queue.length) bkSend(); return true; })
       .catch(function (e) { if (e && e.code === "network") connected(false); if (e && e.code === "unauthorized") { token(null); showSetup("Код не подошёл"); } bkStatus(explain(e), "err"); bkRender(); return false; });
   }
-  function bkDecide(id, v) { // его решение: сразу на экране, в базу — пачкой
+  function bkDecide(id, v, hold) { // его решение: сразу на экране, в базу — пачкой; hold — пока можно «Отменить», не отправляется
     var q = null; for (var i = 0; i < bk.queue.length; i++) if (bk.queue[i].id === id) q = bk.queue[i];
+    var prev = q ? { category: q.category, note: q.note, hold: q.hold } : null; // что было до него — для «Отменить»
     if (!q) { q = { id: id, v: 0 }; bk.queue.push(q); }
     if (v.category !== undefined) q.category = v.category;
     if (v.note !== undefined) q.note = v.note;
+    if (hold) q.hold = Date.now() + UNDO_MS + 300;
     q.v++;
     ls("bank_queue", bk.queue);
     bkRender();
     clearTimeout(bk.timer); bk.timer = setTimeout(bkSend, 900);
+    return prev;
   }
   function bkSend() {
     if (bk.sending || !bk.queue.length || !token()) return;
+    var now = Date.now(), ready = bk.queue.filter(function (q) { return !(q.hold > now); });
+    if (!ready.length) { // всё ещё можно отменить — уйдёт, когда выйдет время
+      var w = Math.min.apply(null, bk.queue.map(function (q) { return q.hold; })) - now + 50;
+      clearTimeout(bk.timer); bk.timer = setTimeout(bkSend, Math.max(50, w)); return;
+    }
     bk.sending = true;
-    var batch = bk.queue.slice(0, 300).map(function (q) { var o = { id: q.id }; if (q.category !== undefined) o.category = q.category; if (q.note !== undefined) o.note = q.note; return { op: o, q: q, v: q.v }; });
+    var batch = ready.slice(0, 300).map(function (q) { var o = { id: q.id }; if (q.category !== undefined) o.category = q.category; if (q.note !== undefined) o.note = q.note; return { op: o, q: q, v: q.v }; });
     api("bank_set", { bank: prefs.bank, from: bk.data && bk.data.from, items: batch.map(function (x) { return x.op; }) }).then(function (j) {
       bk.queue = bk.queue.filter(function (q) { return !batch.some(function (x) { return x.q === q && x.v === q.v; }); }); // поправленное за время отправки уйдёт следующим
       ls("bank_queue", bk.queue); bk.sending = false; bkApply(j); bkStatus("", "");
       if (bk.queue.length) { clearTimeout(bk.timer); bk.timer = setTimeout(bkSend, 400); }
     }).catch(function (e) {
       bk.sending = false; if (e && e.code === "network") connected(false); bkRender();
-      if (e && (e.code === "bad" || e.code === "gone")) { bk.queue = bk.queue.filter(function (q) { return !batch.some(function (x) { return x.q === q; }); }); ls("bank_queue", bk.queue); bkStatus(explain(e), "err"); bkLoad(); return; }
+      if (e && (e.code === "bad" || e.code === "gone")) { bk.queue = bk.queue.filter(function (q) { return !batch.some(function (x) { return x.q === q && x.v === q.v; }); }); ls("bank_queue", bk.queue); bkStatus(explain(e), "err"); bkLoad(); return; }
       bkStatus(e && e.code === "network" ? "Нет связи: решения сохранены на телефоне и уйдут сами" : explain(e), "warn");
       clearTimeout(bk.timer); bk.timer = setTimeout(bkSend, 15000);
     });
   }
   window.addEventListener("online", function () { if (bk.queue.length) bkSend(); });
+  // «Отменить»: плашка 4 с; решение до конца срока лежит в очереди с hold и не отправляется — отмена просто убирает его
+  var bu = { box: B("bkUndo"), t: B("bkUndoT"), btn: B("bkUndoBtn") };
+  function bkUndoHide() { if (undo) clearTimeout(undo.timer); undo = null; bu.box.hidden = true; bel.sheet.classList.remove("undo-on"); }
+  function bkUndoPlace() { // над кнопкой открытого листа операции, иначе над меню разделов (без учёта анимации листа)
+    var b = bel.sheet.querySelector(".tx-body"), f = bel.sheet.querySelector(".tx-foot"), tb = document.querySelector(".tabbar"), r = tb.getBoundingClientRect();
+    bu.box.style.bottom = (!bel.sheet.hidden ? bel.sheet.clientHeight - b.offsetTop - f.offsetTop + 8 : r.height ? window.innerHeight - r.top + 8 : 16) + "px";
+    bel.sheet.classList.toggle("undo-on", !bel.sheet.hidden);
+  }
+  function bkUndoShow(t, cat, prev, reopen, note) { // note — комментарий, который пришёл с этим решением (undefined — не трогало)
+    if (!document.body.classList.contains("tab-bank")) return; // успел уйти из раздела — решение просто уйдёт через 4 с
+    if (undo) clearTimeout(undo.timer);
+    undo = { id: t.id, prev: prev, reopen: reopen, note: note, until: Date.now() + UNDO_MS };
+    bu.t.textContent = ""; var b = document.createElement("b"); b.textContent = "✓ " + catLabel(cat); bu.t.appendChild(b);
+    var who = t.counterparty || t.remittance || ""; if (who) { var sm = document.createElement("small"); sm.textContent = who; bu.t.appendChild(sm); }
+    bu.box.hidden = true; void bu.box.offsetWidth; bkUndoPlace(); bu.box.hidden = false; // заново — полоска времени с начала
+    undo.timer = setTimeout(bkUndoHide, UNDO_MS);
+  }
+  document.addEventListener("visibilitychange", function () { if (undo && Date.now() > undo.until) bkUndoHide(); }); // iOS держал таймер во сне
+  bu.btn.addEventListener("click", function () {
+    var u = undo; bkUndoHide();
+    if (!u || Date.now() > u.until) return; // срок вышел — решение уже может уходить в базу
+    var cur = !bel.sheet.hidden ? bkFind(bk.cur) : null, dn = bel.note.value.trim();
+    if (cur && cur.id !== u.id && dn !== (cur.note || "")) bkDecide(cur.id, { note: dn }); // черновик комментария следующей не теряем
+    var q = null; for (var i = 0; i < bk.queue.length; i++) if (bk.queue[i].id === u.id) q = bk.queue[i];
+    if (!q) return;
+    var p = u.prev || {}; // возвращаем только то, что меняло это решение; поправленное позже (комментарий) остаётся
+    if (p.category === undefined) delete q.category; else q.category = p.category;
+    if (u.note !== undefined) { if (p.note === undefined) delete q.note; else q.note = p.note; }
+    if (p.hold) q.hold = p.hold; else delete q.hold;
+    q.v++;
+    if (q.category === undefined && q.note === undefined) bk.queue.splice(bk.queue.indexOf(q), 1); // больше нечего отправлять
+    ls("bank_queue", bk.queue);
+    bkRender();
+    if (u.reopen) { // из листа — назад к этой операции, с набранным комментарием
+      bk.okLock = Date.now() + 350; txOpen(u.id);
+      if (u.note !== undefined) { bel.note.value = u.note; txBtn(); }
+    }
+    else { var li = bel.list.querySelector('.bk-item[data-id="' + u.id + '"]'); if (li) li.classList.add("back"); }
+    if (bk.queue.length) { clearTimeout(bk.timer); bk.timer = setTimeout(bkSend, 900); }
+  });
   // лист операции: подробности, подсказка с объяснением, категории, комментарий для Claude
   function bkFind(id) { var it = bkItems(); for (var i = 0; i < it.length; i++) if (it[i].id === id) return it[i]; return null; }
   function txOpen(id) {
@@ -1153,6 +1224,7 @@ body.tab-bank #bankPage { display: flex; }
       if (r.bottom > v.bottom) sc.scrollTop += r.bottom - v.bottom + 36; // выше затухания (28px)
     }
     txFade();
+    if (undo) bkUndoPlace(); // плашка «Отменить» — над кнопкой листа, не поверх неё
   }
   function txFill() {
     var t = bkFind(bk.cur); if (!t) { txClose(); return; }
@@ -1205,17 +1277,19 @@ body.tab-bank #bankPage { display: flex; }
     var t = bkFind(bk.cur), n = bel.note.value.trim();
     if (t && n !== (t.note || "")) bkDecide(t.id, { note: n }); // комментарий без подтверждения тоже сохраняется
     bel.sheet.hidden = true; bk.cur = null; bel.note.blur();
+    if (undo) bkUndoPlace();
   }
   bel.ok.addEventListener("click", function () {
     if (Date.now() < bk.okLock) return;
     var t = bkFind(bk.cur); if (!t || !bk.pick) return;
-    var n = bel.note.value.trim(), wasNew = !t.category, v = { category: bk.pick };
+    var n = bel.note.value.trim(), wasNew = !t.category, v = { category: bk.pick }, cat = bk.pick, changed = bk.pick !== t.category;
     if (n !== (t.note || "")) v.note = n;
-    bkDecide(t.id, v);
+    var prev = bkDecide(t.id, v, changed); // новая или другая категория — 4 с можно отменить; только комментарий — сразу
     var nx = wasNew ? txNext(t.id) : null;
     if (nx) { // следующая открывается на том же месте — 0,35 с нажатие кнопки не принимается, двойной тап не подтвердит её вслепую
       bk.okLock = Date.now() + 350; txOpen(nx);
     } else { bel.sheet.hidden = true; bk.cur = null; bel.note.blur(); }
+    if (changed) bkUndoShow(t, cat, prev, true, v.note); // набранный комментарий при отмене вернётся в поле
   });
   bel.close.addEventListener("click", txClose); bel.back.addEventListener("click", txClose);
   bel.note.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); bel.note.blur(); } });
@@ -1279,6 +1353,7 @@ body.tab-bank #bankPage { display: flex; }
       Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (x) { var on = x === b; x.classList.toggle("on", on); if (on) x.setAttribute("aria-current", "page"); else x.removeAttribute("aria-current"); });
       document.body.classList.toggle("tab-other", t === "dashboard" || t === "invest");
       document.body.classList.toggle("tab-bank", t === "bank");
+      bkUndoHide(); // ушёл из раздела — решение остаётся и уйдёт в базу
       $("section").textContent = SECTIONS[t];
       window.scrollTo(0, 0);
       if (t === "bank") bankOpen();
