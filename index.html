@@ -502,7 +502,7 @@ body.locked .bk-undo { display: none; }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "103"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "105"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -1182,7 +1182,7 @@ body.locked .bk-undo { display: none; }
     if (!document.body.classList.contains("tab-bank")) return; // успел уйти из раздела — решение просто уйдёт через 4 с
     if (undo) clearTimeout(undo.timer);
     undo = { id: t.id, prev: prev, reopen: reopen, note: note, until: Date.now() + UNDO_MS };
-    bu.t.textContent = ""; var b = document.createElement("b"); b.textContent = "✓ " + catLabel(cat); bu.t.appendChild(b);
+    bu.t.textContent = ""; var b = document.createElement("b"); b.textContent = cat ? "✓ " + catLabel(cat) : "Категория снята"; bu.t.appendChild(b);
     var who = t.counterparty || t.remittance || ""; if (who) { var sm = document.createElement("small"); sm.textContent = who; bu.t.appendChild(sm); }
     bu.box.hidden = true; void bu.box.offsetWidth; bkUndoPlace(); bu.box.hidden = false; // заново — полоска времени с начала
     undo.timer = setTimeout(bkUndoHide, UNDO_MS);
@@ -1235,7 +1235,7 @@ body.locked .bk-undo { display: none; }
     bel.sugg.textContent = "";
     var sg = t.sugg;
     // откуда подсказка и почему; сама категория — подсвечена в списке и на кнопке, здесь не повторяется
-    if (t.category) { var c0 = document.createElement("span"); c0.className = "src"; c0.textContent = "✓ Подтверждено"; bel.sugg.appendChild(c0); }
+    if (t.category) { var c0 = document.createElement("span"); c0.className = "src"; c0.textContent = bk.pick ? "✓ Подтверждено" : "Категория будет снята"; bel.sugg.appendChild(c0); }
     else if (sg) {
       var src = document.createElement("span"), why = document.createElement("span");
       src.className = "src"; src.textContent = sg.source === "ai" ? "✦ Claude" : "≈ По твоим решениям";
@@ -1250,7 +1250,7 @@ body.locked .bk-undo { display: none; }
       b.appendChild(em); b.appendChild(nm);
       if (sg && !t.category && sg.category === c) { var tg = document.createElement("span"); tg.className = "tag"; tg.textContent = sg.source === "ai" ? "✦" : "≈"; b.appendChild(tg); }
       b.className = bk.pick === c ? "on" : ""; b.setAttribute("aria-pressed", bk.pick === c ? "true" : "false");
-      b.addEventListener("click", function () { bk.pick = c; txFill(); });
+      b.addEventListener("click", function () { bk.pick = bk.pick === c ? "" : c; txFill(); }); // выбранная — касание её отжимает (его слово 05.11.2026)
       li.appendChild(b); bel.cats.appendChild(li);
     });
     txBtn();
@@ -1258,12 +1258,13 @@ body.locked .bk-undo { display: none; }
     bel.left.textContent = !t.category && left ? "ещё " + left : ""; // после подтверждения откроется следующая
     txFade();
   }
-  // кнопка внизу: что именно произойдёт; у подтверждённой без правок — «Без изменений» (закрыть — ✕ или свайп)
+  // кнопка внизу: что именно произойдёт; у подтверждённой без правок — «Без изменений» (закрыть — ✕ или свайп); отжал её
+  // категорию — «Снять категорию»: операция снова без категории (его слово 05.11.2026, «Все»)
   function txBtn() {
     var t = bkFind(bk.cur); if (!t) return;
-    var same = t.category && bk.pick === t.category, noteNew = bel.note.value.trim() !== (t.note || "");
-    bel.ok.disabled = !bk.pick || (same && !noteNew);
-    bel.ok.textContent = !bk.pick ? "Выбери категорию" : same ? (noteNew ? "Сохранить комментарий" : "Без изменений") : (t.category ? "Изменить: " : "✓ ") + catLabel(bk.pick);
+    var same = t.category && bk.pick === t.category, noteNew = bel.note.value.trim() !== (t.note || ""), clear = !!t.category && !bk.pick;
+    bel.ok.disabled = (!bk.pick && !clear) || (same && !noteNew);
+    bel.ok.textContent = clear ? "Снять категорию" : !bk.pick ? "Выбери категорию" : same ? (noteNew ? "Сохранить комментарий" : "Без изменений") : (t.category ? "Изменить: " : "✓ ") + catLabel(bk.pick);
   }
   // затухание внизу списка, пока есть что листать
   function txFade() { var sc = B("txScroll"); sc.classList.toggle("more", sc.scrollTop + sc.clientHeight < sc.scrollHeight - 4); }
@@ -1281,8 +1282,8 @@ body.locked .bk-undo { display: none; }
   }
   bel.ok.addEventListener("click", function () {
     if (Date.now() < bk.okLock) return;
-    var t = bkFind(bk.cur); if (!t || !bk.pick) return;
-    var n = bel.note.value.trim(), wasNew = !t.category, v = { category: bk.pick }, cat = bk.pick, changed = bk.pick !== t.category;
+    var t = bkFind(bk.cur); if (!t || (!bk.pick && !t.category)) return;
+    var n = bel.note.value.trim(), wasNew = !t.category, v = { category: bk.pick }, cat = bk.pick, changed = bk.pick !== t.category; // «» — снять категорию
     if (n !== (t.note || "")) v.note = n;
     var prev = bkDecide(t.id, v, changed); // новая или другая категория — 4 с можно отменить; только комментарий — сразу
     var nx = wasNew ? txNext(t.id) : null;
