@@ -31,7 +31,7 @@
   --chip: #222A31; --chip-fg: #E9EDF0; --warn: #E0A14A; --edit: #F5CC3A; --edit-fg: #1F1800; color-scheme: dark } }
 html, body { height: 100%; margin: 0; }
 html { min-height: calc(100% + env(safe-area-inset-top, 0px)); } /* iOS, значок «Домой» + black-translucent: на коротком экране без этого низ окна выше края на высоту статус-бара — меню висело с зазором (02.11.2026) */
-html { font-size: 17px; font: -apple-system-body; font-family: var(--font); --u: calc(1rem / 17); } /* --u = 1px при обычном размере текста, растёт с системной настройкой */
+html { font-size: 17px; font: -apple-system-body; font-family: var(--font); --u: calc(1rem / 17); } /* --u = 1px при обычном размере текста, растет с системной настройкой */
 body { background: var(--bg); color: var(--fg); font-family: var(--font); font-size: calc(16 * var(--u)); line-height: 1.3; -webkit-text-size-adjust: 100%; overscroll-behavior-y: none; }
 * { box-sizing: border-box; }
 button, input { font: inherit; color: inherit; }
@@ -92,7 +92,7 @@ body.tab-bank #bankPage { display: flex; }
 .bk-statbox.tall { height: auto; min-height: 50px; } /* очень крупный системный текст: лучше выше, чем обрезать */
 .bk-statbox.tight { padding-left: 10px; }
 .bk-statbox.hide30 #stD30, .bk-statbox.hide30 #stPend .pct { display: none; }
-/* «Связать категории» не задаёт ширину колонки — её держит «Сделать выгрузку»; название в одну строку */
+/* «Связать категории» не задает ширину колонки — ее держит «Сделать выгрузку»; название в одну строку */
 #bkAiBtn { width: 0; min-width: 100%; padding-left: 6px; padding-right: 6px; }
 #bkAiBtn .t { white-space: nowrap; letter-spacing: -.01em; }
 /* кнопка действия с датой: две строки — что делает и когда было в последний раз (или ход работы) */
@@ -101,10 +101,10 @@ body.tab-bank #bankPage { display: flex; }
 .bk-act .s { font-size: calc(11 * var(--u)); color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .bk-act .s.ok { color: var(--plus); } .bk-act .s.warn { color: var(--warn); } .bk-act .s.err { color: var(--minus); }
 .bk-act:disabled { opacity: .65; }
-/* срок доступа к банку: за 10 дней (как напоминание в календаре) — оранжевый и как продлить, истёк — красный */
+/* срок доступа к банку: за 10 дней (как напоминание в календаре) — оранжевый и как продлить, истек — красный */
 #bkAccess.warn { color: var(--warn); font-weight: 600; } #bkAccess.err { color: var(--minus); font-weight: 600; }
 .bk-hint { margin: -4px 0 0; font-size: calc(13 * var(--u)); color: var(--muted); }
-/* «Связать категории» не задаёт ширину колонки — её держит «Сделать выгрузку»; надпись в одну строку */
+/* «Связать категории» не задает ширину колонки — ее держит «Сделать выгрузку»; надпись в одну строку */
 .bk-act.run .t::before { content: "↻ "; display: inline-block; animation: ptrspin .9s linear infinite; }
 .bk-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
 .bk-list .mh { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 1; display: flex; justify-content: space-between; gap: 10px; padding: 12px 4px 6px; background: var(--bg); border-bottom: 1px solid var(--line); font-size: calc(14 * var(--u)); font-weight: 700; }
@@ -113,12 +113,12 @@ body.tab-bank #bankPage { display: flex; }
 /* ✓ — строка за 0,2 с уезжает вправо и схлопывается, следующие сразу поднимаются (его слово 04.11.2026; было: место держалось ~1 с) */
 .bk-item.going { overflow: hidden; height: 0 !important; opacity: 0; transform: translateX(24px); border-bottom-color: transparent;
   transition: opacity .12s ease-out, transform .12s ease-out, height .16s ease-in .04s; pointer-events: none; }
-/* «Отменить» 4 с после подтверждения категории (его слово 05.11.2026): решение это время ждёт на телефоне и в базу не уходит.
+/* «Отменить» 4 с после подтверждения категории (его слово 05.11.2026): решение это время ждет на телефоне и в базу не уходит.
    Плашка — как меню разделов (поверхность, рамка, тень), над ним; при открытом листе операции — над его кнопкой; полоска
    внизу — сколько осталось. Вернувшаяся строка коротко подсвечивается */
 .bk-undo { position: fixed; left: 50%; z-index: 11; width: min(calc(100% - 32px), 420px); transform: translateX(-50%); display: flex; align-items: center; gap: 6px; min-height: 50px; padding: 3px 4px 3px 14px; overflow: hidden;
   border-radius: 14px; background: var(--surface); border: 1px solid var(--line); box-shadow: 0 8px 28px rgba(0,0,0,.16), 0 1px 3px rgba(0,0,0,.08); animation: undoin .18s ease-out; }
-#txSheet.undo-on .tx-scroll { padding-bottom: 60px; } /* плашка над кнопкой листа — нижнюю категорию можно докрутить из-под неё */
+#txSheet.undo-on .tx-scroll { padding-bottom: 60px; } /* плашка над кнопкой листа — нижнюю категорию можно докрутить из-под нее */
 .bk-undo .t { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.2; } /* категория, под ней продавец — длинное имя не прячет второе */
 .bk-undo .t > * { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .bk-undo .t b { color: var(--fg); font-weight: 600; font-size: calc(15 * var(--u)); }
@@ -162,7 +162,7 @@ body.locked .bk-undo { display: none; }
 .sheet-body.tx-body { display: flex; flex-direction: column; overflow: hidden; padding: 12px 10px 0; max-height: 92%; } /* выше обычного: больше категорий без прокрутки */
 .tx-body .sheet-head { position: static; flex: none; }
 .tx-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
-/* строка суммы липкая: сумма и «ещё N» видны, пока листаешь категории */
+/* строка суммы липкая: сумма и «еще N» видны, пока листаешь категории */
 .tx-amtline { position: sticky; top: 0; z-index: 1; background: var(--surface); padding: 2px 14px 4px; }
 .tx-info { padding: 0 14px 8px; display: flex; flex-direction: column; gap: 4px; }
 .tx-amt { font-size: calc(26 * var(--u)); font-weight: 700; font-variant-numeric: tabular-nums; }
@@ -184,7 +184,7 @@ body.locked .bk-undo { display: none; }
 .tx-foot .comment { height: 42px; padding-right: 12px; }
 .tx-foot .save { height: 46px; padding: 0 14px; font-size: calc(16 * var(--u)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tx-foot .save:disabled { background: var(--chip); color: var(--muted); opacity: 1; } /* нечего подтверждать — серая, не полупрозрачная бирюза */
-/* шапка листа операции (его слово 04.11.2026): название переносится, не больше 2 строк (общее правило шапки); «ещё N» — в строке
+/* шапка листа операции (его слово 04.11.2026): название переносится, не больше 2 строк (общее правило шапки); «еще N» — в строке
    суммы справа, чтобы названию хватало ширины */
 .tx-amtline { display: flex; align-items: baseline; gap: 10px; }
 .tx-left { margin-left: auto; margin-right: -8px; color: var(--muted); font-size: calc(13 * var(--u)); font-weight: 600; white-space: nowrap; }
@@ -293,9 +293,9 @@ body.locked .bk-undo { display: none; }
 .save.edit { background: var(--edit); color: var(--edit-fg); }
 .save:disabled { opacity: .6; }
 @media (prefers-reduced-motion: reduce) { .bk-undo, .catwrap.shake, .sheet-back, .sheet-body, .recent-list button.new, .ptr.spin svg { animation: none; } }
-/* остаток по записям от последнего пересчёта и кнопка пересчёта (его «да» 29.10.2026: сверка наличных раз в месяц) */
+/* остаток по записям от последнего пересчета и кнопка пересчета (его «да» 29.10.2026: сверка наличных раз в месяц) */
 /* сверка — своя карточка над формой: слева состояние (в наличии, Δ последней сверки), справа действие. Цвет сверки — фирменный
-   бирюзовый, как кнопка «Записать сверку» в листе; красный и зелёный остаются за деньгами (расход, приход, Δ) */
+   бирюзовый, как кнопка «Записать сверку» в листе; красный и зеленый остаются за деньгами (расход, приход, Δ) */
 .bal { display: flex; align-items: center; gap: 10px; font-size: calc(14 * var(--u)); color: var(--muted); background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 8px 8px 8px 12px; }
 .bal-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-variant-numeric: tabular-nums; }
 .bal-l { display: flex; align-items: baseline; gap: 6px; white-space: nowrap; }
@@ -335,7 +335,7 @@ body.locked .bk-undo { display: none; }
 
   <section class="card" id="setup" hidden>
     <h2>Код доступа</h2>
-    <p>Вставь код доступа — один раз, он останется в этом приложении. Код лежит в «Паролях» iPhone; если его там нет, новый выдаёт Claude.</p>
+    <p>Вставь код доступа — один раз, он останется в этом приложении. Код лежит в «Паролях» iPhone; если его там нет, новый выдает Claude.</p>
     <input id="tokenInput" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="48 знаков" aria-label="Код доступа">
     <div class="line"><span id="setupMsg"></span><button class="primary" id="btnToken" type="button">Сохранить</button></div>
   </section>
@@ -353,7 +353,7 @@ body.locked .bk-undo { display: none; }
     <button id="btnCancel" type="button">Отмена</button>
   </div>
 
-  <!-- пересчёт нужен раз в месяц — наверху, частые поля ниже под пальцем (его слово 29.10.2026) -->
+  <!-- пересчет нужен раз в месяц — наверху, частые поля ниже под пальцем (его слово 29.10.2026) -->
   <div class="bal" id="bal"><div class="bal-info" id="balText"></div><button id="btnCount" type="button">Сделать сверку</button></div>
 
   <div class="dates" role="group" aria-label="Дата">
@@ -399,7 +399,7 @@ body.locked .bk-undo { display: none; }
   <section class="recent">
     <div class="recent-hint" id="recentEmpty" hidden>Пока пусто</div>
     <ul class="recent-list" id="recentList"></ul>
-    <button class="more-btn" id="btnMoreRecent" type="button" hidden>Показать ещё</button>
+    <button class="more-btn" id="btnMoreRecent" type="button" hidden>Показать еще</button>
   </section>
 
   <section id="soon">Раздел в работе</section>
@@ -502,7 +502,7 @@ body.locked .bk-undo { display: none; }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "105"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "106"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -544,7 +544,7 @@ body.locked .bk-undo { display: none; }
   var state = { sign: prefs.sign === "+" ? "+" : "-", cur: CURS.indexOf(prefs.cur) >= 0 ? prefs.cur : "EUR", cat: "", date: todayStr(),
     cats: ls("cash_cats") || [], recent: ls("cash_recent") || [], queue: ls("cash_queue") || [], shown: 10, sending: false,
     edit: null, armed: null, busy: false, flash: null, // flash — только что записанная строка, подсвечивается секунду
-    balance: ls("cash_balance") || {}, count: null, months: ls("cash_months") || {} }; // months — итоги месяцев {ГГГГ-ММ: {валюта: сумма}} // balance — остаток по записям от пересчёта по валютам; count — открытый пересчёт {cur, id}
+    balance: ls("cash_balance") || {}, count: null, months: ls("cash_months") || {} }; // months — итоги месяцев {ГГГГ-ММ: {валюта: сумма}} // balance — остаток по записям от пересчета по валютам; count — открытый пересчет {cur, id}
 
   // ---------- access code: once from the sign-in link (#t=…) or typed, then kept on this phone ----------
   function token(v) {
@@ -623,7 +623,7 @@ body.locked .bk-undo { display: none; }
       if (j.months) { state.months = j.months; ls("cash_months", state.months); renderRecent(); }
     }).catch(function () { /* покажем при следующем обновлении */ });
   }
-  function twoLines(cat, comment) { // категория, под ней комментарий приглушённо; без комментария — прочерк
+  function twoLines(cat, comment) { // категория, под ней комментарий приглушенно; без комментария — прочерк
     var c = document.createElement("span"), top = document.createElement("span"), sub = document.createElement("span");
     c.className = "c"; top.textContent = cat || "—"; sub.className = "sub"; sub.textContent = comment || "—";
     c.appendChild(top); c.appendChild(sub);
@@ -657,7 +657,7 @@ body.locked .bk-undo { display: none; }
       var c = twoLines(q.cat, q.comment);
       var a = document.createElement("span"); a.className = "a " + (n < 0 ? "minus" : "plus"); a.textContent = money(n, q.cur);
       b.appendChild(d); b.appendChild(c); b.appendChild(a);
-      b.addEventListener("click", function () { setStatus("Ещё не отправлено: появится связь — уйдёт само. Исправить можно после отправки.", "warn"); flushQueue(); });
+      b.addEventListener("click", function () { setStatus("Еще не отправлено: появится связь — уйдет само. Исправить можно после отправки.", "warn"); flushQueue(); });
       li.appendChild(b); el.recentList.appendChild(li);
     });
     var lastMonth = "";
@@ -689,7 +689,7 @@ body.locked .bk-undo { display: none; }
     el.btnFlush.hidden = !state.queue.length;
     if (state.queue.length) setStatus("Не отправлено: " + state.queue.length + ". Появится связь — отправлю.", "warn");
   }
-  // остаток по записям от последнего пересчёта (с сервера) плюс ещё не отправленные записи этой валюты
+  // остаток по записям от последнего пересчета (с сервера) плюс еще не отправленные записи этой валюты
   // день сверки по часам телефона (так его считает и база): запись с датой раньше уже была в пересчитанных деньгах
   function countDay(b) { var d = new Date(b.at); return isNaN(d) ? "" : d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
   function balNow(cur) {
@@ -703,12 +703,12 @@ body.locked .bk-undo { display: none; }
   function signed(n, cur) { return (n > 0.004 ? "+" : n < -0.004 ? "−" : "") + nf.format(Math.abs(n)) + " " + (SYM[cur] || cur); }
   function node(tag, cls, text) { var x = document.createElement(tag); if (cls) x.className = cls; if (text !== undefined) x.textContent = text; return x; }
   // вверху (его слово 31.10.2026): «В наличии: 77,00 €» — остаток по записям сейчас, меняется после каждой записи, правки и
-  // удаления; «Сверка 31.10: Δ −18,00 €» — расхождение последней сверки с записями (зелёная — сходится, красная — нет;
-  // у первой сверки сравнивать не с чем — «Δ —»). Кнопка «Сделать сверку» — его слово 31.10.2026 (было «Пересчёт», затем «Сверка»)
+  // удаления; «Сверка 31.10: Δ −18,00 €» — расхождение последней сверки с записями (зеленая — сходится, красная — нет;
+  // у первой сверки сравнивать не с чем — «Δ —»). Кнопка «Сделать сверку» — его слово 31.10.2026 (было «Пересчет», затем «Сверка»)
   function renderBal() {
     var keys = CURS.filter(function (k) { return state.balance && state.balance[k]; });
     el.balText.textContent = "";
-    if (!keys.length) { el.balText.appendChild(node("span", "k", "Сверки ещё не было")); return; }
+    if (!keys.length) { el.balText.appendChild(node("span", "k", "Сверки еще не было")); return; }
     keys.forEach(function (k) {
       var b = state.balance[k], d = b.delta !== null && b.delta !== undefined && isFinite(b.delta) ? Number(b.delta) : null;
       var l1 = node("div", "bal-l"), l2 = node("div", "bal-l");
@@ -725,7 +725,7 @@ body.locked .bk-undo { display: none; }
     var t = token();
     if (!t) return Promise.reject({ code: "no_token" });
     var ctrl = typeof AbortController === "function" ? new AbortController() : null;
-    var tm = ctrl ? setTimeout(function () { ctrl.abort(); }, ms || 30000) : null; // выгрузка из банка ждёт дольше
+    var tm = ctrl ? setTimeout(function () { ctrl.abort(); }, ms || 30000) : null; // выгрузка из банка ждет дольше
     return fetch(FN, { method: "POST", headers: { "content-type": "application/json", "x-cash-token": t }, body: JSON.stringify(Object.assign({ action: action }, payload || {})), signal: ctrl ? ctrl.signal : undefined })
       .then(function (r) {
         if (tm) clearTimeout(tm);
@@ -739,7 +739,7 @@ body.locked .bk-undo { display: none; }
   function explain(e) {
     var c = e && e.code;
     if (c === "no_token") return "Введи код доступа";
-    if (c === "unauthorized") return "Код не подошёл: введи его заново";
+    if (c === "unauthorized") return "Код не подошел: введи его заново";
     if (c === "network") return "Нет связи с базой";
     if (c === "rate") return "Слишком много попыток, подожди 10 минут";
     if (c === "bad") return "Не принято: " + (e.message || "");
@@ -761,7 +761,7 @@ body.locked .bk-undo { display: none; }
       return true;
     }).catch(function (e) {
       connected(false);
-      if (e.code === "unauthorized") { token(null); showSetup("Код не подошёл"); }
+      if (e.code === "unauthorized") { token(null); showSetup("Код не подошел"); }
       setStatus(explain(e), e.code === "network" ? "warn" : "err");
       return false;
     });
@@ -787,7 +787,7 @@ body.locked .bk-undo { display: none; }
       return true;
     }).catch(function (e) {
       if (e.code === "bad") { dequeue(en.id); setStatus(explain(e), "err"); return true; } // база отвергла навсегда: в очереди не держим
-      if (e.code === "unauthorized") { token(null); showSetup("Код не подошёл"); }
+      if (e.code === "unauthorized") { token(null); showSetup("Код не подошел"); }
       if (e.code === "network") connected(false);
       setStatus(explain(e) + (state.queue.length ? " · в очереди " + state.queue.length : ""), e.code === "network" ? "warn" : "err");
       renderQueue();
@@ -849,7 +849,7 @@ body.locked .bk-undo { display: none; }
       resetForm(); connected(true); refreshBalance();
       setStatus(j.sheet ? "" : "Таблица обновится при следующей правке", j.sheet ? "" : "warn");
     }).catch(function (e) {
-      if (e.code === "unauthorized") { token(null); showSetup("Код не подошёл"); }
+      if (e.code === "unauthorized") { token(null); showSetup("Код не подошел"); }
       if (e.code === "gone") { state.recent = state.recent.filter(function (r) { return r.id !== id; }); ls("cash_recent", state.recent); resetForm(); }
       setStatus(explain(e), e.code === "network" ? "warn" : "err");
     }).then(function () { state.busy = false; el.btnSave.disabled = false; });
@@ -864,24 +864,24 @@ body.locked .bk-undo { display: none; }
       resetForm(); connected(true); refreshBalance();
       setStatus(j.sheet ? "" : "Строку в таблице убери руками", j.sheet ? "" : "warn");
     }).catch(function (e) {
-      if (e.code === "unauthorized") { token(null); showSetup("Код не подошёл"); }
+      if (e.code === "unauthorized") { token(null); showSetup("Код не подошел"); }
       if (e.code === "gone") { state.recent = state.recent.filter(function (r) { return r.id !== id; }); ls("cash_recent", state.recent); resetForm(); }
       setStatus(explain(e), e.code === "network" ? "warn" : "err"); el.btnDelete.textContent = "Удалить";
     }).then(function () { state.busy = false; el.btnSave.disabled = false; });
   }
 
-  // ---------- пересчёт наличных: сколько на руках сейчас (для сверки месяца) ----------
+  // ---------- пересчет наличных: сколько на руках сейчас (для сверки месяца) ----------
   function countCur(cur) {
     state.count.cur = cur;
     el.cEUR.classList.toggle("on", cur === "EUR"); el.cUSD.classList.toggle("on", cur === "USD");
     el.countSym.textContent = SYM[cur] || cur;
     var n = balNow(cur);
-    el.countHint.className = ""; el.countHint.textContent = n === null ? "Первая сверка в " + cur + ": точка отсчёта." : ""; // «по записям» в листе не нужно — оно в карточке (его слово 31.10.2026)
+    el.countHint.className = ""; el.countHint.textContent = n === null ? "Первая сверка в " + cur + ": точка отсчета." : ""; // «по записям» в листе не нужно — оно в карточке (его слово 31.10.2026)
     if (state.queue.length) { el.countHint.className = "err"; el.countHint.textContent = "Сначала уйдут записи без связи (" + state.queue.length + "), потом сверка."; }
   }
   function countOpen() {
     if (!token()) { showSetup(""); return; }
-    state.count = { cur: state.cur, id: uuid() }; // один id на открытие: повтор после сбоя связи не создаст второй пересчёт
+    state.count = { cur: state.cur, id: uuid() }; // один id на открытие: повтор после сбоя связи не создаст второй пересчет
     el.countAmount.value = ""; el.amount.blur(); el.comment.blur();
     el.countTitle.textContent = "Сверка наличных на " + dmy(todayStr()); // на сегодня по телефону (его слово 31.10.2026)
     countCur(state.count.cur); el.countSheet.hidden = false; el.btnCountSave.disabled = false;
@@ -897,13 +897,13 @@ body.locked .bk-undo { display: none; }
     if (!state.count || el.btnCountSave.disabled) return;
     var a = parseCount(el.countAmount.value), req = state.count, cur = req.cur;
     if (a === null) { el.countHint.className = "err"; el.countHint.textContent = "Введи сумму: 0, если наличных нет"; return; }
-    // записи без связи должны уйти раньше пересчёта, иначе база посчитает их тратами после него
-    if (state.queue.length || state.sending) { flushQueue(); el.countHint.className = "err"; el.countHint.textContent = "Сначала отправляю записи без связи (" + state.queue.length + "). Нажми ещё раз, когда они уйдут."; return; }
+    // записи без связи должны уйти раньше пересчета, иначе база посчитает их тратами после него
+    if (state.queue.length || state.sending) { flushQueue(); el.countHint.className = "err"; el.countHint.textContent = "Сначала отправляю записи без связи (" + state.queue.length + "). Нажми еще раз, когда они уйдут."; return; }
     el.btnCountSave.disabled = true; el.countHint.className = ""; el.countHint.textContent = "Записываю…";
     api("count", { id: req.id, currency: cur, amount: a, day: todayStr() }).then(function (j) {
       if (state.count === req) countClose(); connected(true);
       var msg = j.duplicate ? "Эта сверка уже записана"
-        : "Сверка " + plain(a, cur) + (j.delta === null ? " · точка отсчёта" : " · Δ " + signed(j.delta, cur));
+        : "Сверка " + plain(a, cur) + (j.delta === null ? " · точка отсчета" : " · Δ " + signed(j.delta, cur));
       var kind = j.delta && Math.abs(j.delta) >= 0.005 ? "warn" : "";
       if (!j.duplicate) { // строка вверху сразу, не дожидаясь обновления данных
         state.balance = state.balance || {};
@@ -911,12 +911,12 @@ body.locked .bk-undo { display: none; }
         ls("cash_balance", state.balance); renderBal();
       }
       setStatus(msg, kind);
-      refreshInit().then(function () { setStatus(msg, kind); }); // обновление данных не стирает итог пересчёта
+      refreshInit().then(function () { setStatus(msg, kind); }); // обновление данных не стирает итог пересчета
     }).catch(function (e) {
-      if (e.code === "unauthorized") { countClose(); token(null); showSetup("Код не подошёл"); return; }
-      if (state.count !== req) return; // лист закрыт или открыт заново — подсказка уже не про этот пересчёт
+      if (e.code === "unauthorized") { countClose(); token(null); showSetup("Код не подошел"); return; }
+      if (state.count !== req) return; // лист закрыт или открыт заново — подсказка уже не про этот пересчет
       el.btnCountSave.disabled = false; el.countHint.className = "err";
-      el.countHint.textContent = explain(e) + (e.code === "network" ? ". Нажми «Записать сверку» ещё раз: второй не появится." : "");
+      el.countHint.textContent = explain(e) + (e.code === "network" ? ". Нажми «Записать сверку» еще раз: второй не появится." : "");
     });
   }
   el.btnCount.addEventListener("click", countOpen);
@@ -939,7 +939,7 @@ body.locked .bk-undo { display: none; }
   // Решения копятся на телефоне (bank_queue) и уходят пачкой через секунду тишины; ответ сервера — свежий список с подсказками
   var bk = { data: ls("bank_cache"), filter: prefs.bkFilter === "all" ? "all" : "review", queue: ls("bank_queue") || [], timer: null, sending: false,
     loaded: false, cur: null, pick: "", busy: false, leaving: {}, okLock: 0 }; // leaving — строки, уезжающие после ✓ (0,2 с)
-  var UNDO_MS = 4000, undo = null; // «Отменить» после подтверждения категории: столько решение ждёт на телефоне (его слово 05.11.2026)
+  var UNDO_MS = 4000, undo = null; // «Отменить» после подтверждения категории: столько решение ждет на телефоне (его слово 05.11.2026)
   bk.queue.forEach(function (q) { delete q.hold; }); // после перезапуска отменять нечем — ничего не задерживаем (и часы не застопорят)
   var B = function (id) { return document.getElementById(id); };
   var bel = { bankBtn: B("bkBankBtn"), bankSheet: B("bkBankSheet"), bankList: B("bkBankList"), sync: B("bkSync"), syncSt: B("bkSyncSt"), review: B("bkReview"), all: B("bkAll"), pendingN: B("bkPendingN"),
@@ -947,7 +947,7 @@ body.locked .bk-undo { display: none; }
     sheet: B("txSheet"), back: B("txBack"), close: B("txClose"), title: B("txTitle"), amt: B("txAmt"), meta: B("txMeta"), rem: B("txRem"), sugg: B("txSugg"),
     cats: B("txCats"), note: B("txNote"), ok: B("txOk"), left: B("txLeft") };
   function bkStatus(t, kind) { bel.status.textContent = t || ""; bel.status.className = "status" + (kind ? " " + kind : ""); }
-  function bkOverlay(t) { // операция с его ещё не отправленными решениями поверх ответа сервера
+  function bkOverlay(t) { // операция с его еще не отправленными решениями поверх ответа сервера
     var q = null; for (var i = 0; i < bk.queue.length; i++) if (bk.queue[i].id === t.id) q = bk.queue[i];
     if (!q) return t;
     var o = {}; for (var k in t) o[k] = t[k];
@@ -963,10 +963,10 @@ body.locked .bk-undo { display: none; }
     var from = bk.data ? bk.data.review_from : "";
     return bkItems().filter(function (t) {
       if (bk.filter === "all") return true;
-      return String(t.date) >= from && !t.category && !bk.leaving[t.id]; // подтверждённая (и уезжающая после ✓) — не в «К проверке»
+      return String(t.date) >= from && !t.category && !bk.leaving[t.id]; // подтвержденная (и уезжающая после ✓) — не в «К проверке»
     });
   }
-  function catLabel(c) { var p = catSplit(c); return (p.em ? p.em + " " : "") + p.nm; } // эмодзи вперёд: короче и читается быстрее
+  function catLabel(c) { var p = catSplit(c); return (p.em ? p.em + " " : "") + p.nm; } // эмодзи вперед: короче и читается быстрее
   function bkChip(t) { // после ✦ узкий пробел — длинное имя категории влезает в строку
     var c = document.createElement("span"), sg = t.sugg;
     if (t.category) { c.className = "chip ok" + (t.wait ? " wait" : ""); c.textContent = "✓ " + catLabel(t.category); }
@@ -992,7 +992,7 @@ body.locked .bk-undo { display: none; }
     box.classList.remove("snug", "tight", "hide30", "tall"); box.style.setProperty("--k", "1");
     if (wide()) box.classList.add("snug");
     if (over()) box.classList.add("tight");
-    for (var k = 0.96; over() && k > 0.75; k -= 0.04) box.style.setProperty("--k", k.toFixed(2)); // мельче, но всё видно
+    for (var k = 0.96; over() && k > 0.75; k -= 0.04) box.style.setProperty("--k", k.toFixed(2)); // мельче, но все видно
     if (wide()) box.classList.add("hide30");
     if (high()) box.classList.add("tall");
   }
@@ -1006,11 +1006,11 @@ body.locked .bk-undo { display: none; }
     var a = bk.data && bk.data.access, t = a && a.until ? Date.parse(a.until) : NaN, left = (t - Date.now()) / 86400000, st = "";
     var day = isFinite(t) ? new Date(t).toLocaleDateString("ru-RU", { timeZone: "Europe/Berlin", day: "2-digit", month: "2-digit", year: "numeric" }) : "";
     if (!a) bel.access.textContent = "—";
-    else if (a.expired || !isFinite(t) || left <= 0) { bel.access.textContent = "истёк"; st = "err"; }
+    else if (a.expired || !isFinite(t) || left <= 0) { bel.access.textContent = "истек"; st = "err"; }
     else { bel.access.textContent = "до " + day; if (left <= 10) st = "warn"; }
     bel.access.className = st;
     bel.accessHint.hidden = !st;
-    bel.accessHint.textContent = st ? "Чтобы продлить, напиши Claude «продли " + String(b || "банк").replace(/ /g, "\u00a0") + "» — пришлёт ссылку, подтвердишь в банке за минуту." : "";
+    bel.accessHint.textContent = st ? "Чтобы продлить, напиши Claude «продли " + String(b || "банк").replace(/ /g, "\u00a0") + "» — пришлет ссылку, подтвердишь в банке за минуту." : "";
   }
   function bkRender() {
     var d = bk.data, items = bkItems();
@@ -1063,9 +1063,9 @@ body.locked .bk-undo { display: none; }
         var ok = document.createElement("button"); ok.type = "button"; ok.className = "bk-ok"; ok.textContent = "✓";
         ok.setAttribute("aria-label", "Подтвердить: " + t.sugg.category);
         ok.addEventListener("click", function () {
-          if (bk.filter !== "review") { bkUndoShow(t, t.sugg.category, bkDecide(t.id, { category: t.sugg.category }, true), false); return; } // во «Все» строка остаётся
+          if (bk.filter !== "review") { bkUndoShow(t, t.sugg.category, bkDecide(t.id, { category: t.sugg.category }, true), false); return; } // во «Все» строка остается
           if (li.classList.contains("going")) return;
-          bk.leaving[t.id] = 1; // перерисовка в эти 0,2 с не вернёт строку и не даст нажать ✓ второй раз
+          bk.leaving[t.id] = 1; // перерисовка в эти 0,2 с не вернет строку и не даст нажать ✓ второй раз
           li.style.height = li.offsetHeight + "px"; void li.offsetHeight; li.classList.add("going"); // от текущей высоты к нулю
           setTimeout(function () { delete bk.leaving[t.id]; bkUndoShow(t, t.sugg.category, bkDecide(t.id, { category: t.sugg.category }, true), false); }, 200);
         });
@@ -1075,7 +1075,7 @@ body.locked .bk-undo { display: none; }
     });
     var empty = !vis.length;
     bel.empty.hidden = !empty;
-    bel.empty.innerHTML = bk.filter === "review" ? "<b>Всё размечено ✓</b>Новые операции придут с ночной выгрузкой банка" : "Операций пока нет";
+    bel.empty.innerHTML = bk.filter === "review" ? "<b>Все размечено ✓</b>Новые операции придут с ночной выгрузкой банка" : "Операций пока нет";
     var prev = bkPrevMonth();
     bel.more.hidden = bk.filter !== "all" || !prev;
     if (prev) bel.more.textContent = "Показать " + MONTHS[Number(prev.slice(5, 7)) - 1].toLowerCase() + " " + prev.slice(0, 4);
@@ -1093,7 +1093,7 @@ body.locked .bk-undo { display: none; }
     else if (d.ai_ready === false) t = "не подключено";
     else if (a && a.state === "done") t = dmhm(a.finished) + (a.changed ? " · ✎" + a.changed : ""); // серым, как дата под «Сделать выгрузку»
     else if (a && a.state === "error") { t = "ошибка " + dmhm(a.finished || a.started); k = "err"; }
-    else t = "ещё не было";
+    else t = "еще не было";
     bel.aiSt.textContent = t; bel.aiSt.className = "s" + (k ? " " + k : "");
     if (run) bkAiPoll();
   }
@@ -1101,7 +1101,7 @@ body.locked .bk-undo { display: none; }
     if (bk.aiTimer) return;
     bk.aiTimer = setTimeout(function () {
       bk.aiTimer = null;
-      if (!document.body.classList.contains("tab-bank")) return; // вернётся в раздел — bank_list покажет состояние и опрос продолжится
+      if (!document.body.classList.contains("tab-bank")) return; // вернется в раздел — bank_list покажет состояние и опрос продолжится
       api("bank_ai_state").then(function (j) {
         var was = bk.data && bk.data.ai && bk.data.ai.state;
         if (bk.data) { bk.data.ai = j.ai; bk.data.ai_ready = j.ai_ready; }
@@ -1110,7 +1110,7 @@ body.locked .bk-undo { display: none; }
       }).catch(function () { bkAiPoll(); });
     }, 3000);
   }
-  bel.flush.addEventListener("click", function () { // «Отправить» — сразу всё, и то, что ещё можно было отменить
+  bel.flush.addEventListener("click", function () { // «Отправить» — сразу все, и то, что еще можно было отменить
     bkUndoHide(); bk.queue.forEach(function (q) { delete q.hold; }); ls("bank_queue", bk.queue); clearTimeout(bk.timer); bkSend();
   });
   bel.aiBtn.addEventListener("click", function () {
@@ -1134,7 +1134,7 @@ body.locked .bk-undo { display: none; }
     if (!token()) { bkRender(); return Promise.resolve(false); }
     var f = from || (bk.data && bk.data.from) || undefined;
     return api("bank_list", { bank: prefs.bank, from: f }).then(function (j) { bkApply(j); bkStatus("", ""); if (bk.queue.length) bkSend(); return true; })
-      .catch(function (e) { if (e && e.code === "network") connected(false); if (e && e.code === "unauthorized") { token(null); showSetup("Код не подошёл"); } bkStatus(explain(e), "err"); bkRender(); return false; });
+      .catch(function (e) { if (e && e.code === "network") connected(false); if (e && e.code === "unauthorized") { token(null); showSetup("Код не подошел"); } bkStatus(explain(e), "err"); bkRender(); return false; });
   }
   function bkDecide(id, v, hold) { // его решение: сразу на экране, в базу — пачкой; hold — пока можно «Отменить», не отправляется
     var q = null; for (var i = 0; i < bk.queue.length; i++) if (bk.queue[i].id === id) q = bk.queue[i];
@@ -1152,14 +1152,14 @@ body.locked .bk-undo { display: none; }
   function bkSend() {
     if (bk.sending || !bk.queue.length || !token()) return;
     var now = Date.now(), ready = bk.queue.filter(function (q) { return !(q.hold > now); });
-    if (!ready.length) { // всё ещё можно отменить — уйдёт, когда выйдет время
+    if (!ready.length) { // все еще можно отменить — уйдет, когда выйдет время
       var w = Math.min.apply(null, bk.queue.map(function (q) { return q.hold; })) - now + 50;
       clearTimeout(bk.timer); bk.timer = setTimeout(bkSend, Math.max(50, w)); return;
     }
     bk.sending = true;
     var batch = ready.slice(0, 300).map(function (q) { var o = { id: q.id }; if (q.category !== undefined) o.category = q.category; if (q.note !== undefined) o.note = q.note; return { op: o, q: q, v: q.v }; });
     api("bank_set", { bank: prefs.bank, from: bk.data && bk.data.from, items: batch.map(function (x) { return x.op; }) }).then(function (j) {
-      bk.queue = bk.queue.filter(function (q) { return !batch.some(function (x) { return x.q === q && x.v === q.v; }); }); // поправленное за время отправки уйдёт следующим
+      bk.queue = bk.queue.filter(function (q) { return !batch.some(function (x) { return x.q === q && x.v === q.v; }); }); // поправленное за время отправки уйдет следующим
       ls("bank_queue", bk.queue); bk.sending = false; bkApply(j); bkStatus("", "");
       if (bk.queue.length) { clearTimeout(bk.timer); bk.timer = setTimeout(bkSend, 400); }
     }).catch(function (e) {
@@ -1173,13 +1173,13 @@ body.locked .bk-undo { display: none; }
   // «Отменить»: плашка 4 с; решение до конца срока лежит в очереди с hold и не отправляется — отмена просто убирает его
   var bu = { box: B("bkUndo"), t: B("bkUndoT"), btn: B("bkUndoBtn") };
   function bkUndoHide() { if (undo) clearTimeout(undo.timer); undo = null; bu.box.hidden = true; bel.sheet.classList.remove("undo-on"); }
-  function bkUndoPlace() { // над кнопкой открытого листа операции, иначе над меню разделов (без учёта анимации листа)
+  function bkUndoPlace() { // над кнопкой открытого листа операции, иначе над меню разделов (без учета анимации листа)
     var b = bel.sheet.querySelector(".tx-body"), f = bel.sheet.querySelector(".tx-foot"), tb = document.querySelector(".tabbar"), r = tb.getBoundingClientRect();
     bu.box.style.bottom = (!bel.sheet.hidden ? bel.sheet.clientHeight - b.offsetTop - f.offsetTop + 8 : r.height ? window.innerHeight - r.top + 8 : 16) + "px";
     bel.sheet.classList.toggle("undo-on", !bel.sheet.hidden);
   }
-  function bkUndoShow(t, cat, prev, reopen, note) { // note — комментарий, который пришёл с этим решением (undefined — не трогало)
-    if (!document.body.classList.contains("tab-bank")) return; // успел уйти из раздела — решение просто уйдёт через 4 с
+  function bkUndoShow(t, cat, prev, reopen, note) { // note — комментарий, который пришел с этим решением (undefined — не трогало)
+    if (!document.body.classList.contains("tab-bank")) return; // успел уйти из раздела — решение просто уйдет через 4 с
     if (undo) clearTimeout(undo.timer);
     undo = { id: t.id, prev: prev, reopen: reopen, note: note, until: Date.now() + UNDO_MS };
     bu.t.textContent = ""; var b = document.createElement("b"); b.textContent = cat ? "✓ " + catLabel(cat) : "Категория снята"; bu.t.appendChild(b);
@@ -1195,7 +1195,7 @@ body.locked .bk-undo { display: none; }
     if (cur && cur.id !== u.id && dn !== (cur.note || "")) bkDecide(cur.id, { note: dn }); // черновик комментария следующей не теряем
     var q = null; for (var i = 0; i < bk.queue.length; i++) if (bk.queue[i].id === u.id) q = bk.queue[i];
     if (!q) return;
-    var p = u.prev || {}; // возвращаем только то, что меняло это решение; поправленное позже (комментарий) остаётся
+    var p = u.prev || {}; // возвращаем только то, что меняло это решение; поправленное позже (комментарий) остается
     if (p.category === undefined) delete q.category; else q.category = p.category;
     if (u.note !== undefined) { if (p.note === undefined) delete q.note; else q.note = p.note; }
     if (p.hold) q.hold = p.hold; else delete q.hold;
@@ -1224,7 +1224,7 @@ body.locked .bk-undo { display: none; }
       if (r.bottom > v.bottom) sc.scrollTop += r.bottom - v.bottom + 36; // выше затухания (28px)
     }
     txFade();
-    if (undo) bkUndoPlace(); // плашка «Отменить» — над кнопкой листа, не поверх неё
+    if (undo) bkUndoPlace(); // плашка «Отменить» — над кнопкой листа, не поверх нее
   }
   function txFill() {
     var t = bkFind(bk.cur); if (!t) { txClose(); return; }
@@ -1250,15 +1250,15 @@ body.locked .bk-undo { display: none; }
       b.appendChild(em); b.appendChild(nm);
       if (sg && !t.category && sg.category === c) { var tg = document.createElement("span"); tg.className = "tag"; tg.textContent = sg.source === "ai" ? "✦" : "≈"; b.appendChild(tg); }
       b.className = bk.pick === c ? "on" : ""; b.setAttribute("aria-pressed", bk.pick === c ? "true" : "false");
-      b.addEventListener("click", function () { bk.pick = bk.pick === c ? "" : c; txFill(); }); // выбранная — касание её отжимает (его слово 05.11.2026)
+      b.addEventListener("click", function () { bk.pick = bk.pick === c ? "" : c; txFill(); }); // выбранная — касание ее отжимает (его слово 05.11.2026)
       li.appendChild(b); bel.cats.appendChild(li);
     });
     txBtn();
     var left = bkItems().filter(function (x) { return !x.category && x.id !== t.id && String(x.date) >= (bk.data ? bk.data.review_from : ""); }).length;
-    bel.left.textContent = !t.category && left ? "ещё " + left : ""; // после подтверждения откроется следующая
+    bel.left.textContent = !t.category && left ? "еще " + left : ""; // после подтверждения откроется следующая
     txFade();
   }
-  // кнопка внизу: что именно произойдёт; у подтверждённой без правок — «Без изменений» (закрыть — ✕ или свайп); отжал её
+  // кнопка внизу: что именно произойдет; у подтвержденной без правок — «Без изменений» (закрыть — ✕ или свайп); отжал ее
   // категорию — «Снять категорию»: операция снова без категории (его слово 05.11.2026, «Все»)
   function txBtn() {
     var t = bkFind(bk.cur); if (!t) return;
@@ -1287,10 +1287,10 @@ body.locked .bk-undo { display: none; }
     if (n !== (t.note || "")) v.note = n;
     var prev = bkDecide(t.id, v, changed); // новая или другая категория — 4 с можно отменить; только комментарий — сразу
     var nx = wasNew ? txNext(t.id) : null;
-    if (nx) { // следующая открывается на том же месте — 0,35 с нажатие кнопки не принимается, двойной тап не подтвердит её вслепую
+    if (nx) { // следующая открывается на том же месте — 0,35 с нажатие кнопки не принимается, двойной тап не подтвердит ее вслепую
       bk.okLock = Date.now() + 350; txOpen(nx);
     } else { bel.sheet.hidden = true; bk.cur = null; bel.note.blur(); }
-    if (changed) bkUndoShow(t, cat, prev, true, v.note); // набранный комментарий при отмене вернётся в поле
+    if (changed) bkUndoShow(t, cat, prev, true, v.note); // набранный комментарий при отмене вернется в поле
   });
   bel.close.addEventListener("click", txClose); bel.back.addEventListener("click", txClose);
   bel.note.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); bel.note.blur(); } });
@@ -1318,7 +1318,7 @@ body.locked .bk-undo { display: none; }
   });
   B("bkBankClose").addEventListener("click", function () { bel.bankSheet.hidden = true; });
   B("bkBankBack").addEventListener("click", function () { bel.bankSheet.hidden = true; });
-  // «Обновить» — выгрузка операций из банка сейчас (как ночная, но по его просьбе): сервер берёт только проведённые банком
+  // «Обновить» — выгрузка операций из банка сейчас (как ночная, но по его просьбе): сервер берет только проведенные банком
   function bkSyncRender() { // под «Сделать выгрузку»: ход, итог или когда выгружалось последний раз
     var d = bk.data || {}, x = bk.syncRes, t = "", k = "", last = d.synced_at ? dmhm(d.synced_at) : "";
     bel.sync.disabled = !!bk.syncing; bel.sync.classList.toggle("run", !!bk.syncing);
@@ -1327,7 +1327,7 @@ body.locked .bk-undo { display: none; }
     else if (x && x.skipped === "recent") { t = "только что · " + last; k = "warn"; }
     else if (x && x.skipped) { t = "банк занят"; k = "warn"; }
     else if (x) { t = last + (x.inserted ? " · +" + x.inserted : " · нет новых"); k = x.errors && x.errors.length ? "warn" : "ok"; }
-    else t = last || "ещё не было";
+    else t = last || "еще не было";
     bel.syncSt.textContent = t; bel.syncSt.className = "s" + (k ? " " + k : "");
   }
   bel.sync.addEventListener("click", function () {
@@ -1354,7 +1354,7 @@ body.locked .bk-undo { display: none; }
       Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (x) { var on = x === b; x.classList.toggle("on", on); if (on) x.setAttribute("aria-current", "page"); else x.removeAttribute("aria-current"); });
       document.body.classList.toggle("tab-other", t === "dashboard" || t === "invest");
       document.body.classList.toggle("tab-bank", t === "bank");
-      bkUndoHide(); // ушёл из раздела — решение остаётся и уйдёт в базу
+      bkUndoHide(); // ушел из раздела — решение остается и уйдет в базу
       $("section").textContent = SECTIONS[t];
       window.scrollTo(0, 0);
       if (t === "bank") bankOpen();
@@ -1410,13 +1410,13 @@ body.locked .bk-undo { display: none; }
   el.btnSave.addEventListener("click", onSave);
   el.btnDelete.addEventListener("click", onDelete);
   el.btnCancel.addEventListener("click", editCancel);
-  el.btnMore.addEventListener("click", function () { if (document.body.classList.contains("tab-bank")) bel.menu.hidden = !bel.menu.hidden; else el.more.hidden = !el.more.hidden; }); // в Bank — своё меню
+  el.btnMore.addEventListener("click", function () { if (document.body.classList.contains("tab-bank")) bel.menu.hidden = !bel.menu.hidden; else el.more.hidden = !el.more.hidden; }); // в Bank — свое меню
   el.ver.textContent = APP_VERSION; $("bkVer").textContent = APP_VERSION;
   el.btnToken.addEventListener("click", function () {
     var v = el.tokenInput.value.trim().toLowerCase();
     if (!/^[0-9a-f]{48}$/.test(v)) { el.setupMsg.textContent = "Код: 48 знаков 0–9 и a–f"; return; }
     token(v); el.tokenInput.value = ""; el.setupMsg.textContent = "Проверяю…";
-    refreshInit().then(function (ok) { if (ok) { el.setup.hidden = true; setStatus("Код сохранён", ""); flushQueue(); el.amount.focus(); } });
+    refreshInit().then(function (ok) { if (ok) { el.setup.hidden = true; setStatus("Код сохранен", ""); flushQueue(); el.amount.focus(); } });
   });
   el.btnFlush.addEventListener("click", flushQueue);
   window.addEventListener("online", flushQueue);
