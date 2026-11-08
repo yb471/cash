@@ -564,7 +564,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "109"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "110"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -1020,6 +1020,8 @@ button.txd-row:active { background: var(--chip); }
     o.wait = true;
     return o;
   }
+  // возврат по карте: отправителем банк пишет владельца счета (его самого), продавец — только в назначении «Refund from …»
+  function refundFrom(t) { var m = t && t.kind === "CARD_REFUND" ? /^refund from\s+(.+)$/i.exec(String(t.remittance || "").trim()) : null; return m ? m[1] : ""; }
   function bkRemOwn(t) { return t.remittance && String(t.remittance).trim().toLowerCase() !== String(t.counterparty || "").trim().toLowerCase(); } // назначение, если не повторяет продавца
   function bkMoney(n, cur) { return n ? money(n, cur) : "0,00 " + (SYM[cur] || cur); } // проверка карты на 0 — без знака и цвета
   function bkItems() { return bk.data && bk.data.items ? bk.data.items.map(bkOverlay) : []; }
@@ -1109,12 +1111,13 @@ button.txd-row:active { background: var(--chip); }
       b.type = "button"; b.className = "bk-row";
       dd.className = "d"; dd.textContent = dmy(t.date);
       main.className = "bk-main";
-      var cp = document.createElement("span"); cp.className = "bk-cp"; cp.textContent = t.counterparty || t.remittance || "—"; main.appendChild(cp);
+      var rf = refundFrom(t), cp = document.createElement("span"); cp.className = "bk-cp"; cp.textContent = rf || t.counterparty || t.remittance || "—"; main.appendChild(cp);
       // вторая строка есть всегда (его слово 04.11.2026): назначение платежа; нет его — пояснение к подсказке категории
       // («3 из 3 раз», комментарий Claude), курсивом; нет и его — пустая, чтобы все строки списка были одной высоты
       var r = document.createElement("span"), why = !t.category && t.sugg && t.sugg.why && t.sugg.why !== "предложение Claude" ? t.sugg.why : "";
       r.className = "bk-rem";
-      if (bkRemOwn(t)) r.textContent = t.remittance;
+      if (rf) r.textContent = "Возврат"; // продавец уже в заголовке строки
+      else if (bkRemOwn(t)) r.textContent = t.remittance;
       else if (why) { r.className += " why"; r.textContent = why; }
       else { r.textContent = "\u00a0"; r.setAttribute("aria-hidden", "true"); }
       main.appendChild(r);
@@ -1286,8 +1289,8 @@ button.txd-row:active { background: var(--chip); }
   // имя для глаз: без посредника оплаты («Sumup *»), без юридического хвоста после запятой, заглавные — как в обычном тексте;
   // текст банка как есть — строкой ниже и в «Данных банка»
   function txName(t) {
-    var rf = t && t.kind === "CARD_REFUND" ? /^refund from\s+(.+)$/i.exec(String(t.remittance || "")) : null; // у возврата отправитель — он сам, продавец — в назначении
-    var s = String(rf ? rf[1] : (t && (t.counterparty || t.remittance)) || "").replace(/\s+/g, " ").trim();
+    var rf = refundFrom(t);
+    var s = String(rf || (t && (t.counterparty || t.remittance)) || "").replace(/\s+/g, " ").trim();
     var m = /^(?:sumup|sq|zettle|izettle|paypal|pp|shopify|unzer|stripe)\s*\*\s*(.+)$/i.exec(s), up = !!m; if (m) s = m[1];
     s = s.replace(/\s*\*\s*(?=[a-z0-9]*\d)[a-z0-9]{6,}$/i, ""); // номер заказа после «*» — не имя
     var k = s.indexOf(","); if (k > 3) s = s.slice(0, k);
