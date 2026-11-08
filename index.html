@@ -156,10 +156,11 @@ body.locked .bk-undo { display: none; }
 .bk-ok:active { background: var(--accent); color: var(--accent-fg); }
 .bk-empty { text-align: center; color: var(--muted); padding: 28px 8px; font-size: calc(15 * var(--u)); line-height: 1.4; }
 .bk-empty b { display: block; color: var(--plus); font-size: calc(17 * var(--u)); margin-bottom: 4px; }
-/* лист операции (его слово 05.11.2026: «переосмысли блок» — лучшие финтех-приложения + твердость данных; версия 104):
-   сверху очередь «N из M» с полоской; чистое имя и текст банка под ним; крупная сумма и тип; карточка подсказки с причиной;
-   сетка 13 категорий в его порядке — касание сохраняет (4 с «Отменить»); внизу «💬 Комментарий» по кнопке, «Пропустить»,
-   «✓ Принять» подсказку под пальцем; «Похожие и данные банка» — второй вид листа: поля банка как есть, дубли, кто и когда */
+/* лист операции (его слово 05.11.2026, версия 104; аудит — его «да» 08.11.2026, версия 109): сверху очередь «N из M» с полоской;
+   шапка одной строкой — логотип, имя, «день, дата · тип из банка», сумма справа (расход обычным цветом, доход зеленым);
+   под ней до трех строк без плашки — назначение, почему подсказка Claude, «Раньше N раз: категория» или «Возможен дубль»
+   с входом в «Подробнее»; сетка 13 категорий в его порядке — касание сохраняет (4 с «Отменить»), по выбранной — снимает;
+   внизу «💬», «Пропустить», «✓ Принять»; «Подробнее» — прошлые платежи отправителя с категориями, дубли, поля банка */
 .sheet-body.tx-body { --tile: color-mix(in srgb, var(--fg) 5%, var(--surface)); display: flex; flex-direction: column; overflow: hidden; padding: 10px 0 0; max-height: calc(100% - env(safe-area-inset-top, 0px) - 6px); border-radius: 28px 28px 0 0; }
 .tx-body .sheet-head.tx-top { position: static; flex: none; gap: 12px; padding: 8px 12px 8px 18px; font-weight: 400; font-size: inherit; }
 .tx-prog { flex: 1; min-width: 0; }
@@ -184,34 +185,28 @@ body.locked .bk-undo { display: none; }
 .ava img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #FFFFFF; opacity: 0; transition: opacity .15s ease-out; }
 .ava.lg img { opacity: 1; }
 .ava.lg { box-shadow: 0 0 0 1px var(--line); }
-.tx-who { display: flex; align-items: center; gap: 12px; }
-.tx-who .w { min-width: 0; }
-.tx-who .n { font-weight: 700; font-size: calc(19 * var(--u)); line-height: 1.2; letter-spacing: -.01em; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
-.tx-who .l { margin-top: 2px; font-size: calc(13 * var(--u)); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tx-who .l:empty { display: none; }
-.tx-amtrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; }
-.tx-amt { font-size: calc(34 * var(--u)); font-weight: 700; line-height: 1.05; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
-.tx-amt.minus { color: var(--minus); } .tx-amt.plus { color: var(--plus); }
-.tx-type { flex: none; height: 34px; padding: 0 12px; border: 0; border-radius: 17px; background: var(--chip); color: var(--fg); font: inherit; font-size: calc(14 * var(--u)); font-weight: 600; white-space: nowrap; }
-.tx-type { position: relative; } .tx-type::before { content: ""; position: absolute; inset: -5px -2px; } /* касание — 44px */
-.tx-type::after { content: " ▾"; color: var(--muted); font-size: .85em; }
-.tx-meta { margin-top: 5px; font-size: calc(14 * var(--u)); color: var(--muted); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
-.tx-meta .ok { color: var(--plus); font-weight: 600; } .tx-meta .pend { color: var(--warn); font-weight: 600; }
-.tx-rem { margin-top: 2px; font-size: calc(13 * var(--u)); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tx-rem:empty { display: none; }
-.tx-card { margin-top: 12px; padding: 10px 12px; border-radius: 14px; background: var(--tile); font-size: calc(14 * var(--u)); line-height: 1.35; }
-.tx-card.ai { background: color-mix(in srgb, var(--accent) 9%, var(--surface)); }
-.tx-card .h { font-weight: 600; } .tx-card.ai .h { color: var(--accent); }
-.tx-card .s { margin-top: 2px; color: var(--muted); }
-.tx-card .yb { color: var(--fg); } /* его прежние слова — его голосом, не серым */
-.tx-card .warn { color: var(--warn); font-weight: 600; }
+/* шапка: логотип на две строки; имя и сумма — первая строка, «день, дата · тип» — вся ширина под ними (длинная сумма не сжимает дату) */
+.tx-who { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "ava n amt" "ava m m"; column-gap: 12px; align-items: start; padding-top: 2px; }
+.tx-who .ava { grid-area: ava; align-self: center; } .tx-who .n { grid-area: n; } .tx-who .tx-amt { grid-area: amt; } .tx-who .tx-meta { grid-area: m; }
+.tx-who .n { font-weight: 700; font-size: calc(17 * var(--u)); line-height: 1.2; letter-spacing: -.01em; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+.tx-amt { padding-top: 1px; font-size: calc(21 * var(--u)); font-weight: 700; line-height: 1.2; letter-spacing: -.01em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tx-amt.minus { color: var(--fg); } .tx-amt.plus { color: var(--plus); } /* расход — обычным цветом, доход — зеленым с «+» */
+.tx-meta { margin-top: 2px; font-size: calc(13.5 * var(--u)); color: var(--muted); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.tx-meta .pend { color: var(--warn); font-weight: 600; }
 #txSheet.undo-on .tx-prog { visibility: hidden; } /* плашка «Отменить» встает на место строки очереди — сетка и кнопки свободны, ✕ виден */
 .bk-undo.in-sheet { left: 12px; right: 58px; width: auto; transform: none; animation: undofade .18s ease-out; }
 @keyframes undofade { from { opacity: 0; } to { opacity: 1; } }
-.tx-card .lk { margin-top: 4px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* одна строка: данные банка дописываются без сдвига сетки */
-.tx-card .lnk, .txd-retry { padding: 0; border: 0; background: none; color: var(--accent); font: inherit; font-weight: 600; text-align: left; }
-.tx-hint { margin: 12px 2px 8px; font-size: calc(12.5 * var(--u)); color: var(--muted); }
+.txd-retry { padding: 0; border: 0; background: none; color: var(--accent); font: inherit; font-weight: 600; text-align: left; }
 /* сетка категорий: две колонки, при крупном системном тексте — сама одна */
+.tx-ctx { display: flex; flex-direction: column; gap: 5px; margin: 12px 0 14px; padding-left: 58px; font-size: calc(14 * var(--u)); line-height: 1.3; }
+.tx-ctx:empty { display: none; }
+.tx-ctx .q { color: var(--fg); overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+.tx-ctx .ai { color: var(--accent); } .tx-ctx .ai b { font-weight: 600; } .tx-ctx .ai span { color: var(--muted); }
+.tx-ctx .yb { color: var(--fg); }
+.tx-ctx .hs { display: flex; align-items: baseline; gap: 6px; max-width: 100%; padding: 0; border: 0; background: none; color: var(--muted); font: inherit; text-align: left; }
+.tx-ctx .hs > span { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .tx-ctx .hs > span:empty { display: none; }
+.tx-ctx .hs b { flex: none; white-space: nowrap; } /* «Подробнее ›» не обрезается — сокращается текст перед ним */
+.tx-ctx .hs b { color: var(--accent); font-weight: 600; } .tx-ctx .hs.ai { color: var(--accent); font-weight: 600; } .tx-ctx .hs.ai b { font-weight: 600; } .tx-ctx .hs.warn, .tx-ctx .hs.warn b { color: var(--warn); font-weight: 600; }
 .tx-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(calc(150 * var(--u)), 1fr)); gap: 8px; }
 .tx-tile { position: relative; display: flex; align-items: center; gap: 8px; min-height: 50px; padding: 7px 10px 7px 8px; border: 0; border-radius: 14px; background: var(--tile); color: var(--fg); font: inherit; font-size: calc(14 * var(--u)); line-height: 1.18; font-weight: 500; text-align: left; -webkit-tap-highlight-color: transparent; transition: transform .12s, background-color .12s; }
 .tx-tile .e { flex: none; width: 32px; height: 32px; border-radius: 10px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); display: flex; align-items: center; justify-content: center; font-size: 19px; line-height: 1; }
@@ -225,7 +220,7 @@ body.locked .bk-undo { display: none; }
 .tx-foot { flex: none; display: flex; flex-direction: column; gap: 8px; padding: 10px 14px max(10px, calc(env(safe-area-inset-bottom, 0px) - 10px)); background: var(--surface); border-top: 1px solid var(--line); }
 .tx-foot .comment { height: 44px; padding-right: 12px; }
 .tx-btns { display: flex; flex-wrap: wrap; gap: 8px; } /* крупный системный текст — кнопки во второй ряд, а не обрезанные */
-.tx-b { flex: 1 1 calc(110 * var(--u)); min-width: 0; height: 50px; padding: 0 12px; border: 0; border-radius: 25px; background: var(--chip); color: var(--fg); font: inherit; font-size: calc(16 * var(--u)); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tx-b { flex: 1 1 calc(110 * var(--u)); min-width: 0; height: 50px; padding: 0 8px; border: 0; border-radius: 25px; background: var(--chip); color: var(--fg); font: inherit; font-size: calc(16 * var(--u)); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tx-b.icon { flex: none; width: 50px; padding: 0; font-size: 19px; }
 .tx-b.pri { flex: 1.25 1 calc(130 * var(--u)); background: var(--accent); color: var(--accent-fg); }
 .tx-b[aria-expanded="true"] { background: color-mix(in srgb, var(--accent) 16%, var(--chip)); color: var(--accent); }
@@ -247,14 +242,7 @@ button.txd-row:active { background: var(--chip); }
 .txd-sim .a.plus { color: var(--plus); }
 .txd-ok { margin: 7px 2px 0; font-size: calc(13 * var(--u)); color: var(--plus); }
 .txd-ok.warn { color: var(--warn); font-weight: 600; } .txd-ok.none { color: var(--muted); }
-.txd-hist .t { flex: none; width: calc(80 * var(--u)); white-space: nowrap; color: var(--muted); font-size: calc(13 * var(--u)); font-variant-numeric: tabular-nums; }
-.txd-src { flex: none; padding: 1px 6px; border-radius: 6px; font-size: calc(11 * var(--u)); font-weight: 700; line-height: 1.6; }
-.txd-src.bank { color: var(--muted); background: var(--chip); }
-.txd-src.claude { color: #6E4FE0; background: color-mix(in srgb, #7A5AF8 13%, transparent); }
-.txd-src.you { color: var(--accent); background: color-mix(in srgb, var(--accent) 13%, transparent); }
-@media (prefers-color-scheme: dark) { .txd-src.claude { color: #B3A2FF; } }
 .txd-wait { padding: 22px 6px; color: var(--muted); text-align: center; font-size: calc(14 * var(--u)); }
-.tx-typenote { margin: 6px 14px 4px; font-size: calc(13 * var(--u)); color: var(--muted); }
 .save:disabled { opacity: .45; }
 .section { margin-left: auto; color: var(--muted); font-weight: 600; font-size: calc(14 * var(--u)); white-space: nowrap; } /* раздел приложения (его слово 31.10.2026: вместо итога месяца) */
 .gear { width: 44px; height: 44px; margin-right: -8px; border: 0; background: transparent; border-radius: 10px; font-size: calc(20 * var(--u)); color: var(--muted); }
@@ -531,12 +519,8 @@ button.txd-row:active { background: var(--chip); }
     <div class="tx-mini" id="txMini" hidden><span class="ava" id="txMiniAva" aria-hidden="true"></span><span class="n" id="txMiniName"></span><span class="v" id="txMiniAmt"></span></div>
     <div class="tx-scroll" id="txScroll">
       <div id="txMain">
-        <div class="tx-who"><span class="ava" id="txAva" aria-hidden="true"></span><div class="w"><div class="n" id="txTitle"></div><div class="l" id="txRaw"></div></div></div>
-        <div class="tx-amtrow"><span class="tx-amt" id="txAmt"></span><button class="tx-type" id="txType" type="button" aria-haspopup="dialog"></button></div>
-        <div class="tx-meta" id="txMeta"></div>
-        <div class="tx-rem" id="txRem"></div>
-        <div class="tx-card" id="txSugg"></div>
-        <div class="tx-hint" id="txHint"></div>
+        <div class="tx-who"><span class="ava" id="txAva" aria-hidden="true"></span><div class="n" id="txTitle"></div><span class="tx-amt" id="txAmt"></span><div class="tx-meta" id="txMeta"></div></div>
+        <div class="tx-ctx" id="txSugg"></div>
         <div class="tx-grid" id="txCats" role="group" aria-label="Категория"></div>
       </div>
       <div id="txData" hidden></div>
@@ -550,15 +534,6 @@ button.txd-row:active { background: var(--chip); }
         <button class="tx-b pri" id="txOk" type="button" hidden></button>
       </div>
     </div>
-  </div>
-</div>
-<!-- тип операции: пока только вид, не сохраняется (его слово 05.11.2026: «кнопку без бекенда, я подумаю») -->
-<div class="sheet" id="txTypeSheet" hidden>
-  <div class="sheet-back" id="txTypeBack"></div>
-  <div class="sheet-body" role="dialog" aria-label="Тип операции">
-    <div class="sheet-head"><span>Тип операции</span><button id="txTypeClose" type="button" aria-label="Закрыть">✕</button></div>
-    <ul class="sheet-list" id="txTypeList"></ul>
-    <p class="tx-typenote">Пока не сохраняется: ты решаешь, как вести доходы и переводы.</p>
   </div>
 </div>
 
@@ -589,7 +564,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "108"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "109"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -1031,11 +1006,10 @@ button.txd-row:active { background: var(--chip); }
   var B = function (id) { return document.getElementById(id); };
   var bel = { bankBtn: B("bkBankBtn"), bankSheet: B("bkBankSheet"), bankList: B("bkBankList"), sync: B("bkSync"), syncSt: B("bkSyncSt"), review: B("bkReview"), all: B("bkAll"), pendingN: B("bkPendingN"),
     stPend: B("stPend"), stSuggP: B("stSuggP"), stAll: B("stAll"), stD30: B("stD30"), statBox: B("bkStatBox"), menu: B("bkMenu"), queueN: B("bkQueueN"), flush: B("bkFlush"), sheetLink: B("bkSheetLink"), access: B("bkAccess"), accessHint: B("bkAccessHint"), aiBtn: B("bkAiBtn"), aiSt: B("bkAiSt"), status: B("bkStatus"), list: B("bkList"), empty: B("bkEmpty"), more: B("bkMore"),
-    sheet: B("txSheet"), back: B("txBack"), close: B("txClose"), title: B("txTitle"), amt: B("txAmt"), meta: B("txMeta"), rem: B("txRem"), sugg: B("txSugg"),
-    cats: B("txCats"), note: B("txNote"), ok: B("txOk"), prog: B("txProg"), q: B("txQ"), pos: B("txPos"), bar: B("txBar"), ava: B("txAva"), raw: B("txRaw"),
-    type: B("txType"), hint: B("txHint"), main: B("txMain"), data: B("txData"), mini: B("txMini"), miniAva: B("txMiniAva"), miniName: B("txMiniName"),
-    miniAmt: B("txMiniAmt"), scroll: B("txScroll"), noteRow: B("txNoteRow"), cmt: B("txCmt"), skip: B("txSkip"), backMain: B("txBackMain"),
-    typeSheet: B("txTypeSheet"), typeList: B("txTypeList") };
+    sheet: B("txSheet"), back: B("txBack"), close: B("txClose"), title: B("txTitle"), amt: B("txAmt"), meta: B("txMeta"), sugg: B("txSugg"),
+    cats: B("txCats"), note: B("txNote"), ok: B("txOk"), prog: B("txProg"), q: B("txQ"), pos: B("txPos"), bar: B("txBar"), ava: B("txAva"),
+    main: B("txMain"), data: B("txData"), mini: B("txMini"), miniAva: B("txMiniAva"), miniName: B("txMiniName"),
+    miniAmt: B("txMiniAmt"), scroll: B("txScroll"), noteRow: B("txNoteRow"), cmt: B("txCmt"), skip: B("txSkip"), backMain: B("txBackMain") };
   function bkStatus(t, kind) { bel.status.textContent = t || ""; bel.status.className = "status" + (kind ? " " + kind : ""); }
   function bkOverlay(t) { // операция с его еще не отправленными решениями поверх ответа сервера
     var q = null; for (var i = 0; i < bk.queue.length; i++) if (bk.queue[i].id === t.id) q = bk.queue[i];
@@ -1303,18 +1277,19 @@ button.txd-row:active { background: var(--chip); }
     if (bk.queue.length) { clearTimeout(bk.timer); bk.timer = setTimeout(bkSend, 900); }
   });
   // ---------- лист операции (его слово 05.11.2026: переосмыслить блок — лучшие финтех-приложения + твердость данных) ----------
-  // одна операция — одно касание: категория сохраняется сразу (4 с «Отменить»), открывается следующая; подсказка — карточкой с
-  // причиной и кнопкой «✓ Принять» под пальцем; «Пропустить» уводит операцию в конец очереди (до конца разбора — по кругу);
-  // «Похожие и данные банка» — действие bank_tx функции cash: поля банка как есть, дубли, кто и когда (только хранимое)
-  var TX_TYPES = [["out", "Расход"], ["in", "Доход"], ["move", "Перевод"]];
+  // одна операция — одно касание: категория сохраняется сразу (4 с «Отменить»), открывается следующая; подсказка — подсвеченной
+  // плиткой, строкой причины и кнопкой «✓ Принять» под пальцем; «Пропустить» уводит операцию в конец очереди (по кругу);
+  // «Подробнее» — действие bank_tx функции cash: прошлые платежи отправителя, дубли, поля банка (только то, что помогает определить)
   var AVA = ["#3B7BC0", "#C0663B", "#8A5CC2", "#2F9468", "#B8498A", "#9C7F1E", "#3E8FA6", "#C24B4B"];
-  bk.sess = {}; bk.skipped = {}; bk.skipN = 0; bk.types = {}; bk.view = "main"; bk.txc = {};
+  bk.sess = {}; bk.skipped = {}; bk.skipN = 0; bk.view = "main"; bk.txc = {};
   function bkFind(id) { var it = bkItems(); for (var i = 0; i < it.length; i++) if (it[i].id === id) return it[i]; return null; }
   // имя для глаз: без посредника оплаты («Sumup *»), без юридического хвоста после запятой, заглавные — как в обычном тексте;
   // текст банка как есть — строкой ниже и в «Данных банка»
   function txName(t) {
-    var s = String((t && (t.counterparty || t.remittance)) || "").replace(/\s+/g, " ").trim();
+    var rf = t && t.kind === "CARD_REFUND" ? /^refund from\s+(.+)$/i.exec(String(t.remittance || "")) : null; // у возврата отправитель — он сам, продавец — в назначении
+    var s = String(rf ? rf[1] : (t && (t.counterparty || t.remittance)) || "").replace(/\s+/g, " ").trim();
     var m = /^(?:sumup|sq|zettle|izettle|paypal|pp|shopify|unzer|stripe)\s*\*\s*(.+)$/i.exec(s), up = !!m; if (m) s = m[1];
+    s = s.replace(/\s*\*\s*(?=[a-z0-9]*\d)[a-z0-9]{6,}$/i, ""); // номер заказа после «*» — не имя
     var k = s.indexOf(","); if (k > 3) s = s.slice(0, k);
     if (s && s === s.toUpperCase() && /[A-ZА-Я]/.test(s)) { up = true; s = s.split(" ").map(function (w) { return w.length <= 2 ? w : w.charAt(0) + w.slice(1).toLowerCase(); }).join(" "); }
     return !s ? "Операция" : up ? s.charAt(0).toUpperCase() + s.slice(1) : s; // «dm-drogerie markt» остается как у банка
@@ -1340,16 +1315,18 @@ button.txd-row:active { background: var(--chip); }
     im.src = FN + "?logo=" + encodeURIComponent(logo);
     node.appendChild(im);
   }
-  function txPending() { var from = bk.data ? bk.data.review_from : ""; return bkItems().filter(function (x) { return !x.category && String(x.date) >= from; }); }
-  function txTypeOf(t) { var k = bk.types[t.id] || (t.amount > 0 ? "in" : "out"); for (var i = 0; i < TX_TYPES.length; i++) if (TX_TYPES[i][0] === k) return TX_TYPES[i]; return TX_TYPES[0]; }
-  function plOps(n) { var a = n % 10, b = n % 100; return a === 1 && b !== 11 ? "операция" : a >= 2 && a <= 4 && (b < 10 || b >= 20) ? "операции" : "операций"; }
-  function fullDate(iso) { return iso ? dmy(iso) + "." + String(iso).slice(0, 4) : "—"; }
-  function dateTime(iso, short) { // short — без года, если год текущий (колонка «кто и когда»)
-    var d = new Date(iso); if (!iso || isNaN(d)) return "—";
-    var o = { timeZone: "Europe/Berlin", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" };
-    if (!short || d.getFullYear() !== new Date().getFullYear()) o.year = "numeric";
-    return d.toLocaleString("ru-RU", o).replace(",", "");
+  var KIND = { CARD_PAYMENT: "Оплата картой", TRANSFER: "Перевод", TOPUP: "Пополнение", CARD_REFUND: "Возврат", EXCHANGE: "Обмен валюты",
+    CARD_CHARGEBACK: "Возврат по спору", REV_PAYMENT: "Перевод", ATM: "Снятие наличных" };
+  function txKind(t) { var k = KIND[t.kind] || ""; return k === "Перевод" && t.amount > 0 ? "Входящий перевод" : k; }
+  var MON = ["янв", "фев", "мар", "апр", "мая", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"];
+  function shortDate(iso) { var y = String(iso).slice(0, 4), m = Number(String(iso).slice(5, 7)), d = Number(String(iso).slice(8, 10)); return d + " " + MON[m - 1] + (y !== String(new Date().getFullYear()) ? " " + y : ""); }
+  // назначение для глаз: без хвоста «To …» / «Payment from …» (это имя второй стороны) и без повтора продавца
+  function txPurpose(t) {
+    if (!t.remittance || t.kind === "CARD_PAYMENT" || t.kind === "CARD_REFUND") return "";
+    var p = String(t.remittance).split(" / ").filter(function (x) { return !/^(to|from|payment from|refund from)\b/i.test(x.trim()); }).join(" / ").trim();
+    return p && /\p{L}{3,}/u.test(p) && p.toLowerCase() !== String(t.counterparty || "").toLowerCase() ? p : "";
   }
+  function txPending() { var from = bk.data ? bk.data.review_from : ""; return bkItems().filter(function (x) { return !x.category && String(x.date) >= from; }); }
   function txOpen(id, cont) { // cont — переход внутри разбора (следующая, отмена, похожая); с нуля — новая очередь
     var t = bkFind(id); if (!t) return;
     var was = bk.cur && bk.cur !== id && !bel.sheet.hidden ? bkFind(bk.cur) : null, dn = bel.note.value.trim();
@@ -1382,20 +1359,12 @@ button.txd-row:active { background: var(--chip); }
     bel.bar.style.width = inQ && total ? Math.round((done + 1) / total * 100) + "%" : "0";
     // кто, сколько, когда
     txAva(bel.ava, nm, t.logo); bel.title.textContent = nm;
-    var raw = String(t.counterparty || "").trim(); bel.raw.textContent = raw && raw.toLowerCase() !== nm.toLowerCase() ? raw : "";
     bel.amt.textContent = bkMoney(t.amount, t.currency); bel.amt.className = "tx-amt " + (t.amount < 0 ? "minus" : t.amount > 0 ? "plus" : "");
-    var ty = txTypeOf(t); bel.type.textContent = ty[1]; bel.type.setAttribute("aria-label", "Тип операции: " + ty[1] + " (пока не сохраняется)");
     bel.meta.textContent = "";
     var d = new Date(String(t.date) + "T12:00:00"), wd = isNaN(d) ? "" : ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"][d.getDay()] + ", ";
-    bel.meta.appendChild(document.createTextNode(wd + fullDate(t.date)));
-    if (t.status === "BOOK" || t.status === "PDNG") {
-      var st = document.createElement("span"); st.className = t.status === "BOOK" ? "ok" : "pend"; st.textContent = t.status === "BOOK" ? "✓ проведена" : "в ожидании";
-      bel.meta.appendChild(document.createTextNode(" · ")); bel.meta.appendChild(st);
-    }
-    if (t.account) bel.meta.appendChild(document.createTextNode(" · " + t.account));
-    bel.rem.textContent = bkRemOwn(t) && String(t.remittance).toLowerCase().indexOf(nm.toLowerCase()) < 0 ? t.remittance : ""; // повторяет имя — только в «Данных банка»
+    bel.meta.appendChild(document.createTextNode(wd + shortDate(t.date) + (txKind(t) ? " · " + txKind(t) : "")));
+    if (t.status === "PDNG") { var st = document.createElement("span"); st.className = "pend"; st.textContent = "в ожидании"; bel.meta.appendChild(document.createTextNode(" · ")); bel.meta.appendChild(st); }
     txCard(t);
-    bel.hint.textContent = t.category ? "Другая — меняет, ✓ — снимает · 4 с на отмену" : sg ? "Другая категория — касание сохраняет · 4 с на отмену" : "Касание по категории сохраняет · 4 с на отмену";
     // 13 категорий в его порядке; выбранная — ✓, подсказанная — ✦, обе залиты бирюзой
     bel.cats.textContent = "";
     ((bk.data && bk.data.categories) || []).forEach(function (c) {
@@ -1411,21 +1380,26 @@ button.txd-row:active { background: var(--chip); }
   }
   // карточка: подсказка с причиной (или что ее нет), его прежний комментарий, сколько еще от отправителя, вход в «Данные банка»
   function txCard(t) {
-    var c = bel.sugg, sg = t.category ? null : t.sugg, h = document.createElement("div"), s = document.createElement("div"), info = bk.txc[t.id];
-    c.textContent = ""; c.className = "tx-card" + (sg ? " ai" : ""); h.className = "h"; s.className = "s";
-    if (t.category) h.textContent = "✓ Размечено: " + catLabel(t.category) + (t.wait ? " · отправляю…" : "");
-    else if (sg) {
-      h.textContent = (sg.source === "ai" ? "✦ Claude · " : "≈ По твоим решениям · ") + catLabel(sg.category);
-      var why = sg.why && sg.why !== "предложение Claude" ? sg.why : "";
-      if (why) s.appendChild(document.createTextNode((sg.source === "ai" ? "«" + why + "»" : why) + ". "));
-    } else h.textContent = "◌ Подсказки нет — выбери сам";
-    var said = t.category ? t.note : sg && sg.note;
-    if (said) { var yb = document.createElement("span"); yb.className = "yb"; yb.textContent = (t.category ? "💬 «" : "💬 Ты писал: «") + said + "». "; s.appendChild(yb); }
-    var lk = document.createElement("div"), a = document.createElement("button"); lk.className = "lk";
-    a.type = "button"; a.className = "lnk"; a.textContent = "Похожие и данные банка ›"; a.addEventListener("click", txShowData); lk.appendChild(a);
-    if (info && info.dup && info.dup.verdict === "possible") { var w = document.createElement("span"); w.className = "warn"; w.textContent = " · ⚠ возможен дубль"; lk.appendChild(w); }
-    else if (info && info.similar && info.similar.length) lk.appendChild(document.createTextNode(" · еще " + info.similar.length + (info.similar_more ? "+" : "")));
-    c.appendChild(h); if (s.firstChild) c.appendChild(s); c.appendChild(lk);
+    var c = bel.sugg, sg = t.category ? null : t.sugg, info = bk.txc[t.id], add = function (cls, txt) { var e = document.createElement("div"); e.className = cls; if (txt) e.textContent = txt; c.appendChild(e); return e; };
+    c.textContent = ""; c.className = "tx-ctx";
+    var pu = txPurpose(t); if (pu) add("q", "«" + pu + "»");
+    var sim = info && info.similar ? info.similar : null, dup = info && info.dup, byHist = sg && sg.source !== "ai" && sim && sim.length; // подсказка по прошлым — это и есть строка «Раньше»
+    if (sg && !byHist) {
+      var a = add("ai"), b = document.createElement("b"), w = document.createElement("span"), why = sg.why && sg.why !== "предложение Claude" ? sg.why : "";
+      b.textContent = sg.source === "ai" ? "✦ Claude" : "≈ Как раньше"; a.appendChild(b);
+      if (sg.source === "ai" && why) w.textContent = ": «" + why + "»"; else if (sg.source !== "ai" && why) w.textContent = ": " + why; a.appendChild(w);
+    }
+    var said = t.category ? t.note : sg && sg.note; if (said) add("yb", "💬 «" + said + "»");
+    var h = document.createElement("button"), ht = document.createElement("span"), hb = document.createElement("b"); h.type = "button"; h.className = "hs"; h.addEventListener("click", txShowData);
+    if (dup && dup.verdict === "possible") { h.className = "hs warn"; ht.textContent = "⚠ Возможен дубль"; }
+    else if (sim && sim.length) {
+      var n = {}, top = "", k; sim.forEach(function (o) { if (o.category) n[o.category] = (n[o.category] || 0) + 1; });
+      for (k in n) if (!top || n[k] > n[top]) top = k;
+      var cnt = sim.length + (info.similar_more ? "+" : ""), word = sim.length % 10 >= 2 && sim.length % 10 <= 4 && (sim.length % 100 < 10 || sim.length % 100 >= 20) ? " раза" : " раз";
+      if (byHist) h.className = "hs ai";
+      ht.textContent = (byHist ? "≈ " : "") + "Раньше " + cnt + word + (top ? ": " + catLabel(top) + (n[top] < sim.length ? " ×" + n[top] : "") : ", без категории");
+    } else if (sim) ht.textContent = "Раньше не было";
+    hb.textContent = "Подробнее ›"; h.appendChild(ht); h.appendChild(hb); c.appendChild(h);
   }
   // низ листа: что можно сделать с этой операцией сейчас
   function txFoot() {
@@ -1454,7 +1428,7 @@ button.txd-row:active { background: var(--chip); }
     for (i = 0; i < all.length; i++) if (open(all[i]) && (!best || bk.skipped[all[i].id] < bk.skipped[best.id])) best = all[i];
     return best ? best.id : null;
   }
-  function txHide() { bel.sheet.hidden = true; bel.typeSheet.hidden = true; bk.cur = null; bel.note.blur(); if (undo) bkUndoPlace(); }
+  function txHide() { bel.sheet.hidden = true; bk.cur = null; bel.note.blur(); if (undo) bkUndoPlace(); }
   function txClose() {
     var t = bkFind(bk.cur), n = bel.note.value.trim();
     if (t && n !== (t.note || "")) bkDecide(t.id, { note: n }); // комментарий без категории тоже сохраняется
@@ -1540,7 +1514,6 @@ button.txd-row:active { background: var(--chip); }
     }
     list.appendChild(r); return r;
   }
-  function txSrc(who) { var s = document.createElement("span"); s.className = "txd-src " + who; s.textContent = who === "bank" ? "банк" : who === "claude" ? "Claude" : "ты"; return s; }
   function txIban(v) { return v.length > 12 ? v.slice(0, 4) + " " + v.slice(4, 8) + " •••• " + v.slice(-4) : v; }
   function txRenderData() {
     var t = bkFind(bk.cur), box = bel.data, info = t ? bk.txc[t.id] : null; if (!t) return;
@@ -1552,13 +1525,13 @@ button.txd-row:active { background: var(--chip); }
     }
     // похожие того же отправителя и проверка на дубль
     var sim = info.similar || [], yr = String(t.date).slice(0, 4);
-    var sl = txSec(box, "Похожие · тот же отправитель", sim.length ? sim.length + (info.similar_more ? "+, последние" : "") : "нет");
-    if (!sim.length) txRow(sl, "", "Других операций от этого отправителя нет");
+    var sl = txSec(box, "Раньше от этого отправителя", sim.length ? sim.length + (info.similar_more ? "+, последние" : "") : "нет");
+    if (!sim.length) txRow(sl, "", "Других операций нет — впервые");
     sim.forEach(function (o) {
       var r = document.createElement("button"), d = document.createElement("span"), v = document.createElement("span"), a = document.createElement("span");
       r.type = "button"; r.className = "txd-row txd-sim";
       d.className = "d"; d.textContent = dmy(o.date) + (String(o.date).slice(0, 4) !== yr ? "." + String(o.date).slice(2, 4) : "");
-      v.className = "v"; v.textContent = (o.reference || "") + (o.category ? (o.reference ? " · " : "") + catLabel(o.category) : (o.reference ? "" : "без категории"));
+      v.className = "v"; v.textContent = o.category ? catLabel(o.category) : "без категории";
       a.className = "a" + (o.amount > 0 ? " plus" : ""); a.textContent = bkMoney(o.amount, o.currency);
       r.appendChild(d); r.appendChild(v); r.appendChild(a);
       if (bkFind(o.id)) r.addEventListener("click", function () { txOpen(o.id, true); }); else r.disabled = true;
@@ -1568,48 +1541,16 @@ button.txd-row:active { background: var(--chip); }
     ok.className = "txd-ok" + (!dup ? " none" : dup.verdict === "possible" ? " warn" : "");
     ok.textContent = !dup ? "Дубли не проверены: у операции нет отправителя" :
       dup.verdict === "possible" ? "⚠ Возможен дубль: та же сумма, дата и назначение — проверь в банке" :
-      dup.verdict === "differs" ? "✓ Вероятно, разные платежи: та же сумма и дата у " + refs.join(", ") + " — другой референс или назначение" :
+      dup.verdict === "differs" ? "✓ Вероятно, разные платежи: та же сумма и дата" + (refs.length ? " у " + refs.join(", ") : "") + " — другой референс или назначение" :
       "✓ Дублей нет: другой операции на эту сумму в этот день от отправителя нет";
     box.appendChild(ok);
-    // решение: кто и когда — только то, что хранится
-    var hl = txSec(box, "Решение", "кто и когда"), hs = info.history || [];
-    if (t.wait) hs = hs.concat([{ at: null, who: "you", kind: "wait" }]);
-    if (!hs.length) txRow(hl, "", "Записей еще нет");
-    hs.forEach(function (x) {
-      var r = document.createElement("div"), tm = document.createElement("span"), tx = document.createElement("span");
-      r.className = "txd-row txd-hist"; tm.className = "t"; tm.textContent = x.at ? dateTime(x.at, true) : "—"; tx.className = "v";
-      tx.textContent = x.kind === "loaded" ? "загружено из банка" :
-        x.kind === "ai" ? (x.category ? "подсказка: " + catLabel(x.category) + (x.why ? " — «" + x.why + "»" : "") : "подсказки нет") :
-        x.kind === "category" ? "категория: " + catLabel(x.category) + (x.suggested ? (x.suggested === x.category ? " — как в подсказке" : " — подсказка была: " + catLabel(x.suggested)) + (x.source === "ai" ? " (Claude)" : x.source ? " (по твоим решениям)" : "") : "") :
-        x.kind === "note" ? "комментарий: «" + x.note + "»" : "решение на телефоне — еще не отправлено";
-      r.appendChild(tm); r.appendChild(txSrc(x.who)); r.appendChild(tx); hl.appendChild(r);
-    });
     // из банка — как пришло, не меняется
-    var bf = info.bank || {}, bl = txSec(box, "Из банка", "не меняется");
+    var bf = info.bank || {}, bl = txSec(box, "Из банка", "как пришло");
     txRow(bl, t.amount > 0 ? "Плательщик" : "Получатель", bf.counterparty || "—");
     if (bf.iban) txRow(bl, "IBAN", txIban(bf.iban), { mono: true, copy: bf.iban });
     if (bf.remittance) txRow(bl, "Назначение", bf.remittance, { copy: bf.remittance });
     if (bf.reference && String(bf.remittance || "").indexOf(bf.reference) < 0) txRow(bl, "Референс", bf.reference, { mono: true, copy: bf.reference });
-    txRow(bl, "Проводка", fullDate(bf.booking_date) + (!bf.value_date ? "" : bf.value_date !== bf.booking_date ? " · валютирование " + fullDate(bf.value_date) : " · валютирование в тот же день"));
-    if (bf.status) txRow(bl, "Статус", (bf.status === "BOOK" ? "Проведена" : bf.status === "PDNG" ? "В ожидании" : bf.status) + " (" + bf.status + ")" + (bf.code ? " · " + bf.code : ""));
-    if (bf.account) txRow(bl, "Счет", bf.account);
-    if (bf.loaded) txRow(bl, "Загружено", dateTime(bf.loaded));
   }
-  // тип операции: пока только вид (его слово 05.11.2026), выбор живет до перезапуска и никуда не уходит
-  bel.type.addEventListener("click", function () {
-    var t = bkFind(bk.cur); if (!t) return;
-    var cur = txTypeOf(t)[0]; bel.typeList.textContent = "";
-    TX_TYPES.forEach(function (p) {
-      var li = document.createElement("li"), b = document.createElement("button"), nm = document.createElement("span");
-      b.type = "button"; nm.className = "nm"; nm.textContent = p[1]; b.appendChild(nm);
-      b.className = p[0] === cur ? "on" : ""; b.setAttribute("aria-pressed", p[0] === cur ? "true" : "false");
-      b.addEventListener("click", function () { bk.types[t.id] = p[0]; bel.typeSheet.hidden = true; if (bk.cur === t.id) { var ty = txTypeOf(t); bel.type.textContent = ty[1]; } });
-      li.appendChild(b); bel.typeList.appendChild(li);
-    });
-    bel.typeSheet.hidden = false;
-  });
-  B("txTypeClose").addEventListener("click", function () { bel.typeSheet.hidden = true; });
-  B("txTypeBack").addEventListener("click", function () { bel.typeSheet.hidden = true; });
   bel.close.addEventListener("click", txClose); bel.back.addEventListener("click", txClose);
   bel.note.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); bel.note.blur(); } });
   bel.note.addEventListener("input", txFoot);
@@ -1716,7 +1657,6 @@ button.txd-row:active { background: var(--chip); }
   sheetSwipe(el.sheet, null, sheetClose);
   sheetSwipe(el.countSheet, null, countClose);
   sheetSwipe(bel.sheet, ".tx-scroll", txClose);
-  sheetSwipe(bel.typeSheet, null, function () { bel.typeSheet.hidden = true; });
   sheetSwipe(bel.bankSheet, null, function () { bel.bankSheet.hidden = true; });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") { if (!el.sheet.hidden) sheetClose(); if (!el.countSheet.hidden) countClose(); if (!bel.sheet.hidden) txClose(); if (!bel.bankSheet.hidden) bel.bankSheet.hidden = true; } });
   el.comment.addEventListener("input", renderTpl);
