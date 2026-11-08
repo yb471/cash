@@ -564,7 +564,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "110"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "111"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -1036,7 +1036,7 @@ button.txd-row:active { background: var(--chip); }
   function bkChip(t) { // после ✦ узкий пробел — длинное имя категории влезает в строку
     var c = document.createElement("span"), sg = t.sugg;
     if (t.category) { c.className = "chip ok" + (t.wait ? " wait" : ""); c.textContent = "✓ " + catLabel(t.category); }
-    else if (sg) { c.className = "chip " + sg.level; c.textContent = (sg.source === "ai" ? "✦\u2009" : "") + catLabel(sg.category); c.title = sg.source === "ai" ? "подсказка Claude" : "по твоим прошлым решениям"; }
+    else if (sg) { c.className = "chip " + sg.level; c.textContent = (sg.source === "ai" ? "✦\u2009" : "") + catLabel(sg.category); c.title = sg.source === "ai" ? "подсказка Claude" : sg.source === "purchase" ? "как покупка на ту же сумму" : "по твоим прошлым решениям"; }
     else { c.className = "chip none"; c.textContent = "Выбрать категорию"; }
     return c;
   }
@@ -1386,10 +1386,10 @@ button.txd-row:active { background: var(--chip); }
     var c = bel.sugg, sg = t.category ? null : t.sugg, info = bk.txc[t.id], add = function (cls, txt) { var e = document.createElement("div"); e.className = cls; if (txt) e.textContent = txt; c.appendChild(e); return e; };
     c.textContent = ""; c.className = "tx-ctx";
     var pu = txPurpose(t); if (pu) add("q", "«" + pu + "»");
-    var sim = info && info.similar ? info.similar : null, dup = info && info.dup, byHist = sg && sg.source !== "ai" && sim && sim.length; // подсказка по прошлым — это и есть строка «Раньше»
+    var sim = info && info.similar ? info.similar : null, dup = info && info.dup, byHist = sg && (sg.source === "merchant" || sg.source === "brand") && sim && sim.length; // подсказка по прошлым — это и есть строка «Раньше»
     if (sg && !byHist) {
       var a = add("ai"), b = document.createElement("b"), w = document.createElement("span"), why = sg.why && sg.why !== "предложение Claude" ? sg.why : "";
-      b.textContent = sg.source === "ai" ? "✦ Claude" : "≈ Как раньше"; a.appendChild(b);
+      b.textContent = sg.source === "ai" ? "✦ Claude" : sg.source === "purchase" ? "≈ Как покупка" : "≈ Как раньше"; a.appendChild(b); // возврат — в категорию покупки на ту же сумму
       if (sg.source === "ai" && why) w.textContent = ": «" + why + "»"; else if (sg.source !== "ai" && why) w.textContent = ": " + why; a.appendChild(w);
     }
     var said = t.category ? t.note : sg && sg.note; if (said) add("yb", "💬 «" + said + "»");
