@@ -564,7 +564,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "111"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "112"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -1022,7 +1022,6 @@ button.txd-row:active { background: var(--chip); }
   }
   // возврат по карте: отправителем банк пишет владельца счета (его самого), продавец — только в назначении «Refund from …»
   function refundFrom(t) { var m = t && t.kind === "CARD_REFUND" ? /^refund from\s+(.+)$/i.exec(String(t.remittance || "").trim()) : null; return m ? m[1] : ""; }
-  function bkRemOwn(t) { return t.remittance && String(t.remittance).trim().toLowerCase() !== String(t.counterparty || "").trim().toLowerCase(); } // назначение, если не повторяет продавца
   function bkMoney(n, cur) { return n ? money(n, cur) : "0,00 " + (SYM[cur] || cur); } // проверка карты на 0 — без знака и цвета
   function bkItems() { return bk.data && bk.data.items ? bk.data.items.map(bkOverlay) : []; }
   function bkVisible() {
@@ -1111,13 +1110,13 @@ button.txd-row:active { background: var(--chip); }
       b.type = "button"; b.className = "bk-row";
       dd.className = "d"; dd.textContent = dmy(t.date);
       main.className = "bk-main";
-      var rf = refundFrom(t), cp = document.createElement("span"); cp.className = "bk-cp"; cp.textContent = rf || t.counterparty || t.remittance || "—"; main.appendChild(cp);
+      var rf = refundFrom(t), cp = document.createElement("span"); cp.className = "bk-cp"; cp.textContent = txName(t); main.appendChild(cp);
       // вторая строка есть всегда (его слово 04.11.2026): назначение платежа; нет его — пояснение к подсказке категории
       // («3 из 3 раз», комментарий Claude), курсивом; нет и его — пустая, чтобы все строки списка были одной высоты
       var r = document.createElement("span"), why = !t.category && t.sugg && t.sugg.why && t.sugg.why !== "предложение Claude" ? t.sugg.why : "";
       r.className = "bk-rem";
       if (rf) r.textContent = "Возврат"; // продавец уже в заголовке строки
-      else if (bkRemOwn(t)) r.textContent = t.remittance;
+      else if (txPurpose(t)) r.textContent = txPurpose(t); // назначение со смыслом; сырой текст банка — только в «Подробнее»
       else if (why) { r.className += " why"; r.textContent = why; }
       else { r.textContent = "\u00a0"; r.setAttribute("aria-hidden", "true"); }
       main.appendChild(r);
@@ -1286,16 +1285,31 @@ button.txd-row:active { background: var(--chip); }
   var AVA = ["#3B7BC0", "#C0663B", "#8A5CC2", "#2F9468", "#B8498A", "#9C7F1E", "#3E8FA6", "#C24B4B"];
   bk.sess = {}; bk.skipped = {}; bk.skipN = 0; bk.view = "main"; bk.txc = {};
   function bkFind(id) { var it = bkItems(); for (var i = 0; i < it.length; i++) if (it[i].id === id) return it[i]; return null; }
-  // имя для глаз: без посредника оплаты («Sumup *»), без юридического хвоста после запятой, заглавные — как в обычном тексте;
-  // текст банка как есть — строкой ниже и в «Данных банка»
-  function txName(t) {
-    var rf = refundFrom(t);
-    var s = String(rf || (t && (t.counterparty || t.remittance)) || "").replace(/\s+/g, " ").trim();
-    var m = /^(?:sumup|sq|zettle|izettle|paypal|pp|shopify|unzer|stripe)\s*\*\s*(.+)$/i.exec(s), up = !!m; if (m) s = m[1];
-    s = s.replace(/\s*\*\s*(?=[a-z0-9]*\d)[a-z0-9]{6,}$/i, ""); // номер заказа после «*» — не имя
+  // четкое имя (его слово 08.11.2026, как в Revolut): имя продавца от функции cash (me.bank_merchants.name — «Amazon», «dm»),
+  // иначе чистка текста банка — без посредника оплаты, номера заказа, юридической формы, номера филиала, домена; заглавные — как
+  // обычный текст. Текст банка как есть — в «Подробнее»
+  var PROC = /^(?:sumup|sq|zettle|izettle|paypal|pp|shopify|unzer|stripe|uzr|sp|mol)$/i;
+  function cleanName(raw) {
+    var s = String(raw || "").replace(/\s+/g, " ").trim();
+    s = s.replace(/^vielen dank,?\s*/i, "").replace(/^support@/i, "");
+    var star = s.indexOf("*");
+    if (star >= 0) { var l = s.slice(0, star).trim(), r = s.slice(star + 1).trim(); s = PROC.test(l.split(" ").pop() || "") && r ? r : l || r; } // «SumUp *Cafe» → Cafe, «Amazon* 3z8y» → Amazon
+    var w0 = s.split(" "); if (w0.length > 1 && /^(?:sp|uzr)$/i.test(w0[0])) s = w0.slice(1).join(" "); // «Sp Snocks» — магазин Shopify
     var k = s.indexOf(","); if (k > 3) s = s.slice(0, k);
-    if (s && s === s.toUpperCase() && /[A-ZА-Я]/.test(s)) { up = true; s = s.split(" ").map(function (w) { return w.length <= 2 ? w : w.charAt(0) + w.slice(1).toLowerCase(); }).join(" "); }
-    return !s ? "Операция" : up ? s.charAt(0).toUpperCase() + s.slice(1) : s; // «dm-drogerie markt» остается как у банка
+    s = s.replace(/^www\./i, "").replace(/[.\s]+$/, "");
+    var dm = /^(?:shop\.)?([a-z0-9-]+)\.(?:com|de|no|at|eu|net|org|io|shop|co|uk|fr|it|es|nl)(?:\/\S*)?(?:\s+\S+)?$/i.exec(s); if (dm) s = dm[1]; // Apple.com, apple.com/bill, Eqology.no As
+    for (var i = 0; i < 3; i++) s = s.replace(/\s+(?:gmbh|gmb|gm|mbh|ag|se|kg|ug|gbr|ohg|ltd|inc|as|bv|b\.v\.?|s\.a\.r\.l\.?|sarl|d\.o\.o\.?|a\.?g|e\.v\.|co|haftungsbeschraenkt|europe|eu|de|at)\.?$/i, "").trim(); // формы и «Europe»
+    s = s.replace(/(?:\s+[a-z]{0,3}\d[\d\s]*)+$/i, "").replace(/(gmbh|lebensmittelgmbh)$/i, function (x) { return x.length > 4 ? x.slice(0, -4) : x; }).trim(); // номер филиала, «Lebensmittelgmbh»
+    s = s.replace(/\s+(?:mun|mu|muc)$/i, "").replace(/(\p{L})\d{6,}$/u, "$1").trim(); // «Lufthan2202219345309» // обрезанный город у SumUp («gastrokind Mun»)
+    var ws = s.split(" "), out = []; ws.forEach(function (w) { if (!out.length || out[out.length - 1].toLowerCase() !== w.toLowerCase()) out.push(w); }); s = out.join(" "); // «calimero Calimero»
+    var caps = s === s.toUpperCase() && /\p{Lu}/u.test(s); // весь текст заглавными — в обычный; короткие слова — аббревиатуры
+    if (caps) s = s.split(" ").map(function (w) { return w.length <= 4 ? w : w.charAt(0) + w.slice(1).toLowerCase(); }).join(" "); // короткие — аббревиатуры (ZWGE, LLC)
+    s = s.replace(/\b([a-z])&([a-z])\b/gi, function (x, a, b) { return (a + "&" + b).toUpperCase(); }); // H&M
+    return !s ? "" : /^\p{Ll}+\p{Lu}/u.test(s) ? s : s.charAt(0).toUpperCase() + s.slice(1); // «eBay» — как есть
+  }
+  function txName(t) {
+    if (t && t.name) return t.name;
+    return cleanName(refundFrom(t) || (t && (t.counterparty || t.remittance)) || "") || "Операция";
   }
   function txEm(s) { // первый эмодзи категории — ровный квадрат в плитке (имя категории целиком — текстом)
     try { if (window.Intl && Intl.Segmenter && s) return new Intl.Segmenter("ru", { granularity: "grapheme" }).segment(s).containing(0).segment; } catch (e) { /* старый Safari */ }
@@ -1325,7 +1339,7 @@ button.txd-row:active { background: var(--chip); }
   function shortDate(iso) { var y = String(iso).slice(0, 4), m = Number(String(iso).slice(5, 7)), d = Number(String(iso).slice(8, 10)); return d + " " + MON[m - 1] + (y !== String(new Date().getFullYear()) ? " " + y : ""); }
   // назначение для глаз: без хвоста «To …» / «Payment from …» (это имя второй стороны) и без повтора продавца
   function txPurpose(t) {
-    if (!t.remittance || t.kind === "CARD_PAYMENT" || t.kind === "CARD_REFUND") return "";
+    if (!t.remittance || !t.counterparty || t.kind === "CARD_PAYMENT" || t.kind === "CARD_REFUND") return ""; // без отправителя назначение — это и есть имя
     var p = String(t.remittance).split(" / ").filter(function (x) { return !/^(to|from|payment from|refund from)\b/i.test(x.trim()); }).join(" / ").trim();
     return p && /\p{L}{3,}/u.test(p) && p.toLowerCase() !== String(t.counterparty || "").toLowerCase() ? p : "";
   }
