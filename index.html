@@ -159,7 +159,6 @@ body.locked .bk-undo { display: none; }
 .bk-sub.sg, .bk-sub.pick { color: var(--accent); } /* подсказка и «Выбрать категорию» — цветом, без жирного (его слово 09.11.2026: все-таки выделять) */ .bk-sub.wait { opacity: .7; }
 .bk-ok { grid-area: ok; justify-self: end; align-self: start; position: relative; margin: 2px 0 -8px; width: calc(37 * var(--u) + 3px); height: calc(37 * var(--u) + 3px); padding: 0; border: 0; border-radius: 50%; background: color-mix(in srgb, var(--accent) 13%, var(--surface)); color: var(--accent); font-size: 18px; font-weight: 700; line-height: 1; display: flex; align-items: center; justify-content: center; }
 .bk-ok::before { content: ""; position: absolute; inset: -4px; } /* касание — не меньше 44px */
-.bk-ok svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; } /* по весу как ✓ */
 @media (prefers-color-scheme: dark) { .bk-ok { background: color-mix(in srgb, var(--accent) 22%, var(--surface)); } } /* в темной кружок заметнее */
 .bk-ok:active { background: var(--accent); color: var(--accent-fg); }
 /* «выбрать категорию» — серая, чтобы не путать с ✓ «принять» (его слово 09.11.2026) */
@@ -590,7 +589,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "126"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "127"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -1060,8 +1059,6 @@ button.txd-row:active { background: var(--chip); }
   function catLabel(c) { var p = catSplit(c); return (p.em ? p.em + " " : "") + p.nm; } // эмодзи вперед: короче и читается быстрее
   var MONTHS_G = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
   // день: «Вт, 20 октября» и итог дня по всем его операциям (по валютам)
-  // значок ярлыка (категория) для кнопки «выбрать категорию» — контур, как значки меню разделов
-  var BK_TAG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 4.9v5.6c0 .5.2 1 .6 1.4l8.4 8.4c.8.8 2 .8 2.8 0l5.1-5.1c.8-.8.8-2 0-2.8L12 4.1c-.4-.4-.9-.6-1.4-.6H4.9c-.8 0-1.4.6-1.4 1.4z"/><circle cx="8" cy="8" r="1.4"/></svg>';
   function bkDayHead(day) {
     var li = document.createElement("li"), sp = document.createElement("span"), d = new Date(day + "T12:00:00");
     li.className = "dh"; li.appendChild(sp); // дата — таблеткой (его слово 09.11.2026)
@@ -1224,9 +1221,9 @@ button.txd-row:active { background: var(--chip); }
         ok.setAttribute("aria-label", "Принять: " + t.sugg.category);
         ok.addEventListener("click", function (e) { e.stopPropagation(); bkAccept(li, t); }); // строку не открывает
         b.appendChild(ok);
-      } else if (!t.category) { // подсказки нет — та же кнопка, значок ярлыка: открыть выбор категории (его слово 09.11.2026)
+      } else if (!t.category) { // подсказки нет — та же кнопка, серая, со знаком вопроса: открыть выбор категории (его слово 09.11.2026)
         li.className += " has-ok";
-        var pk = document.createElement("button"); pk.type = "button"; pk.className = "bk-ok pick"; pk.innerHTML = BK_TAG;
+        var pk = document.createElement("button"); pk.type = "button"; pk.className = "bk-ok pick"; pk.textContent = "?";
         pk.setAttribute("aria-label", "Выбрать категорию");
         pk.addEventListener("click", function (e) { e.stopPropagation(); txOpen(t.id); });
         b.appendChild(pk);
