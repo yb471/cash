@@ -109,12 +109,12 @@ body.tab-bank #bankPage { display: flex; }
 .bk-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
 /* список как в банке (его слово 08.11.2026, формат Revolut): операции по дням — белые карточки, у дня итог; строка — логотип,
    чистое имя, под ним категория (подсказка — акцентом), сумма справа (расход обычным цветом, доход зеленым с «+») */
-.bk-list .dh { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 1; display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 14px 4px 6px; background: var(--bg); color: var(--muted); font-size: calc(13 * var(--u)); font-weight: 600; } /* день — липкий, тихий */
-.bk-list .dh span:last-child { font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bk-list .dh { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 1; display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 18px 4px 8px; background: var(--bg); color: var(--fg); font-size: calc(16 * var(--u)); font-weight: 600; } /* день — липкий, четкий */
+.bk-list .dh span:last-child { color: var(--muted); font-size: calc(15 * var(--u)); font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .bk-item { position: relative; background: var(--surface); overflow: hidden; } /* обрезает полосу смахивания по углам карточки */
-.bk-item.first { border-radius: 16px 16px 0 0; }
-.bk-item.last { border-radius: 0 0 16px 16px; }
-.bk-item.first.last { border-radius: 16px; }
+.bk-item.first { border-radius: 20px 20px 0 0; padding-top: 4px; }
+.bk-item.last { border-radius: 0 0 20px 20px; padding-bottom: 4px; }
+.bk-item.first.last { border-radius: 20px; }
 /* ✓ — строка за 0,2 с уезжает вправо и схлопывается, следующие сразу поднимаются (его слово 04.11.2026; было: место держалось ~1 с) */
 .bk-item.going { overflow: hidden; height: 0 !important; opacity: 0; transform: translateX(24px); border-bottom-color: transparent;
   transition: opacity .12s ease-out, transform .12s ease-out, height .16s ease-in .04s; pointer-events: none; }
@@ -135,29 +135,36 @@ body.tab-bank #bankPage { display: flex; }
 body.locked .bk-undo { display: none; }
 .bk-item.back { animation: rowback 1.2s ease-out; }
 @keyframes rowback { from { background: color-mix(in srgb, var(--accent) 16%, var(--surface)); } to { background: var(--surface); } }
-.bk-row { width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "ava n a" "ava s s"; column-gap: 12px; row-gap: 0; align-items: center; padding: 8px 14px; border: 0; border-radius: inherit; background: var(--surface); touch-action: pan-y; text-align: left; color: var(--fg); font-size: calc(15 * var(--u)); }
+.bk-row { width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "ava n a" "ava s s"; column-gap: 14px; row-gap: 3px; align-items: start; align-content: start; padding: 12px 16px; border: 0; border-radius: inherit; background: var(--surface); text-align: left; color: var(--fg); font-size: calc(15 * var(--u)); touch-action: pan-y; }
 .bk-row.m3 { grid-template-areas: "ava n a" "ava s s" "ava m m"; }
-.bk-row.m3 .bk-avw { align-self: start; margin-top: 2px; } /* три строки — логотип вверху, как в банке */
-.bk-avw { grid-area: ava; position: relative; display: flex; }
-.bk-avw .ava { width: 40px; height: 40px; font-size: calc(14 * var(--u)); }
+/* кнопка ✓ (его слово 09.11.2026: «верни логику кнопки») — под суммой, напротив категории; высоту не добавляет */
+.bk-item.has-ok .bk-row { grid-template-areas: "ava n a" "ava s ok"; } .bk-item.has-ok .bk-row.m3 { grid-template-areas: "ava n a" "ava s ok" "ava m m"; }
+.bk-avw { align-self: start; } /* логотип — на уровне имени, как в банке */
+.bk-avw { grid-area: ava; position: relative; display: flex; margin-top: 1px; }
+.bk-avw .ava { width: 42px; height: 42px; font-size: calc(15 * var(--u)); }
 .bk-avw .bdg { position: absolute; right: -4px; bottom: -4px; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--fg); color: var(--surface); font-size: 11px; font-weight: 700; box-shadow: 0 0 0 2px var(--surface); }
-.bk-row .bk-cp { grid-area: n; line-height: calc(20 * var(--u)); }
-.bk-meta { grid-area: m; min-width: 0; color: var(--muted); font-size: calc(13 * var(--u)); line-height: calc(17 * var(--u)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bk-row .bk-cp { grid-area: n; line-height: calc(22 * var(--u)); }
+.bk-meta { grid-area: m; min-width: 0; color: var(--muted); font-size: calc(14 * var(--u)); line-height: calc(19 * var(--u)); overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; } /* назначение — до двух строк */
 .bk-meta .pend { color: var(--warn); font-weight: 600; }
-.bk-sub { grid-area: s; min-width: 0; color: var(--muted); font-size: calc(14 * var(--u)); line-height: calc(18 * var(--u)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bk-sub { grid-area: s; min-width: 0; color: var(--muted); font-size: calc(15 * var(--u)); line-height: calc(20 * var(--u)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .bk-sub.sg { color: var(--accent); } /* подсказка — цветом, без жирного */ .bk-sub .pend { color: var(--warn); font-weight: 600; } .bk-sub.wait { opacity: .7; }
+.bk-ok { grid-area: ok; justify-self: end; align-self: center; position: relative; margin: -5px 0; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 50%; background: color-mix(in srgb, var(--accent) 13%, var(--surface)); color: var(--accent); font-size: 15px; font-weight: 700; line-height: 1; display: flex; align-items: center; justify-content: center; }
+.bk-ok::before { content: ""; position: absolute; inset: -8px; } /* касание — 44px */
+@media (prefers-color-scheme: dark) { .bk-ok { background: color-mix(in srgb, var(--accent) 22%, var(--surface)); } } /* в темной кружок заметнее */
+.bk-ok:active { background: var(--accent); color: var(--accent-fg); }
+.bk-item.swiping .bk-ok { opacity: 0; }
 .bk-row:active { background: color-mix(in srgb, var(--fg) 6%, var(--surface)); }
 /* смахнуть вправо — принять подсказку (его слово 09.11.2026: вместо кнопки ✓); без подсказки — выбрать категорию */
-.bk-swipe { position: absolute; inset: 0; display: flex; align-items: center; padding: 0 18px; background: color-mix(in srgb, var(--accent) 22%, var(--surface)); color: var(--accent); font-weight: 600; font-size: calc(14 * var(--u)); white-space: nowrap; overflow: hidden; }
+.bk-swipe { position: absolute; inset: 0; display: flex; align-items: center; padding: 0 18px; background: color-mix(in srgb, var(--accent) 22%, var(--surface)); color: var(--accent); font-weight: 600; font-size: calc(15 * var(--u)); white-space: nowrap; overflow: hidden; }
 .bk-swipe span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .bk-item.armed .bk-swipe { background: var(--accent); color: var(--accent-fg); }
 .bk-item.swiping .bk-row { box-shadow: -6px 0 14px rgba(0, 0, 0, .08); }
-.bk-swhint { margin: 2px 4px 0; font-size: calc(12.5 * var(--u)); color: var(--muted); } /* «смахни вправо» — пока ни разу не смахнул */
-.bk-cp { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; letter-spacing: -.01em; font-size: calc(16 * var(--u)); } /* чуть жирнее текста — выделяется, не кричит (его слово 04.11.2026); так же в Cash */
+.bk-swhint { margin: 4px 4px 0; font-size: calc(12.5 * var(--u)); color: var(--muted); } /* «смахни вправо» — пока ни разу не смахнул */
+.bk-cp { min-width: 0; font-weight: 500; letter-spacing: -.01em; font-size: calc(17 * var(--u)); overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; } /* имя — до двух строк, потом «…» */
 /* колонки (его слово 04.11.2026): дата и сумма по своему тексту, узкие промежутки — средней колонке больше места; категория
    в одну строку и только в средней колонке — в колонку суммы не заходит, лишнее уходит в «…»; полное имя — в листе операции.
    Колонка суммы не уже 44px: под ней кнопка ✓ */
-.bk-row .a { grid-area: a; justify-self: end; line-height: calc(20 * var(--u)); font-variant-numeric: tabular-nums; font-weight: 500; font-size: calc(16 * var(--u)); white-space: nowrap; }
+.bk-row .a { grid-area: a; justify-self: end; line-height: calc(22 * var(--u)); font-variant-numeric: tabular-nums; font-weight: 500; font-size: calc(17 * var(--u)); white-space: nowrap; }
 .bk-row .a.minus { color: var(--fg); }
 .bk-row .a.plus { color: var(--plus); }
 .bk-row .a.zero { color: var(--muted); }
@@ -571,7 +578,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "114"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "115"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -1061,7 +1068,7 @@ button.txd-row:active { background: var(--chip); }
     return r;
   }
   // тип операции значком у аватара, как в банке: возврат ↺, перевод → / ←, обмен ⇄, пополнение +
-  // смахивание строки вправо (как в почте iOS): дальше трети ширины — принять подсказку (4 с «Отменить»), без подсказки — открыть
+  // кнопка ✓ и смахивание строки вправо (как в почте iOS): дальше трети ширины — принять подсказку (4 с «Отменить»), без подсказки — открыть
   // выбор категории; вертикальная прокрутка остается браузеру (touch-action: pan-y)
   function bkAccept(li, t) {
     if (bk.filter !== "review") { bkUndoShow(t, t.sugg.category, bkDecide(t.id, { category: t.sugg.category }, true), false); return; } // во «Все» строка остается
@@ -1174,9 +1181,10 @@ button.txd-row:active { background: var(--chip); }
       if (m !== lastM) { if (prevLi) prevLi.classList.add("last"); prevLi = null; lastD = ""; lastM = m; }
       var day = String(t.date);
       if (day !== lastD) { if (prevLi) prevLi.classList.add("last"); bel.list.appendChild(bkDayHead(day)); lastD = day; prevLi = null; }
-      var li = document.createElement("li"), b = document.createElement("button"), aw = document.createElement("span"), av = document.createElement("span"), cp = document.createElement("span"), a = document.createElement("span");
+      var li = document.createElement("li"), b = document.createElement("div"), aw = document.createElement("span"), av = document.createElement("span"), cp = document.createElement("span"), a = document.createElement("span");
       li.className = "bk-item" + (prevLi ? "" : " first"); li.setAttribute("data-id", t.id);
-      b.type = "button"; b.className = "bk-row";
+      b.className = "bk-row"; b.setAttribute("role", "button"); b.tabIndex = 0; // div: внутри — кнопка ✓
+      b.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); b.click(); } });
       aw.className = "bk-avw"; av.className = "ava"; av.setAttribute("aria-hidden", "true"); aw.appendChild(av);
       var nm = txName(t); txAva(av, nm, t.logo);
       var bt = bkBadge(t); if (bt) { var bd = document.createElement("span"); bd.className = "bdg"; bd.textContent = bt[0]; bd.title = bt[1]; aw.appendChild(bd); }
@@ -1187,6 +1195,13 @@ button.txd-row:active { background: var(--chip); }
       b.addEventListener("click", function () { if (b._sw) { b._sw = false; return; } txOpen(t.id); }); // после смахивания касание не открывает лист
       li.appendChild(b);
       if (!t.category) bkSwipe(li, b, t);
+      if (!t.category && t.sugg) {
+        li.className += " has-ok";
+        var ok = document.createElement("button"); ok.type = "button"; ok.className = "bk-ok"; ok.textContent = "✓";
+        ok.setAttribute("aria-label", "Принять: " + t.sugg.category);
+        ok.addEventListener("click", function (e) { e.stopPropagation(); bkAccept(li, t); }); // строку не открывает
+        b.appendChild(ok);
+      }
       bel.list.appendChild(li); prevLi = li;
     });
     if (prevLi) prevLi.classList.add("last");
@@ -1394,7 +1409,8 @@ button.txd-row:active { background: var(--chip); }
   // назначение для глаз: без хвоста «To …» / «Payment from …» (это имя второй стороны) и без повтора продавца
   function txPurpose(t) {
     if (!t.remittance || !t.counterparty || t.kind === "CARD_PAYMENT" || t.kind === "CARD_REFUND") return ""; // без отправителя назначение — это и есть имя
-    var p = String(t.remittance).split(" / ").filter(function (x) { return !/^(to|from|payment from|refund from)\b/i.test(x.trim()); }).join(" / ").trim();
+    var cp = String(t.counterparty || "").trim().toLowerCase(); // хвост с именем второй стороны («… / Telekom Deutschland GmbH») — не назначение
+    var p = String(t.remittance).split(" / ").filter(function (x) { x = x.trim(); return !/^(to|from|payment from|refund from)\b/i.test(x) && x.toLowerCase() !== cp; }).join(" / ").trim();
     return p && /\p{L}{3,}/u.test(p) && p.toLowerCase() !== String(t.counterparty || "").toLowerCase() ? p : "";
   }
   function txPending() { var from = bk.data ? bk.data.review_from : ""; return bkItems().filter(function (x) { return !x.category && String(x.date) >= from; }); }
