@@ -147,7 +147,7 @@ body.locked .bk-undo { display: none; }
 .bk-meta { grid-area: m; min-width: 0; color: var(--muted); font-size: calc(13 * var(--u)); line-height: calc(18 * var(--u)); overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; } /* назначение — до двух строк */
 .bk-meta .pend { color: var(--warn); font-weight: 600; }
 .bk-sub { grid-area: s; min-width: 0; color: var(--muted); font-size: calc(14 * var(--u)); line-height: calc(19 * var(--u)); overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; } /* категория — до двух строк */
-.bk-sub.sg, .bk-sub.pick { color: var(--accent); } /* подсказка и «Выбрать категорию» — цветом, без жирного (его «да» 09.11.2026) */ .bk-sub .pend { color: var(--warn); font-weight: 600; } .bk-sub.wait { opacity: .7; }
+.bk-sub.sg { color: var(--accent); } /* подсказка — цветом, без жирного; «Выбрать категорию» — серым (его слово 09.11.2026: «верни как было») */ .bk-sub .pend { color: var(--warn); font-weight: 600; } .bk-sub.wait { opacity: .7; }
 .bk-ok { grid-area: ok; justify-self: end; align-self: start; position: relative; margin: 2px 0 -8px; width: calc(37 * var(--u) + 3px); height: calc(37 * var(--u) + 3px); padding: 0; border: 0; border-radius: 50%; background: color-mix(in srgb, var(--accent) 13%, var(--surface)); color: var(--accent); font-size: 18px; font-weight: 700; line-height: 1; display: flex; align-items: center; justify-content: center; }
 .bk-ok::before { content: ""; position: absolute; inset: -4px; } /* касание — не меньше 44px */
 @media (prefers-color-scheme: dark) { .bk-ok { background: color-mix(in srgb, var(--accent) 22%, var(--surface)); } } /* в темной кружок заметнее */
@@ -578,7 +578,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "118"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "119"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -1064,7 +1064,7 @@ button.txd-row:active { background: var(--chip); }
     if (t.status === "PDNG") { var p = document.createElement("span"); p.className = "pend"; p.textContent = "в ожидании · "; r.appendChild(p); }
     if (t.category) { if (t.wait) r.className += " wait"; r.appendChild(document.createTextNode(catLabel(t.category))); }
     else if (sg) { r.className += " sg"; r.appendChild(document.createTextNode((sg.source === "ai" ? "✦ " : "≈ ") + catLabel(sg.category))); r.title = sg.source === "ai" ? "подсказка Claude" : sg.source === "purchase" ? "как покупка на ту же сумму" : "по твоим прошлым решениям"; }
-    else { r.className += " pick"; r.appendChild(document.createTextNode("Выбрать категорию")); } // ждет действия — акцентом
+    else r.appendChild(document.createTextNode("Выбрать категорию"));
     return r;
   }
   // тип операции значком у аватара, как в банке: возврат ↺, перевод → / ←, обмен ⇄, пополнение +
