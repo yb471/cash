@@ -106,15 +106,21 @@ body.tab-bank #bankPage { display: flex; }
 .bk-hint { margin: -4px 0 0; font-size: calc(13 * var(--u)); color: var(--muted); }
 /* «Связать категории» не задает ширину колонки — ее держит «Сделать выгрузку»; надпись в одну строку */
 .bk-act.run .t::before { content: "↻ "; display: inline-block; animation: ptrspin .9s linear infinite; }
-.bk-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
-/* список как в банке (его слово 08.11.2026, формат Revolut): операции по дням — белые карточки, у дня итог; строка — логотип,
-   чистое имя, под ним категория (подсказка — акцентом), сумма справа (расход обычным цветом, доход зеленым с «+») */
-.bk-list .dh { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 1; display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 16px 16px 8px 4px; background: var(--bg); color: var(--fg); font-size: calc(15 * var(--u)); font-weight: 600; } /* день — липкий, четкий */
+/* список (его слово 09.11.2026: без островков по дням, тексту шире) — одна белая лента от края до края экрана со скругленным верхом
+   и низом; дни внутри — липкий заголовок с итогом и тонкая линия над ним; строка — логотип, чистое имя, под ним категория
+   (подсказка и «Выбрать категорию» — акцентом), сумма справа (расход обычным цветом, доход зеленым с «+») */
+.bk-list { list-style: none; padding: 0; display: flex; flex-direction: column;
+  margin: 0 calc(-1 * max(16px, env(safe-area-inset-right, 0px))) 0 calc(-1 * max(16px, env(safe-area-inset-left, 0px))); }
+.bk-list::before, .bk-list::after { content: ""; flex: none; height: 14px; background: var(--surface); }
+.bk-list::before { border-radius: 22px 22px 0 0; } .bk-list::after { border-radius: 0 0 22px 22px; }
+.bk-list:empty::before, .bk-list:empty::after { display: none; }
+.bk-list .dh { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 1; display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
+  padding: 20px max(16px, env(safe-area-inset-right, 0px)) 6px max(16px, env(safe-area-inset-left, 0px)); background: var(--surface); color: var(--fg); font-size: calc(15 * var(--u)); font-weight: 600; } /* день — липкий, четкий */
+.bk-list .dh::before { content: ""; position: absolute; top: 0; left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); height: 1px; background: var(--line); }
+@media (prefers-color-scheme: dark) { .bk-list .dh::before { background: color-mix(in srgb, var(--line) 80%, var(--fg)); } } /* в темной обычная линия сливается */
+.bk-list .dh:first-child { padding-top: 2px; } .bk-list .dh:first-child::before { display: none; } /* первый день — сразу под скруглением, без линии */
 .bk-list .dh span:last-child { color: var(--muted); font-size: calc(14 * var(--u)); font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.bk-item { position: relative; background: var(--surface); overflow: hidden; } /* обрезает полосу смахивания по углам карточки */
-.bk-item.first { border-radius: 20px 20px 0 0; padding-top: 4px; }
-.bk-item.last { border-radius: 0 0 20px 20px; padding-bottom: 4px; }
-.bk-item.first.last { border-radius: 20px; }
+.bk-item { position: relative; background: var(--surface); overflow: hidden; } /* сдвинутая смахиванием строка не уходит за край экрана */
 /* ✓ — строка за 0,2 с уезжает вправо и схлопывается, следующие сразу поднимаются (его слово 04.11.2026; было: место держалось ~1 с) */
 .bk-item.going { overflow: hidden; height: 0 !important; opacity: 0; transform: translateX(24px); border-bottom-color: transparent;
   transition: opacity .12s ease-out, transform .12s ease-out, height .16s ease-in .04s; pointer-events: none; }
@@ -135,7 +141,7 @@ body.tab-bank #bankPage { display: flex; }
 body.locked .bk-undo { display: none; }
 .bk-item.back { animation: rowback 1.2s ease-out; }
 @keyframes rowback { from { background: color-mix(in srgb, var(--accent) 16%, var(--surface)); } to { background: var(--surface); } }
-.bk-row { width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "ava n a" "ava s s"; column-gap: 12px; row-gap: 3px; align-items: start; align-content: start; padding: 12px 16px; border: 0; border-radius: inherit; background: var(--surface); text-align: left; color: var(--fg); font-size: calc(15 * var(--u)); touch-action: pan-y; }
+.bk-row { width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "ava n a" "ava s s"; column-gap: 12px; row-gap: 3px; align-items: start; align-content: start; padding: 12px max(16px, env(safe-area-inset-right, 0px)) 12px max(16px, env(safe-area-inset-left, 0px)); border: 0; border-radius: 0; background: var(--surface); text-align: left; color: var(--fg); font-size: calc(15 * var(--u)); touch-action: pan-y; }
 .bk-row.m3 { grid-template-areas: "ava n a" "ava s s" "ava m ."; } /* имя и назначение — левее суммы; категория в одну строку может уйти под сумму (его слово 09.11.2026) */
 /* кнопка ✓ (его слово 09.11.2026) — под суммой, высотой в две строки текста */
 .bk-item.has-ok .bk-row { grid-template-areas: "ava n a" "ava s ok" "ava . ok"; } .bk-item.has-ok .bk-row.m3 { grid-template-areas: "ava n a" "ava s ok" "ava m ok"; }
@@ -149,7 +155,7 @@ body.locked .bk-undo { display: none; }
 .bk-meta { grid-area: m; min-width: 0; color: var(--muted); font-size: calc(13 * var(--u)); line-height: calc(18 * var(--u)); overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; } /* назначение — до двух строк */
 .bk-meta .pend { color: var(--warn); font-weight: 600; }
 .bk-sub { grid-area: s; min-width: 0; color: var(--muted); font-size: calc(14 * var(--u)); line-height: calc(19 * var(--u)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* категория — одной строкой, целиком (его слово 09.11.2026); многоточие — только если не влезла и мелким шрифтом (очень крупный системный текст) */
-.bk-sub.sg { color: var(--accent); } /* подсказка — цветом, без жирного; «Выбрать категорию» — серым (его слово 09.11.2026: «верни как было») */ .bk-sub.wait { opacity: .7; }
+.bk-sub.sg, .bk-sub.pick { color: var(--accent); } /* подсказка и «Выбрать категорию» — цветом, без жирного (его слово 09.11.2026: все-таки выделять) */ .bk-sub.wait { opacity: .7; }
 .bk-ok { grid-area: ok; justify-self: end; align-self: start; position: relative; margin: 2px 0 -8px; width: calc(37 * var(--u) + 3px); height: calc(37 * var(--u) + 3px); padding: 0; border: 0; border-radius: 50%; background: color-mix(in srgb, var(--accent) 13%, var(--surface)); color: var(--accent); font-size: 18px; font-weight: 700; line-height: 1; display: flex; align-items: center; justify-content: center; }
 .bk-ok::before { content: ""; position: absolute; inset: -4px; } /* касание — не меньше 44px */
 @media (prefers-color-scheme: dark) { .bk-ok { background: color-mix(in srgb, var(--accent) 22%, var(--surface)); } } /* в темной кружок заметнее */
@@ -580,7 +586,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "120"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "121"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -1065,7 +1071,7 @@ button.txd-row:active { background: var(--chip); }
     r.className = "bk-sub";
     if (t.category) { if (t.wait) r.className += " wait"; r.appendChild(document.createTextNode(catLabel(t.category))); }
     else if (sg) { r.className += " sg"; r.appendChild(document.createTextNode((sg.source === "ai" ? "✦ " : "≈ ") + catLabel(sg.category))); r.title = sg.source === "ai" ? "подсказка Claude" : sg.source === "purchase" ? "как покупка на ту же сумму" : "по твоим прошлым решениям"; }
-    else r.appendChild(document.createTextNode("Выбрать категорию"));
+    else { r.className += " pick"; r.appendChild(document.createTextNode("Выбрать категорию")); } // ждет действия — акцентом
     return r;
   }
   // тип операции значком у аватара, как в банке: возврат ↺, перевод → / ←, обмен ⇄, пополнение +
@@ -1191,14 +1197,12 @@ button.txd-row:active { background: var(--chip); }
     bkFitBal();
     var vis = bkVisible();
     bel.list.textContent = "";
-    var lastM = "", lastD = "", prevLi = null;
+    var lastD = "";
     vis.forEach(function (t) {
-      var m = String(t.date).slice(0, 7);
-      if (m !== lastM) { if (prevLi) prevLi.classList.add("last"); prevLi = null; lastD = ""; lastM = m; }
       var day = String(t.date);
-      if (day !== lastD) { if (prevLi) prevLi.classList.add("last"); bel.list.appendChild(bkDayHead(day)); lastD = day; prevLi = null; }
+      if (day !== lastD) { bel.list.appendChild(bkDayHead(day)); lastD = day; }
       var li = document.createElement("li"), b = document.createElement("div"), aw = document.createElement("span"), av = document.createElement("span"), cp = document.createElement("span"), a = document.createElement("span");
-      li.className = "bk-item" + (prevLi ? "" : " first"); li.setAttribute("data-id", t.id);
+      li.className = "bk-item"; li.setAttribute("data-id", t.id);
       b.className = "bk-row"; b.setAttribute("role", "button"); b.tabIndex = 0; // div: внутри — кнопка ✓
       b.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); b.click(); } });
       aw.className = "bk-avw"; av.className = "ava"; av.setAttribute("aria-hidden", "true"); aw.appendChild(av);
@@ -1218,9 +1222,8 @@ button.txd-row:active { background: var(--chip); }
         ok.addEventListener("click", function (e) { e.stopPropagation(); bkAccept(li, t); }); // строку не открывает
         b.appendChild(ok);
       }
-      bel.list.appendChild(li); prevLi = li;
+      bel.list.appendChild(li);
     });
-    if (prevLi) prevLi.classList.add("last");
     bkFitSub();
     var seen = false; try { seen = localStorage.getItem("bk_swiped") === "1"; } catch (er) { /* приватный режим */ }
     if (!bel.hint) { bel.hint = document.createElement("p"); bel.hint.className = "bk-swhint"; bel.hint.textContent = "Смахни операцию вправо — принять подсказку. Нажми — открыть."; bel.list.parentNode.insertBefore(bel.hint, bel.list); }
