@@ -117,9 +117,9 @@ body.tab-bank #bankPage { display: flex; }
 .bk-list:empty::before, .bk-list:empty::after { display: none; }
 .bk-list .dh { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 1;
   padding: 14px max(16px, env(safe-area-inset-right, 0px)) 4px max(16px, env(safe-area-inset-left, 0px)); background: var(--surface); } /* день — липкий */
-.bk-list .dh span { display: inline-block; padding: 3px 10px; border-radius: 999px; background: var(--chip); color: var(--fg); font-size: calc(14 * var(--u)); font-weight: 600; line-height: calc(19 * var(--u)); }
+.bk-list .dh span { display: inline-block; padding: 3px 10px; border-radius: 999px; background: color-mix(in srgb, var(--chip) 50%, var(--surface)); color: color-mix(in srgb, var(--muted) 70%, var(--fg)); font-size: calc(14 * var(--u)); font-weight: 500; line-height: calc(19 * var(--u)); } /* вдвое тише (его слово 09.11.2026): фон — половина чипа, текст темно-серый, средней жирности */
 .bk-list .dh::before { content: ""; position: absolute; top: 0; left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); height: 1px; background: var(--line); }
-@media (prefers-color-scheme: dark) { .bk-list .dh::before { background: color-mix(in srgb, var(--line) 80%, var(--fg)); } .bk-list .dh span { background: color-mix(in srgb, var(--fg) 11%, var(--surface)); } } /* в темной обычные линия и чип сливаются */
+@media (prefers-color-scheme: dark) { .bk-list .dh::before { background: color-mix(in srgb, var(--line) 80%, var(--fg)); } .bk-list .dh span { background: color-mix(in srgb, var(--fg) 6%, var(--surface)); } } /* в темной обычные линия и чип сливаются */
 .bk-list .dh:first-child { padding-top: 0; } .bk-list .dh:first-child::before { display: none; } /* первый день — сразу под скруглением, без линии */
 .bk-item { position: relative; background: var(--surface); overflow: hidden; } /* сдвинутая смахиванием строка не уходит за край экрана */
 /* ✓ — строка за 0,2 с уезжает вправо и схлопывается, следующие сразу поднимаются (его слово 04.11.2026; было: место держалось ~1 с) */
@@ -589,7 +589,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "128"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "129"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
