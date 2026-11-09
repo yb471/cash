@@ -110,7 +110,7 @@ body.tab-bank #bankPage { display: flex; }
 /* «Связать категории» не задает ширину колонки — ее держит «Сделать выгрузку»; надпись в одну строку */
 .bk-act.run .t::before { content: "↻ "; display: inline-block; animation: ptrspin .9s linear infinite; }
 /* список (его слово 09.11.2026: без островков по дням, тексту шире) — одна белая лента от края до края экрана со скругленным верхом
-   и низом; дни внутри — липкий заголовок (без суммы дня) и тонкая линия над ним; дата — просто текстом, темно-серым, без фона
+   и низом; дни внутри — заголовок (без суммы дня, не липнет) и тонкая линия над ним; дата — просто текстом, темно-серым, без фона
    (его слово 09.11.2026: полосы во всю ширину и «таблетки» не надо); строка — логотип, чистое имя, под ним категория
    (подсказка и «Выбрать категорию» — акцентом), сумма справа (расход обычным цветом, доход зеленым с «+») */
 .bk-list { list-style: none; padding: 0; display: flex; flex-direction: column;
@@ -118,13 +118,12 @@ body.tab-bank #bankPage { display: flex; }
 .bk-list::before, .bk-list::after { content: ""; flex: none; height: 14px; background: var(--surface); }
 .bk-list::before { border-radius: 22px 22px 0 0; } .bk-list::after { border-radius: 0 0 22px 22px; }
 .bk-list:empty::before, .bk-list:empty::after { display: none; }
-.bk-list .dh { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 1;
+.bk-list .dh {
   padding: 17px max(16px, env(safe-area-inset-right, 0px)) 7px max(16px, env(safe-area-inset-left, 0px)); background: var(--surface);
-  color: color-mix(in srgb, var(--muted) 70%, var(--fg)); font-size: calc(14 * var(--u)); font-weight: 500; line-height: calc(19 * var(--u)); } /* день — липкий, дата без фона */
-/* линия между днями — у дня, не у липкого заголовка: при прокрутке уходит под строку статуса, прилипает только дата
-   (его слово 09.11.2026: «сверху липнет полоса, ее там не должно быть»); поверх белого фона заголовка, пока он на месте */
+  color: color-mix(in srgb, var(--muted) 70%, var(--fg)); font-size: calc(14 * var(--u)); font-weight: 500; line-height: calc(19 * var(--u)); } /* дата без фона и не липнет — прокручивается со списком (его слово 09.11.2026: «убери магнитную дату») */
+/* линия между днями — у верхнего края дня, поверх белого фона заголовка */
 .bk-day { position: relative; }
-.bk-day::before { content: ""; position: absolute; z-index: 2; top: 0; left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); height: 1px; background: var(--line); pointer-events: none; }
+.bk-day::before { content: ""; position: absolute; top: 0; left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); height: 1px; background: var(--line); pointer-events: none; }
 @media (prefers-color-scheme: dark) { .bk-day::before { background: color-mix(in srgb, var(--line) 80%, var(--fg)); } } /* в темной обычная линия сливается */
 .bk-rows { list-style: none; margin: 0; padding: 0; }
 .bk-day:first-child .dh { padding-top: 3px; } .bk-day:first-child::before { display: none; } /* первый день — сразу под скруглением, без линии */
@@ -596,7 +595,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "133"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "134"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -1066,8 +1065,7 @@ button.txd-row:active { background: var(--chip); }
   function catLabel(c) { var p = catSplit(c); return (p.em ? p.em + " " : "") + p.nm; } // эмодзи вперед: короче и читается быстрее
   var MONTHS_G = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
   // день: «Вт, 20 октября» и итог дня по всем его операциям (по валютам)
-  // день — своя группа: заголовок и строки дня; липкий заголовок живет внутри группы, и следующий день выталкивает его вверх,
-  // а не наезжает поверх (его слово 09.11.2026: «Сб, 7 ноября» резало пополам заголовком «Пт, 6 ноября»)
+  // день — своя группа: заголовок и строки дня, линия между днями — у группы
   function bkDayHead(day) {
     var li = document.createElement("li"), h = document.createElement("div"), rows = document.createElement("ul"), d = new Date(day + "T12:00:00");
     li.className = "bk-day"; h.className = "dh"; rows.className = "bk-rows"; li.appendChild(h); li.appendChild(rows);
