@@ -107,18 +107,17 @@ body.tab-bank #bankPage { display: flex; }
 /* «Связать категории» не задает ширину колонки — ее держит «Сделать выгрузку»; надпись в одну строку */
 .bk-act.run .t::before { content: "↻ "; display: inline-block; animation: ptrspin .9s linear infinite; }
 /* список (его слово 09.11.2026: без островков по дням, тексту шире) — одна белая лента от края до края экрана со скругленным верхом
-   и низом; дни внутри — липкий заголовок (без суммы дня — его слово 09.11.2026) и тонкая линия над ним; строка — логотип, чистое имя, под ним категория
+   и низом; дни внутри — липкий заголовок (без суммы дня — его слово 09.11.2026) на легком сером фоне во всю ширину (его слово 09.11.2026:
+   «чтобы день немножко выделялся фоном, очень легко»); строка — логотип, чистое имя, под ним категория
    (подсказка и «Выбрать категорию» — акцентом), сумма справа (расход обычным цветом, доход зеленым с «+») */
-.bk-list { list-style: none; padding: 0; display: flex; flex-direction: column;
+.bk-list { --dayband: color-mix(in srgb, var(--fg) 5%, var(--surface)); list-style: none; padding: 0; display: flex; flex-direction: column;
   margin: 0 calc(-1 * max(16px, env(safe-area-inset-right, 0px))) 0 calc(-1 * max(16px, env(safe-area-inset-left, 0px))); }
 .bk-list::before, .bk-list::after { content: ""; flex: none; height: 14px; background: var(--surface); }
-.bk-list::before { border-radius: 22px 22px 0 0; } .bk-list::after { border-radius: 0 0 22px 22px; }
+.bk-list::before { border-radius: 22px 22px 0 0; background: var(--dayband); } /* скругление сверху — продолжение полосы первого дня */ .bk-list::after { border-radius: 0 0 22px 22px; }
 .bk-list:empty::before, .bk-list:empty::after { display: none; }
 .bk-list .dh { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 1;
-  padding: 20px max(16px, env(safe-area-inset-right, 0px)) 6px max(16px, env(safe-area-inset-left, 0px)); background: var(--surface); color: var(--fg); font-size: calc(15 * var(--u)); font-weight: 600; } /* день — липкий, четкий */
-.bk-list .dh::before { content: ""; position: absolute; top: 0; left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); height: 1px; background: var(--line); }
-@media (prefers-color-scheme: dark) { .bk-list .dh::before { background: color-mix(in srgb, var(--line) 80%, var(--fg)); } } /* в темной обычная линия сливается */
-.bk-list .dh:first-child { padding-top: 2px; } .bk-list .dh:first-child::before { display: none; } /* первый день — сразу под скруглением, без линии */
+  padding: 8px max(16px, env(safe-area-inset-right, 0px)) 8px max(16px, env(safe-area-inset-left, 0px)); background: var(--dayband); color: var(--fg); font-size: calc(15 * var(--u)); font-weight: 600; } /* день — липкий, на легком фоне */
+@media (prefers-color-scheme: dark) { .bk-list { --dayband: color-mix(in srgb, var(--fg) 6%, var(--surface)); } } /* в темной 5% не видно */
 .bk-item { position: relative; background: var(--surface); overflow: hidden; } /* сдвинутая смахиванием строка не уходит за край экрана */
 /* ✓ — строка за 0,2 с уезжает вправо и схлопывается, следующие сразу поднимаются (его слово 04.11.2026; было: место держалось ~1 с) */
 .bk-item.going { overflow: hidden; height: 0 !important; opacity: 0; transform: translateX(24px); border-bottom-color: transparent;
@@ -586,7 +585,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "122"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "123"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
