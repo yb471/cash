@@ -159,6 +159,8 @@ body.locked .bk-undo { display: none; }
 .bk-ok svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; } /* по весу как ✓ */
 @media (prefers-color-scheme: dark) { .bk-ok { background: color-mix(in srgb, var(--accent) 22%, var(--surface)); } } /* в темной кружок заметнее */
 .bk-ok:active { background: var(--accent); color: var(--accent-fg); }
+/* «выбрать категорию» — серая, чтобы не путать с ✓ «принять» (его слово 09.11.2026) */
+.bk-ok.pick, .bk-ok.pick:active { background: var(--chip); color: var(--chip-fg); } .bk-ok.pick:active { background: color-mix(in srgb, var(--chip-fg) 18%, var(--surface)); }
 .bk-item.swiping .bk-ok { opacity: 0; }
 .bk-row:active { background: color-mix(in srgb, var(--fg) 6%, var(--surface)); }
 /* смахнуть вправо — принять подсказку (его слово 09.11.2026: вместо кнопки ✓); без подсказки — выбрать категорию */
@@ -585,7 +587,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "123"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "124"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
