@@ -116,7 +116,7 @@ body.tab-bank #bankPage { display: flex; }
 .bk-list::before { border-radius: 22px 22px 0 0; background: var(--dayband); } /* скругление сверху — продолжение полосы первого дня */ .bk-list::after { border-radius: 0 0 22px 22px; }
 .bk-list:empty::before, .bk-list:empty::after { display: none; }
 .bk-list .dh { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 1;
-  padding: 8px max(16px, env(safe-area-inset-right, 0px)) 8px max(16px, env(safe-area-inset-left, 0px)); background: var(--dayband); color: var(--fg); font-size: calc(15 * var(--u)); font-weight: 600; } /* день — липкий, на легком фоне */
+  padding: 8px max(16px, env(safe-area-inset-right, 0px)) 8px max(16px, env(safe-area-inset-left, 0px)); background: var(--dayband); color: color-mix(in srgb, var(--muted) 85%, var(--fg)); font-size: calc(14 * var(--u)); font-weight: 500; } /* день — липкий, на легком фоне; дата легкая — серым, средней жирности (его слово 09.11.2026); серый чуть темнее обычного — на полосе контраст не ниже 4,5:1 */
 @media (prefers-color-scheme: dark) { .bk-list { --dayband: color-mix(in srgb, var(--fg) 6%, var(--surface)); } } /* в темной 5% не видно */
 .bk-item { position: relative; background: var(--surface); overflow: hidden; } /* сдвинутая смахиванием строка не уходит за край экрана */
 /* ✓ — строка за 0,2 с уезжает вправо и схлопывается, следующие сразу поднимаются (его слово 04.11.2026; было: место держалось ~1 с) */
@@ -587,7 +587,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "124"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "125"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
