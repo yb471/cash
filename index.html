@@ -109,7 +109,14 @@ body.tab-bank #bankPage { display: flex; }
 .bk-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
 .bk-list .mh { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 1; display: flex; justify-content: space-between; gap: 10px; padding: 12px 4px 6px; background: var(--bg); border-bottom: 1px solid var(--line); font-size: calc(14 * var(--u)); font-weight: 700; }
 .bk-list .mh span:last-child { color: var(--muted); white-space: nowrap; } /* жирность — как итог месяца в Cash */
-.bk-item { position: relative; border-bottom: 1px solid color-mix(in srgb, var(--line) 55%, transparent); }
+/* список как в банке (его слово 08.11.2026, формат Revolut): операции по дням — белые карточки, у дня итог; строка — логотип,
+   чистое имя, под ним категория (подсказка — акцентом), сумма справа (расход обычным цветом, доход зеленым с «+») */
+.bk-list .dh { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 16px 6px 8px; font-size: calc(15 * var(--u)); font-weight: 600; }
+.bk-list .dh span:last-child { color: var(--muted); font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bk-item { position: relative; background: var(--surface); }
+.bk-item.first { border-radius: 18px 18px 0 0; padding-top: 4px; }
+.bk-item.last { border-radius: 0 0 18px 18px; padding-bottom: 4px; }
+.bk-item.first.last { border-radius: 18px; }
 /* ✓ — строка за 0,2 с уезжает вправо и схлопывается, следующие сразу поднимаются (его слово 04.11.2026; было: место держалось ~1 с) */
 .bk-item.going { overflow: hidden; height: 0 !important; opacity: 0; transform: translateX(24px); border-bottom-color: transparent;
   transition: opacity .12s ease-out, transform .12s ease-out, height .16s ease-in .04s; pointer-events: none; }
@@ -129,30 +136,27 @@ body.tab-bank #bankPage { display: flex; }
 @keyframes undobar { from { transform: scaleX(1); } to { transform: scaleX(0); } }
 body.locked .bk-undo { display: none; }
 .bk-item.back { animation: rowback 1.2s ease-out; }
-@keyframes rowback { from { background: color-mix(in srgb, var(--accent) 16%, transparent); } to { background: transparent; } }
-.bk-row { width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(44px, auto); gap: 3px 6px; align-items: start; padding: 10px 4px; border: 0; background: transparent; text-align: left; color: var(--fg); font-size: calc(14 * var(--u)); }
+@keyframes rowback { from { background: color-mix(in srgb, var(--accent) 16%, var(--surface)); } to { background: var(--surface); } }
+.bk-row { width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "ava n a" "ava s s"; column-gap: 12px; row-gap: 1px; align-items: center; padding: 9px 14px; border: 0; border-radius: inherit; background: transparent; text-align: left; color: var(--fg); font-size: calc(15 * var(--u)); }
+.bk-item.has-ok .bk-row { grid-template-areas: "ava n a" "ava s ."; grid-template-rows: auto 30px; } /* под суммой — кнопка ✓; без нее категория занимает и это место */
+.bk-avw { grid-area: ava; position: relative; display: flex; }
+.bk-avw .ava { width: 40px; height: 40px; font-size: calc(14 * var(--u)); }
+.bk-avw .bdg { position: absolute; right: -4px; bottom: -4px; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--fg); color: var(--surface); font-size: 11px; font-weight: 700; box-shadow: 0 0 0 2px var(--surface); }
+.bk-row .bk-cp { grid-area: n; }
+.bk-sub { grid-area: s; min-width: 0; color: var(--muted); font-size: calc(13.5 * var(--u)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bk-sub.sg { color: var(--accent); font-weight: 600; } .bk-sub .pend { color: var(--warn); font-weight: 600; } .bk-sub.wait { opacity: .7; }
 .bk-row:active { background: var(--chip); }
-.bk-row .d { color: var(--muted); font-variant-numeric: tabular-nums; }
-.bk-main { min-width: 0; display: flex; flex-direction: column; gap: 1px; padding-right: 0; } /* как строка записи в Cash */
-.bk-cp { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; } /* чуть жирнее текста — выделяется, не кричит (его слово 04.11.2026); так же в Cash */
-.bk-rem { color: var(--muted); font-size: calc(13 * var(--u)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.bk-rem.why { font-style: italic; } /* пояснение подсказки, не текст банка */
+.bk-cp { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; font-size: calc(16 * var(--u)); } /* чуть жирнее текста — выделяется, не кричит (его слово 04.11.2026); так же в Cash */
 /* колонки (его слово 04.11.2026): дата и сумма по своему тексту, узкие промежутки — средней колонке больше места; категория
    в одну строку и только в средней колонке — в колонку суммы не заходит, лишнее уходит в «…»; полное имя — в листе операции.
    Колонка суммы не уже 44px: под ней кнопка ✓ */
-.bk-chipline { grid-column: 2; display: flex; align-items: center; min-width: 0; min-height: 34px; }
-.bk-chipline .chip { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; overflow-wrap: normal; padding: 4px 8px; letter-spacing: -.015em; }
-.bk-row .a { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
-.bk-row .a.minus { color: var(--minus); }
+.bk-row .a { grid-area: a; justify-self: end; font-variant-numeric: tabular-nums; font-weight: 600; font-size: calc(16 * var(--u)); white-space: nowrap; }
+.bk-row .a.minus { color: var(--fg); }
 .bk-row .a.plus { color: var(--plus); }
 .bk-row .a.zero { color: var(--muted); }
-.chip { display: inline-block; max-width: 100%; padding: 4px 10px; border-radius: 12px; font-size: calc(13 * var(--u)); font-weight: 600; line-height: 1.25; overflow-wrap: anywhere; border: 1px solid transparent; } /* длинное имя переносится, не режется */
-.chip.ok { background: color-mix(in srgb, var(--plus) 14%, transparent); color: var(--plus); }
-.chip.high { background: color-mix(in srgb, var(--accent) 12%, transparent); border-color: color-mix(in srgb, var(--accent) 45%, transparent); color: var(--accent); }
-.chip.medium { border: 1px dashed color-mix(in srgb, var(--accent) 65%, transparent); color: var(--accent); }
-.chip.low, .chip.none { border: 1px dashed var(--line); color: var(--muted); }
-.chip.wait { opacity: .7; }
-.bk-ok { position: absolute; right: 4px; bottom: 9px; width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid var(--accent); background: var(--surface); color: var(--accent); font-size: 18px; font-weight: 700; line-height: 1; display: flex; align-items: center; justify-content: center; }
+.bk-ok { position: absolute; right: 14px; bottom: 9px; width: 30px; height: 30px; padding: 0; border-radius: 50%; border: 1.5px solid var(--accent); background: var(--surface); color: var(--accent); font-size: 15px; font-weight: 700; line-height: 1; display: flex; align-items: center; justify-content: center; }
+.bk-ok::before { content: ""; position: absolute; inset: -7px; } /* касание — 44px */
+.bk-item.last .bk-ok { bottom: 13px; }
 .bk-ok:active { background: var(--accent); color: var(--accent-fg); }
 .bk-empty { text-align: center; color: var(--muted); padding: 28px 8px; font-size: calc(15 * var(--u)); line-height: 1.4; }
 .bk-empty b { display: block; color: var(--plus); font-size: calc(17 * var(--u)); margin-bottom: 4px; }
@@ -564,7 +568,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "112"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "113"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -1032,12 +1036,26 @@ button.txd-row:active { background: var(--chip); }
     });
   }
   function catLabel(c) { var p = catSplit(c); return (p.em ? p.em + " " : "") + p.nm; } // эмодзи вперед: короче и читается быстрее
-  function bkChip(t) { // после ✦ узкий пробел — длинное имя категории влезает в строку
-    var c = document.createElement("span"), sg = t.sugg;
-    if (t.category) { c.className = "chip ok" + (t.wait ? " wait" : ""); c.textContent = "✓ " + catLabel(t.category); }
-    else if (sg) { c.className = "chip " + sg.level; c.textContent = (sg.source === "ai" ? "✦\u2009" : "") + catLabel(sg.category); c.title = sg.source === "ai" ? "подсказка Claude" : sg.source === "purchase" ? "как покупка на ту же сумму" : "по твоим прошлым решениям"; }
-    else { c.className = "chip none"; c.textContent = "Выбрать категорию"; }
-    return c;
+  var MONTHS_G = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
+  // день: «Вт, 20 октября» и итог дня по всем его операциям (по валютам)
+  function bkDayHead(day) {
+    var li = document.createElement("li"), a = document.createElement("span"), b = document.createElement("span"), d = new Date(day + "T12:00:00"), sum = {}, k, out = [];
+    li.className = "dh";
+    a.textContent = (isNaN(d) ? "" : ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"][d.getDay()] + ", ") + Number(day.slice(8, 10)) + " " + MONTHS_G[Number(day.slice(5, 7)) - 1];
+    bkItems().forEach(function (t) { if (String(t.date) === day) sum[t.currency] = (sum[t.currency] || 0) + Number(t.amount); });
+    for (k in sum) out.push(bkMoney(Math.round(sum[k] * 100) / 100, k));
+    b.textContent = out.join(" · ");
+    li.appendChild(a); li.appendChild(b); return li;
+  }
+  // вторая строка: категория (его — спокойно, подсказка — акцентом), нет — «Выбрать категорию»; ожидающая — пометкой
+  function bkSub(t) {
+    var r = document.createElement("span"), sg = t.sugg;
+    r.className = "bk-sub";
+    if (t.status === "PDNG") { var p = document.createElement("span"); p.className = "pend"; p.textContent = "в ожидании · "; r.appendChild(p); }
+    if (t.category) { if (t.wait) r.className += " wait"; r.appendChild(document.createTextNode(catLabel(t.category))); }
+    else if (sg) { r.className += " sg"; r.appendChild(document.createTextNode((sg.source === "ai" ? "✦ " : "≈ ") + catLabel(sg.category))); r.title = sg.source === "ai" ? "подсказка Claude" : sg.source === "purchase" ? "как покупка на ту же сумму" : "по твоим прошлым решениям"; }
+    else r.appendChild(document.createTextNode("Выбрать категорию"));
+    return r;
   }
   function bkMonthHead(m, list) {
     var li = document.createElement("li"), a = document.createElement("span"), b = document.createElement("span");
@@ -1101,31 +1119,25 @@ button.txd-row:active { background: var(--chip); }
     bkFitBal();
     var vis = bkVisible();
     bel.list.textContent = "";
-    var lastM = "";
+    var lastM = "", lastD = "", prevLi = null;
     vis.forEach(function (t) {
       var m = String(t.date).slice(0, 7);
-      if (m !== lastM) { bel.list.appendChild(bkMonthHead(m, vis.filter(function (x) { return String(x.date).slice(0, 7) === m; }))); lastM = m; }
-      var li = document.createElement("li"), b = document.createElement("button"), dd = document.createElement("span"), main = document.createElement("span"), a = document.createElement("span");
-      li.className = "bk-item"; li.setAttribute("data-id", t.id);
+      if (m !== lastM) { if (prevLi) prevLi.classList.add("last"); prevLi = null; lastD = ""; bel.list.appendChild(bkMonthHead(m, vis.filter(function (x) { return String(x.date).slice(0, 7) === m; }))); lastM = m; }
+      var day = String(t.date);
+      if (day !== lastD) { if (prevLi) prevLi.classList.add("last"); bel.list.appendChild(bkDayHead(day)); lastD = day; prevLi = null; }
+      var li = document.createElement("li"), b = document.createElement("button"), aw = document.createElement("span"), av = document.createElement("span"), cp = document.createElement("span"), a = document.createElement("span");
+      li.className = "bk-item" + (prevLi ? "" : " first"); li.setAttribute("data-id", t.id);
       b.type = "button"; b.className = "bk-row";
-      dd.className = "d"; dd.textContent = dmy(t.date);
-      main.className = "bk-main";
-      var rf = refundFrom(t), cp = document.createElement("span"); cp.className = "bk-cp"; cp.textContent = txName(t); main.appendChild(cp);
-      // вторая строка есть всегда (его слово 04.11.2026): назначение платежа; нет его — пояснение к подсказке категории
-      // («3 из 3 раз», комментарий Claude), курсивом; нет и его — пустая, чтобы все строки списка были одной высоты
-      var r = document.createElement("span"), why = !t.category && t.sugg && t.sugg.why && t.sugg.why !== "предложение Claude" ? t.sugg.why : "";
-      r.className = "bk-rem";
-      if (rf) r.textContent = "Возврат"; // продавец уже в заголовке строки
-      else if (txPurpose(t)) r.textContent = txPurpose(t); // назначение со смыслом; сырой текст банка — только в «Подробнее»
-      else if (why) { r.className += " why"; r.textContent = why; }
-      else { r.textContent = "\u00a0"; r.setAttribute("aria-hidden", "true"); }
-      main.appendChild(r);
-      var cl = document.createElement("span"); cl.className = "bk-chipline"; cl.appendChild(bkChip(t));
+      aw.className = "bk-avw"; av.className = "ava"; av.setAttribute("aria-hidden", "true"); aw.appendChild(av);
+      var nm = txName(t); txAva(av, nm, t.logo);
+      if (t.kind === "CARD_REFUND") { var bd = document.createElement("span"); bd.className = "bdg"; bd.textContent = "↺"; bd.title = "возврат"; aw.appendChild(bd); }
+      cp.className = "bk-cp"; cp.textContent = nm;
       a.className = "a " + (t.amount < 0 ? "minus" : t.amount > 0 ? "plus" : "zero"); a.textContent = bkMoney(t.amount, t.currency);
-      b.appendChild(dd); b.appendChild(main); b.appendChild(a); b.appendChild(cl);
+      b.appendChild(aw); b.appendChild(cp); b.appendChild(a); b.appendChild(bkSub(t));
       b.addEventListener("click", function () { txOpen(t.id); });
       li.appendChild(b);
       if (!t.category && t.sugg) {
+        li.className += " has-ok";
         var ok = document.createElement("button"); ok.type = "button"; ok.className = "bk-ok"; ok.textContent = "✓";
         ok.setAttribute("aria-label", "Подтвердить: " + t.sugg.category);
         ok.addEventListener("click", function () {
@@ -1137,8 +1149,9 @@ button.txd-row:active { background: var(--chip); }
         });
         li.appendChild(ok);
       }
-      bel.list.appendChild(li);
+      bel.list.appendChild(li); prevLi = li;
     });
+    if (prevLi) prevLi.classList.add("last");
     var empty = !vis.length;
     bel.empty.hidden = !empty;
     bel.empty.innerHTML = bk.filter === "review" ? "<b>Все размечено ✓</b>Новые операции придут с ночной выгрузкой банка" : "Операций пока нет";
