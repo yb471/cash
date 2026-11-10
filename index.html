@@ -238,7 +238,8 @@ body.locked .bk-undo { display: none; }
 .tx-ctx .hs > span { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .tx-ctx .hs > span:empty { display: none; }
 .tx-ctx .hs b { flex: none; white-space: nowrap; } /* «Подробнее ›» не обрезается — сокращается текст перед ним */
 .tx-ctx .hs b { color: var(--accent); font-weight: 600; } .tx-ctx .hs.ai { color: var(--accent); font-weight: 600; } .tx-ctx .hs.ai b { font-weight: 600; } .tx-ctx .hs.warn, .tx-ctx .hs.warn b { color: var(--warn); font-weight: 600; }
-.tx-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(calc(150 * var(--u)), 1fr)); gap: 8px; }
+.tx-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(calc(150 * var(--u)), 1fr)); grid-auto-flow: row dense; gap: 8px; } /* dense: строка подкатегорий под плиткой, соседняя плитка встает рядом */
+#txMain [hidden] { display: none !important; }
 .tx-tile { position: relative; display: flex; align-items: center; gap: 8px; min-height: 50px; padding: 7px 10px 7px 8px; border: 0; border-radius: 14px; background: var(--tile); color: var(--fg); font: inherit; font-size: calc(14 * var(--u)); line-height: 1.18; font-weight: 500; text-align: left; -webkit-tap-highlight-color: transparent; transition: transform .12s, background-color .12s; }
 .tx-tile .e { flex: none; width: 32px; height: 32px; border-radius: 10px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); display: flex; align-items: center; justify-content: center; font-size: 19px; line-height: 1; }
 .tx-tile .nm { min-width: 0; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
@@ -247,6 +248,38 @@ body.locked .bk-undo { display: none; }
 .tx-tile.sug .e, .tx-tile.on .e { box-shadow: none; }
 .tx-tile.sug::after, .tx-tile.on::after { position: absolute; top: 3px; right: 6px; font-size: 11px; font-weight: 700; }
 .tx-tile.sug::after { content: "✦"; } .tx-tile.on::after { content: "✓"; font-size: 13px; }
+/* подкатегории (его «да» 10.11.2026): у плитки «›», касание раскрывает их строкой прямо под ней, второе касание выбирает */
+.tx-tile .chev { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 14px; font-weight: 700; line-height: 1; } /* в правом отступе плитки: название не теряет ширину */
+.tx-tile.on .chev, .tx-tile.sug .chev { color: inherit; }
+.tx-tile.open:not(.on):not(.sug) { background: color-mix(in srgb, var(--accent) 12%, var(--tile)); box-shadow: inset 0 0 0 2px var(--accent); }
+.tx-tile.open:not(.on):not(.sug) .chev { color: var(--accent); }
+.tx-subs { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; margin: -2px 0 4px; }
+.tx-sub { flex: 1 1 auto; min-width: 0; min-height: 46px; padding: 6px 14px; white-space: nowrap; border: 0; border-radius: 23px; background: color-mix(in srgb, var(--accent) 13%, var(--surface)); color: var(--accent); font: inherit; font-size: calc(15 * var(--u)); font-weight: 600; line-height: 1.2; }
+.tx-sub.on, .tx-sub.sug { background: var(--accent); color: var(--accent-fg); }
+.tx-sub.on::after { content: " ✓"; } .tx-sub.sug::before { content: "✦ "; font-size: .8em; }
+.tx-sub:active, .tx-sub.tap { transform: scale(.97); }
+.tx-splittile { grid-column: 1 / -1; justify-content: center; min-height: 46px; background: transparent; border: 1.5px dashed color-mix(in srgb, var(--line) 70%, var(--muted)); color: var(--accent); font-weight: 600; }
+/* разделение на категории (его «да» 10.11.2026): части «сумма + категория», последняя — остаток, сходится до цента */
+.tx-split { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+.sp-h { color: var(--muted); font-size: calc(13 * var(--u)); font-weight: 600; }
+.sp-back { align-self: flex-start; min-height: 40px; padding: 0 4px; border: 0; background: none; color: var(--accent); font: inherit; font-size: calc(15 * var(--u)); font-weight: 600; }
+.sp-part { display: grid; grid-template-columns: calc(118 * var(--u)) minmax(0, 1fr); gap: 8px; }
+.sp-part.x { grid-template-columns: calc(118 * var(--u)) minmax(0, 1fr) 36px; }
+.sp-amt { display: flex; flex-direction: column; justify-content: center; min-height: 54px; padding: 0 12px; border-radius: 14px; background: var(--tile); font-size: calc(17 * var(--u)); font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sp-amt:focus-within { background: var(--surface); box-shadow: inset 0 0 0 2px var(--accent); }
+.sp-amt .in { display: flex; align-items: baseline; gap: 4px; }
+.sp-amt input { width: 4.6ch; max-width: 100%; min-width: 0; padding: 0; border: 0; outline: 0; background: transparent; color: var(--fg); font: inherit; font-size: max(16px, calc(17 * var(--u))); font-weight: 700; } /* 16px — iOS не увеличивает экран при вводе */
+.sp-amt small { color: var(--muted); font-size: calc(12 * var(--u)); font-weight: 500; }
+.sp-amt.bad .v { color: var(--minus); }
+.sp-part .tx-tile { min-height: 54px; }
+.sp-part .tx-tile.empty { justify-content: center; color: var(--accent); font-weight: 600; }
+.sp-part .tx-tile .nm small { display: block; color: var(--muted); font-size: calc(12 * var(--u)); font-weight: 500; }
+.sp-x { position: relative; align-self: center; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 50%; background: var(--chip); color: var(--muted); font-size: 14px; }
+.sp-x::before { content: ""; position: absolute; inset: -4px; }
+.sp-add { min-height: 46px; border: 1.5px dashed color-mix(in srgb, var(--line) 70%, var(--muted)); border-radius: 14px; background: transparent; color: var(--accent); font: inherit; font-size: calc(15 * var(--u)); font-weight: 600; }
+.sp-bal { display: flex; justify-content: space-between; gap: 10px; padding: 2px 2px 0; color: var(--muted); font-size: calc(14 * var(--u)); }
+.sp-bal b { flex: none; font-weight: 600; } .sp-bal.ok b { color: var(--plus); } .sp-bal.bad b { color: var(--minus); }
+.tx-b:disabled, .tx-b.pri:disabled { background: var(--chip); color: var(--muted); } /* не готово — серой, не бледной бирюзой */
 /* низ: комментарий по кнопке, «Пропустить», «Принять» подсказку */
 .tx-foot { flex: none; display: flex; flex-direction: column; gap: 8px; padding: 10px 14px max(10px, calc(env(safe-area-inset-bottom, 0px) - 10px)); background: var(--surface); border-top: 1px solid var(--line); }
 .tx-foot .comment { height: 44px; padding-right: 12px; }
@@ -319,6 +352,8 @@ button.txd-row:active { background: var(--chip); }
 .sheet-list button.on::after { content: "✓"; flex: none; margin-left: 4px; color: var(--accent); font-weight: 700; font-size: calc(17 * var(--u)); }
 .sheet-list .em { flex: none; width: 58px; font-size: calc(16 * var(--u)); text-align: center; line-height: 1; white-space: nowrap; letter-spacing: -2px; } /* три эмодзи влезают в колонку */
 .sheet-list .nm { flex: 1; min-width: 0; }
+.sheet-list .chev { flex: none; color: var(--muted); font-weight: 600; } /* подкатегории (его «да» 10.11.2026): касание раскрывает их под категорией */
+.sheet-list .sub button { padding-left: 94px; min-height: 46px; } /* правее названия категории — видно, чья подкатегория */ .sheet-list .sub button .nm { font-weight: 500; }
 @keyframes sheetup { from { transform: translateY(40px); opacity: .6; } to { transform: none; opacity: 1; } }
 @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
 .catwrap::after { content: "▾"; position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; font-size: calc(18 * var(--u)); }
@@ -553,6 +588,7 @@ button.txd-row:active { background: var(--chip); }
         <div class="tx-who"><span class="ava" id="txAva" aria-hidden="true"></span><div class="n" id="txTitle"></div><span class="tx-amt" id="txAmt"></span><div class="tx-meta" id="txMeta"></div></div>
         <div class="tx-ctx" id="txSugg"></div>
         <div class="tx-grid" id="txCats" role="group" aria-label="Категория"></div>
+        <div class="tx-split" id="txSplit" hidden></div>
       </div>
       <div id="txData" hidden></div>
     </div>
@@ -595,7 +631,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "134"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "135"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -634,7 +670,7 @@ button.txd-row:active { background: var(--chip); }
   function dmy(iso) { return String(iso || "").slice(8, 10) + "." + String(iso || "").slice(5, 7); }
 
   var prefs = ls("cash_prefs") || {};
-  var state = { sign: prefs.sign === "+" ? "+" : "-", cur: CURS.indexOf(prefs.cur) >= 0 ? prefs.cur : "EUR", cat: "", date: todayStr(),
+  var state = { sign: prefs.sign === "+" ? "+" : "-", cur: CURS.indexOf(prefs.cur) >= 0 ? prefs.cur : "EUR", cat: "", sub: null, subs: ls("cash_subs") || {}, openCat: null, date: todayStr(),
     cats: ls("cash_cats") || [], recent: ls("cash_recent") || [], queue: ls("cash_queue") || [], shown: 10, sending: false,
     edit: null, armed: null, busy: false, flash: null, // flash — только что записанная строка, подсвечивается секунду
     balance: ls("cash_balance") || {}, count: null, months: ls("cash_months") || {} }; // months — итоги месяцев {ГГГГ-ММ: {валюта: сумма}} // balance — остаток по записям от пересчета по валютам; count — открытый пересчет {cur, id}
@@ -668,28 +704,43 @@ button.txd-row:active { background: var(--chip); }
     var m = /^(.*?)\s*([\p{Extended_Pictographic}\uFE0F\u200D\p{Emoji_Modifier}]+)$/u.exec(name);
     return m ? { em: m[2], nm: m[1] } : { em: "", nm: name };
   }
-  function pickCat(c) {
-    state.cat = c; markErr("cat", false); sheetClose(); renderCats();
+  function cashSubs(c) { return (state.subs && c && state.subs[c]) || []; }
+  function pickCat(c, sub) {
+    state.cat = c; state.sub = sub || null; markErr("cat", false); sheetClose(); renderCats();
   }
   // список категорий — свой лист снизу во всю ширину (системное меню iOS узкое, его слово 27.10.2026)
-  function sheetOpen() {
+  function sheetOpen(keep) { // keep — перерисовка при раскрытии подкатегорий: та же прокрутка
     if (!state.cats.length) return;
+    if (!keep) state.openCat = cashSubs(state.cat).length ? state.cat : null;
     el.sheetList.textContent = "";
     state.cats.forEach(function (c) {
-      var li = document.createElement("li"), b = document.createElement("button"), p = catSplit(c), em = document.createElement("span"), nm = document.createElement("span");
+      var li = document.createElement("li"), b = document.createElement("button"), p = catSplit(c), em = document.createElement("span"), nm = document.createElement("span"), subs = cashSubs(c);
+      var on = state.cat === c && (!subs.length || !!state.sub);
       b.type = "button"; em.className = "em"; em.textContent = p.em; nm.className = "nm"; nm.textContent = p.nm;
-      b.appendChild(em); b.appendChild(nm); b.className = state.cat === c ? "on" : ""; b.setAttribute("aria-pressed", state.cat === c ? "true" : "false");
-      b.addEventListener("click", function () { pickCat(c); });
+      b.appendChild(em); b.appendChild(nm); b.className = on && !subs.length ? "on" : ""; b.setAttribute("aria-pressed", on ? "true" : "false");
+      if (subs.length) {
+        var ch = document.createElement("span"); ch.className = "chev"; ch.setAttribute("aria-hidden", "true"); ch.textContent = state.openCat === c ? "▾" : "›"; b.appendChild(ch);
+        b.setAttribute("aria-expanded", state.openCat === c ? "true" : "false");
+        b.addEventListener("click", function () { state.openCat = state.openCat === c ? null : c; sheetOpen(true); });
+      } else b.addEventListener("click", function () { pickCat(c, null); });
       li.appendChild(b); el.sheetList.appendChild(li);
+      if (subs.length && state.openCat === c) subs.forEach(function (x) {
+        var sl = document.createElement("li"), sb = document.createElement("button"), sn = document.createElement("span"), son = state.cat === c && state.sub === x;
+        sl.className = "sub"; sb.type = "button"; sn.className = "nm"; sn.textContent = x; sb.appendChild(sn);
+        sb.className = son ? "on" : ""; sb.setAttribute("aria-pressed", son ? "true" : "false");
+        sb.addEventListener("click", function () { pickCat(c, x); });
+        sl.appendChild(sb); el.sheetList.appendChild(sl);
+      });
     });
     el.amount.blur(); el.comment.blur();
     el.sheet.hidden = false;
-    var on = el.sheetList.querySelector("button.on"); if (on && on.scrollIntoView) on.scrollIntoView({ block: "center" });
+    var on = el.sheetList.querySelector("button.on"); if (!keep && on && on.scrollIntoView) on.scrollIntoView({ block: "center" });
   }
   function sheetClose() { el.sheet.hidden = true; }
   function renderCats() {
     if (state.cat && state.cats.indexOf(state.cat) < 0) state.cat = "";
-    el.cat.textContent = state.cat || (state.cats.length ? "Категория…" : (token() ? "Категории появятся после связи с базой" : "Сначала введи код доступа"));
+    if (state.sub && cashSubs(state.cat).indexOf(state.sub) < 0) state.sub = null;
+    el.cat.textContent = state.cat ? state.cat + (state.sub ? " · " + state.sub : cashSubs(state.cat).length ? " · выбрать, чья" : "") : (state.cats.length ? "Категория…" : (token() ? "Категории появятся после связи с базой" : "Сначала введи код доступа"));
     el.cat.classList.toggle("set", !!state.cat);
   }
   function dateChip(btn, word, iso, on) {
@@ -747,7 +798,7 @@ button.txd-row:active { background: var(--chip); }
       var li = document.createElement("li"), b = document.createElement("button"), n = q.sign === "-" ? -q.amount : q.amount;
       b.type = "button"; b.className = "queued" + (fl && fl.uid === q.id ? " new" : "");
       var d = document.createElement("span"); d.className = "d"; d.textContent = "⏳";
-      var c = twoLines(q.cat, q.comment);
+      var c = twoLines(q.cat + (q.sub ? " · " + q.sub : ""), q.comment);
       var a = document.createElement("span"); a.className = "a " + (n < 0 ? "minus" : "plus"); a.textContent = money(n, q.cur);
       b.appendChild(d); b.appendChild(c); b.appendChild(a);
       b.addEventListener("click", function () { setStatus("Еще не отправлено: появится связь — уйдет само. Исправить можно после отправки.", "warn"); flushQueue(); });
@@ -760,7 +811,7 @@ button.txd-row:active { background: var(--chip); }
       var li = document.createElement("li"), b = document.createElement("button"), n = Number(r.amount);
       b.type = "button"; b.className = (state.edit && state.edit.id === r.id ? "editing" : "") + (fl && fl.dbId === r.id ? " new" : "");
       var d = document.createElement("span"); d.className = "d"; d.textContent = dmy(r.booking_date);
-      var c = twoLines(r.category, r.counterparty);
+      var c = twoLines(r.category + (r.subcategory ? " · " + r.subcategory : ""), r.counterparty);
       var a = document.createElement("span"); a.className = "a " + (n < 0 ? "minus" : "plus"); a.textContent = money(n, r.currency);
       b.appendChild(d); b.appendChild(c); b.appendChild(a);
       b.addEventListener("click", function () { editStart(r); });
@@ -844,6 +895,7 @@ button.txd-row:active { background: var(--chip); }
     if (!token()) { showSetup(""); renderCats(); return Promise.resolve(false); }
     return api("init").then(function (j) {
       var names = (j.categories || []).filter(Boolean);
+      if (j.subcategories) { state.subs = j.subcategories; ls("cash_subs", state.subs); }
       if (names.length) { state.cats = names; ls("cash_cats", names); if (state.cat && names.indexOf(state.cat) < 0) state.cat = ""; renderCats(); }
       state.recent = j.recent || []; sortRecent(); ls("cash_recent", state.recent);
       if (j.months) { state.months = j.months; ls("cash_months", state.months); }
@@ -863,12 +915,12 @@ button.txd-row:active { background: var(--chip); }
   function dequeue(id) { state.queue = state.queue.filter(function (q) { return q.id !== id; }); ls("cash_queue", state.queue); renderQueue(); renderRecent(); renderBal(); }
   function send(en) {
     setStatus("Записываю…", "");
-    return api("add", { id: en.id, sign: en.sign, amount: en.amount, currency: en.cur, category: en.cat, comment: en.comment, date: en.date }).then(function (j) {
+    return api("add", { id: en.id, sign: en.sign, amount: en.amount, currency: en.cur, category: en.cat, subcategory: en.sub || null, comment: en.comment, date: en.date }).then(function (j) {
       if (state.flash && state.flash.uid === en.id) state.flash.dbId = j.id; // подсветка переходит на записанную строку
       dequeue(en.id); connected(true);
       if (!j.duplicate && j.id && !state.recent.some(function (r) { return r.id === j.id; })) {
         var signed = en.sign === "-" ? -en.amount : en.amount;
-        state.recent.unshift({ id: j.id, booking_date: en.date, amount: signed, currency: en.cur, category: en.cat, counterparty: en.comment });
+        state.recent.unshift({ id: j.id, booking_date: en.date, amount: signed, currency: en.cur, category: en.cat, subcategory: en.sub || null, counterparty: en.comment });
         sortRecent(); ls("cash_recent", state.recent);
         var mk = String(en.date).slice(0, 7); state.months = state.months || {}; state.months[mk] = state.months[mk] || {}; // итог месяца сразу, точный — с сервера
         state.months[mk][en.cur] = Math.round(((state.months[mk][en.cur] || 0) + signed) * 100) / 100; ls("cash_months", state.months);
@@ -898,7 +950,7 @@ button.txd-row:active { background: var(--chip); }
   }
 
   // ---------- form ----------
-  function resetForm() { markErr("amount", false); markErr("cat", false); el.amount.value = ""; el.comment.value = ""; renderTpl(); state.cat = ""; state.date = todayStr(); state.edit = null; renderCats(); renderDate(); renderEdit(); }
+  function resetForm() { markErr("amount", false); markErr("cat", false); el.amount.value = ""; el.comment.value = ""; renderTpl(); state.cat = ""; state.sub = null; state.date = todayStr(); state.edit = null; renderCats(); renderDate(); renderEdit(); }
   function commit(en) { state.flash = { uid: en.id, dbId: null, until: Date.now() + 1300 }; enqueue(en); if (navigator.onLine !== false) send(en); }
   function markErr(field, on) {
     if (field === "amount") { el.errAmount.hidden = !on; el.amountRow.classList.toggle("err", on); }
@@ -908,10 +960,11 @@ button.txd-row:active { background: var(--chip); }
     var a = parseAmount(el.amount.value);
     if (!token()) { showSetup(""); return null; }
     // обязательные поля: подсказка сразу под каждым незаполненным, все разом (его слово 27.10.2026)
-    markErr("amount", !a); markErr("cat", !state.cat);
-    if (!state.cat) { el.catwrap.classList.remove("shake"); void el.catwrap.offsetWidth; el.catwrap.classList.add("shake"); }
-    if (!a || !state.cat) return null;
-    return { sign: state.sign, amount: a, cur: state.cur, cat: state.cat, comment: el.comment.value.trim().slice(0, 200), date: state.date };
+    var catOk = !!state.cat && (!cashSubs(state.cat).length || !!state.sub); // у категории с подкатегориями — и подкатегория
+    markErr("amount", !a); markErr("cat", !catOk);
+    if (!catOk) { el.catwrap.classList.remove("shake"); void el.catwrap.offsetWidth; el.catwrap.classList.add("shake"); }
+    if (!a || !catOk) return null;
+    return { sign: state.sign, amount: a, cur: state.cur, cat: state.cat, sub: state.sub || null, comment: el.comment.value.trim().slice(0, 200), date: state.date };
   }
   function onSave() {
     if (state.busy) return;
@@ -927,7 +980,7 @@ button.txd-row:active { background: var(--chip); }
   function editStart(r) {
     var n = Number(r.amount);
     state.edit = { id: r.id, booking_date: r.booking_date, amount: r.amount, currency: r.currency };
-    state.sign = n < 0 ? "-" : "+"; state.cur = CURS.indexOf(r.currency) >= 0 ? r.currency : "EUR"; state.cat = r.category || ""; state.date = r.booking_date || todayStr();
+    state.sign = n < 0 ? "-" : "+"; state.cur = CURS.indexOf(r.currency) >= 0 ? r.currency : "EUR"; state.cat = r.category || ""; state.sub = r.subcategory || null; state.date = r.booking_date || todayStr();
     el.amount.value = String(Math.abs(n)).replace(".", ","); el.comment.value = r.counterparty || ""; renderTpl();
     renderSign(); renderCur(); renderCats(); renderDate(); renderEdit();
     setStatus("", ""); window.scrollTo({ top: 0, behavior: "smooth" });
@@ -936,8 +989,8 @@ button.txd-row:active { background: var(--chip); }
   function saveEdit(f) {
     var id = state.edit.id;
     state.busy = true; el.btnSave.disabled = true; setStatus("Сохраняю…", "");
-    api("update", { id: id, sign: f.sign, amount: f.amount, currency: f.cur, category: f.cat, comment: f.comment, date: f.date }).then(function (j) {
-      state.recent = state.recent.map(function (r) { return r.id === id ? { id: id, booking_date: f.date, amount: f.sign === "-" ? -f.amount : f.amount, currency: f.cur, category: f.cat, counterparty: f.comment } : r; });
+    api("update", { id: id, sign: f.sign, amount: f.amount, currency: f.cur, category: f.cat, subcategory: f.sub || null, comment: f.comment, date: f.date }).then(function (j) {
+      state.recent = state.recent.map(function (r) { return r.id === id ? { id: id, booking_date: f.date, amount: f.sign === "-" ? -f.amount : f.amount, currency: f.cur, category: f.cat, subcategory: f.sub || null, counterparty: f.comment } : r; });
       sortRecent(); ls("cash_recent", state.recent);
       resetForm(); connected(true); refreshBalance();
       setStatus(j.sheet ? "" : "Таблица обновится при следующей правке", j.sheet ? "" : "warn");
@@ -1025,7 +1078,7 @@ button.txd-row:active { background: var(--chip); }
   el.btnCur.addEventListener("click", function () { state.cur = CURS[(CURS.indexOf(state.cur) + 1) % CURS.length]; if (!state.edit) { prefs.cur = state.cur; ls("cash_prefs", prefs); } renderCur(); renderSave(); });
   el.amount.addEventListener("input", function () { if (parseAmount(el.amount.value)) markErr("amount", false); renderSave(); });
   el.amount.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); el.amount.blur(); } });
-  el.cat.addEventListener("click", sheetOpen);
+  el.cat.addEventListener("click", function () { sheetOpen(false); });
   el.sheetBack.addEventListener("click", sheetClose);
   el.sheetClose.addEventListener("click", sheetClose);
   // ---------- раздел Bank: подтверждение категорий операций банка (его слово 02.11.2026) ----------
@@ -1040,13 +1093,13 @@ button.txd-row:active { background: var(--chip); }
     sheet: B("txSheet"), back: B("txBack"), close: B("txClose"), title: B("txTitle"), amt: B("txAmt"), meta: B("txMeta"), sugg: B("txSugg"),
     cats: B("txCats"), note: B("txNote"), ok: B("txOk"), prog: B("txProg"), q: B("txQ"), pos: B("txPos"), bar: B("txBar"), ava: B("txAva"),
     main: B("txMain"), data: B("txData"), mini: B("txMini"), miniAva: B("txMiniAva"), miniName: B("txMiniName"),
-    miniAmt: B("txMiniAmt"), scroll: B("txScroll"), noteRow: B("txNoteRow"), cmt: B("txCmt"), skip: B("txSkip"), backMain: B("txBackMain") };
+    miniAmt: B("txMiniAmt"), scroll: B("txScroll"), noteRow: B("txNoteRow"), cmt: B("txCmt"), skip: B("txSkip"), backMain: B("txBackMain"), split: B("txSplit") };
   function bkStatus(t, kind) { bel.status.textContent = t || ""; bel.status.className = "status" + (kind ? " " + kind : ""); }
   function bkOverlay(t) { // операция с его еще не отправленными решениями поверх ответа сервера
     var q = null; for (var i = 0; i < bk.queue.length; i++) if (bk.queue[i].id === t.id) q = bk.queue[i];
     if (!q) return t;
     var o = {}; for (var k in t) o[k] = t[k];
-    if (q.category !== undefined) o.category = q.category;
+    if (q.category !== undefined) { o.category = q.category; o.subcategory = q.subcategory || null; o.parts = q.parts || null; }
     if (q.note !== undefined) o.note = q.note;
     o.wait = true;
     return o;
@@ -1059,10 +1112,25 @@ button.txd-row:active { background: var(--chip); }
     var from = bk.data ? bk.data.review_from : "";
     return bkItems().filter(function (t) {
       if (bk.filter === "all") return true;
-      return String(t.date) >= from && !t.category && !bk.leaving[t.id]; // подтвержденная (и уезжающая после ✓) — не в «К проверке»
+      return String(t.date) >= from && bkNeeds(t) && !bk.leaving[t.id]; // подтвержденная (и уезжающая после ✓) — не в «К проверке»
     });
   }
   function catLabel(c) { var p = catSplit(c); return (p.em ? p.em + " " : "") + p.nm; } // эмодзи вперед: короче и читается быстрее
+  // подкатегории и разделение (его «да» 10.11.2026): у категории с подкатегориями решение — с подкатегорией; разделенная —
+  // категория SPLIT и части [{amount, category, subcategory}]
+  var SPLIT = "✂ Разделено";
+  function subsOf(cat) { var s = bk.data && bk.data.subcategories; return (s && cat && s[cat]) || []; }
+  function bkNeeds(t) { return !t.category || (t.category !== SPLIT && subsOf(t.category).length > 0 && !t.subcategory); } // ждет его решения
+  function sgReady(sg) { return !!sg && (!subsOf(sg.category).length || !!sg.subcategory); } // подсказку можно принять одним касанием
+  function splitLabel(parts) {
+    var em = []; (parts || []).forEach(function (x) { var e = catSplit(x.category).em; if (e && em.indexOf(e) < 0) em.push(e); });
+    return SPLIT + (em.length ? " · " + em.join(" ") : "");
+  }
+  function decText(d) { // «🏥 Healthcare · Марк», «✂ Разделено · 🥩🧴 🧹»
+    if (!d || !d.category) return "";
+    return d.category === SPLIT ? splitLabel(d.parts) : catLabel(d.category) + (d.subcategory ? " · " + d.subcategory : "");
+  }
+  function decShort(d) { var e = catSplit(d.category).em; return d.subcategory ? (e ? e + " " : "") + d.subcategory : ""; } // не входит и до края — без названия категории
   var MONTHS_G = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
   // день: «Вт, 20 октября» и итог дня по всем его операциям (по валютам)
   // день — своя группа: заголовок и строки дня, линия между днями — у группы
@@ -1075,22 +1143,30 @@ button.txd-row:active { background: var(--chip); }
   }
   // вторая строка: категория (его — спокойно, подсказка — акцентом), нет — «Выбрать категорию»; ожидающая — пометкой
   function bkSub(t) {
-    var r = document.createElement("span"), sg = t.sugg;
+    var r = document.createElement("span"), needs = bkNeeds(t), sg = needs ? t.sugg : null, full, short = "";
     r.className = "bk-sub";
-    if (t.category) { if (t.wait) r.className += " wait"; r.appendChild(document.createTextNode(catLabel(t.category))); }
-    else if (sg) { r.className += " sg"; r.appendChild(document.createTextNode((sg.source === "ai" ? "✦ " : "≈ ") + catLabel(sg.category))); r.title = sg.source === "ai" ? "подсказка Claude" : sg.source === "purchase" ? "как покупка на ту же сумму" : "по твоим прошлым решениям"; }
-    else { r.className += " pick"; r.appendChild(document.createTextNode("Выбрать категорию")); } // ждет действия — акцентом
+    if (!needs) { full = decText(t); short = t.category === SPLIT ? "" : decShort(t); if (t.wait) r.className += " wait"; }
+    else if (sg) {
+      var pre = sg.source === "ai" ? "✦ " : "≈ "; r.className += " sg"; full = pre + decText(sg); short = sg.subcategory ? pre + decShort(sg) : "";
+      r.title = sg.source === "ai" ? "подсказка Claude" : sg.source === "purchase" ? "как покупка на ту же сумму" : "по твоим прошлым решениям";
+    }
+    else if (t.category) { r.className += " pick"; full = catLabel(t.category) + " · уточнить"; } // размечена до подкатегорий
+    else { r.className += " pick"; full = "Выбрать категорию"; }
+    r.textContent = full; r.setAttribute("data-full", full); if (short) r.setAttribute("data-short", short);
     return r;
   }
+
   // тип операции значком у аватара, как в банке: возврат ↺, перевод → / ←, обмен ⇄, пополнение +
   // кнопка ✓ и смахивание строки вправо (как в почте iOS): дальше трети ширины — принять подсказку (4 с «Отменить»), без подсказки — открыть
   // выбор категории; вертикальная прокрутка остается браузеру (touch-action: pan-y)
   function bkAccept(li, t) {
-    if (bk.filter !== "review") { bkUndoShow(t, t.sugg.category, bkDecide(t.id, { category: t.sugg.category }, true), false); return; } // во «Все» строка остается
+    if (!sgReady(t.sugg)) { txOpen(t.id); return; } // чья трата — выбрать в листе, подкатегории уже раскрыты
+    var d = { category: t.sugg.category, subcategory: t.sugg.subcategory || null };
+    if (bk.filter !== "review") { bkUndoShow(t, d, bkDecide(t.id, d, true), false); return; } // во «Все» строка остается
     if (li.classList.contains("going")) return;
     bk.leaving[t.id] = 1; // перерисовка в эти 0,2 с не вернет строку
     li.style.height = li.offsetHeight + "px"; void li.offsetHeight; li.classList.add("going");
-    setTimeout(function () { delete bk.leaving[t.id]; bkUndoShow(t, t.sugg.category, bkDecide(t.id, { category: t.sugg.category }, true), false); }, 200);
+    setTimeout(function () { delete bk.leaving[t.id]; bkUndoShow(t, d, bkDecide(t.id, d, true), false); }, 200);
   }
   function bkSwipe(li, row, t) {
     var x0 = 0, y0 = 0, dx = 0, on = false, dead = false, pid = null, lay = null;
@@ -1104,7 +1180,7 @@ button.txd-row:active { background: var(--chip); }
         if (!(mx > 10 && mx > Math.abs(my) * 1.5)) return;
         on = true; try { row.setPointerCapture(pid); } catch (er) { /* старый Safari */ }
         lay = document.createElement("span"); lay.className = "bk-swipe"; lay.setAttribute("aria-hidden", "true");
-        var lt = document.createElement("span"); lt.textContent = t.sugg ? "✓ " + catLabel(t.sugg.category) : "Выбрать категорию ›"; lay.appendChild(lt);
+        var lt = document.createElement("span"); lt.textContent = sgReady(t.sugg) ? "✓ " + decText(t.sugg) : "Выбрать категорию ›"; lay.appendChild(lt);
         li.insertBefore(lay, row); li.classList.add("swiping"); row.style.transition = "none";
       }
       dx = Math.max(0, mx); row.style.transform = "translateX(" + dx + "px)";
@@ -1115,10 +1191,11 @@ button.txd-row:active { background: var(--chip); }
       if (!on) return; on = false;
       var go = e.type !== "pointercancel" && dx > lim(); row._sw = true; // прерванный системой жест — только откат setTimeout(function () { row._sw = false; }, 400);
       li.classList.remove("swiping"); row.style.transition = "transform .18s ease-out";
-      row.style.transform = go && t.sugg ? "translateX(100%)" : "";
-      setTimeout(function () { li.classList.remove("armed"); if (lay) { lay.remove(); lay = null; } row.style.transform = ""; row.style.transition = ""; }, go && t.sugg ? 380 : 200);
+      var acc = go && sgReady(t.sugg);
+      row.style.transform = acc ? "translateX(100%)" : "";
+      setTimeout(function () { li.classList.remove("armed"); if (lay) { lay.remove(); lay = null; } row.style.transform = ""; row.style.transition = ""; }, acc ? 380 : 200);
       if (go) { try { localStorage.setItem("bk_swiped", "1"); } catch (er) { /* приватный режим */ } if (bel.hint) bel.hint.hidden = true; }
-      if (go && t.sugg) setTimeout(function () { bkAccept(li, t); }, 160); else if (go) txOpen(t.id);
+      if (acc) setTimeout(function () { bkAccept(li, t); }, 160); else if (go) txOpen(t.id);
     };
     row.addEventListener("pointerup", end); row.addEventListener("pointercancel", end);
   }
@@ -1158,9 +1235,11 @@ button.txd-row:active { background: var(--chip); }
     // точная ширина текста: scrollWidth округляет, и лишние доли пикселя уходят в многоточие
     var need = function (s) { rg.selectNodeContents(s); return rg.getBoundingClientRect().width; };
     var wide = function (s) { return need(s) > s.getBoundingClientRect().width + 0.01; };
-    for (i = 0; i < subs.length; i++) { subs[i].style.fontSize = ""; subs[i].parentNode.classList.remove("cw"); }
+    for (i = 0; i < subs.length; i++) { var sf = subs[i].getAttribute("data-full"); subs[i].style.fontSize = ""; subs[i].parentNode.classList.remove("cw"); if (sf !== null && subs[i].textContent !== sf) subs[i].textContent = sf; }
     for (i = 0; i < subs.length; i++) if (wide(subs[i])) over.push(subs[i]); // сначала все замеры, потом правки — одна перекладка
     over.forEach(function (s) { if (s.parentNode.parentNode.classList.contains("has-ok")) s.parentNode.classList.add("cw"); });
+    over = over.filter(wide);
+    over.forEach(function (s) { var sh = s.getAttribute("data-short"); if (sh) s.textContent = sh; }); // «🚘🚇 Машина Ярослав» — подкатегория и так говорит, что за категория
     over = over.filter(wide);
     over.forEach(function (s) { fs.push(parseFloat(getComputedStyle(s).fontSize) * s.getBoundingClientRect().width / need(s)); });
     over.forEach(function (s, j) { s.style.fontSize = Math.max(11, Math.floor(fs[j] * 4) / 4) + "px"; });
@@ -1189,7 +1268,7 @@ button.txd-row:active { background: var(--chip); }
     var banks = d.banks || [];
     bel.bankBtn.textContent = d.bank || "Банк";
     bkSyncRender();
-    var pending = items.filter(function (t) { return !t.category && String(t.date) >= d.review_from; });
+    var pending = items.filter(function (t) { return bkNeeds(t) && String(t.date) >= d.review_from; });
     bel.pendingN.textContent = pending.length ? " " + pending.length : "";
     // сводка: неразобрано, с подсказкой — по экрану (с его неотправленными решениями), точность — с сервера
     // «Связано: 14 (44%) из 33» (его слово 04.11.2026): сколько неразобранных с подсказкой, доля, всего неразобранных
@@ -1222,14 +1301,15 @@ button.txd-row:active { background: var(--chip); }
       var mt = bkMeta(t); if (mt) { b.appendChild(mt); b.className += " m3"; }
       b.addEventListener("click", function () { if (b._sw) { b._sw = false; return; } txOpen(t.id); }); // после смахивания касание не открывает лист
       li.appendChild(b);
-      if (!t.category) bkSwipe(li, b, t);
-      if (!t.category && t.sugg) {
+      var needs = bkNeeds(t);
+      if (needs) bkSwipe(li, b, t);
+      if (needs && sgReady(t.sugg)) {
         li.className += " has-ok";
         var ok = document.createElement("button"); ok.type = "button"; ok.className = "bk-ok"; ok.textContent = "✓";
-        ok.setAttribute("aria-label", "Принять: " + t.sugg.category);
+        ok.setAttribute("aria-label", "Принять: " + decText(t.sugg));
         ok.addEventListener("click", function (e) { e.stopPropagation(); bkAccept(li, t); }); // строку не открывает
         b.appendChild(ok);
-      } else if (!t.category) { // подсказки нет — та же кнопка, серая, со знаком вопроса: открыть выбор категории (его слово 09.11.2026)
+      } else if (needs) { // подсказки нет (или без нужной подкатегории) — та же кнопка, серая, со знаком вопроса: открыть выбор категории (его слово 09.11.2026)
         li.className += " has-ok";
         var pk = document.createElement("button"); pk.type = "button"; pk.className = "bk-ok pick"; pk.textContent = "?";
         pk.setAttribute("aria-label", "Выбрать категорию");
@@ -1307,9 +1387,9 @@ button.txd-row:active { background: var(--chip); }
   }
   function bkDecide(id, v, hold) { // его решение: сразу на экране, в базу — пачкой; hold — пока можно «Отменить», не отправляется
     var q = null; for (var i = 0; i < bk.queue.length; i++) if (bk.queue[i].id === id) q = bk.queue[i];
-    var prev = q ? { category: q.category, note: q.note, hold: q.hold } : null; // что было до него — для «Отменить»
+    var prev = q ? { category: q.category, subcategory: q.subcategory, parts: q.parts, note: q.note, hold: q.hold } : null; // что было до него — для «Отменить»
     if (!q) { q = { id: id, v: 0 }; bk.queue.push(q); }
-    if (v.category !== undefined) q.category = v.category;
+    if (v.category !== undefined) { q.category = v.category; q.subcategory = v.subcategory || null; q.parts = v.parts || null; }
     if (v.note !== undefined) q.note = v.note;
     if (hold) q.hold = Date.now() + UNDO_MS + 300;
     q.v++;
@@ -1326,7 +1406,12 @@ button.txd-row:active { background: var(--chip); }
       clearTimeout(bk.timer); bk.timer = setTimeout(bkSend, Math.max(50, w)); return;
     }
     bk.sending = true;
-    var batch = ready.slice(0, 300).map(function (q) { var o = { id: q.id }; if (q.category !== undefined) o.category = q.category; if (q.note !== undefined) o.note = q.note; return { op: o, q: q, v: q.v }; });
+    var batch = ready.slice(0, 300).map(function (q) {
+      var o = { id: q.id };
+      if (q.category !== undefined) { o.category = q.category; if (q.subcategory) o.subcategory = q.subcategory; if (q.parts) o.parts = q.parts; }
+      if (q.note !== undefined) o.note = q.note;
+      return { op: o, q: q, v: q.v };
+    });
     api("bank_set", { bank: prefs.bank, from: bk.data && bk.data.from, items: batch.map(function (x) { return x.op; }) }).then(function (j) {
       bk.queue = bk.queue.filter(function (q) { return !batch.some(function (x) { return x.q === q && x.v === q.v; }); }); // поправленное за время отправки уйдет следующим
       ls("bank_queue", bk.queue); bk.sending = false; bkApply(j); bkStatus("", "");
@@ -1348,11 +1433,11 @@ button.txd-row:active { background: var(--chip); }
     bu.box.style.bottom = open ? "auto" : (r.height ? window.innerHeight - r.top + 8 : 16) + "px";
     bel.sheet.classList.toggle("undo-on", open);
   }
-  function bkUndoShow(t, cat, prev, reopen, note) { // note — комментарий, который пришел с этим решением (undefined — не трогало)
+  function bkUndoShow(t, d, prev, reopen, note) { // d — решение {category, subcategory, parts} или null (снята); note — комментарий, который пришел с ним (undefined — не трогало)
     if (!document.body.classList.contains("tab-bank")) return; // успел уйти из раздела — решение просто уйдет через 4 с
     if (undo) clearTimeout(undo.timer);
     undo = { id: t.id, prev: prev, reopen: reopen, note: note, until: Date.now() + UNDO_MS };
-    bu.t.textContent = ""; var b = document.createElement("b"); b.textContent = cat ? "✓ " + catLabel(cat) : "Категория снята"; bu.t.appendChild(b);
+    bu.t.textContent = ""; var b = document.createElement("b"); b.textContent = d && d.category ? "✓ " + decText(d) : "Категория снята"; bu.t.appendChild(b);
     var who = txName(t); if (who) { var sm = document.createElement("small"); sm.textContent = who; bu.t.appendChild(sm); }
     bu.box.hidden = true; void bu.box.offsetWidth; bkUndoPlace(); bu.box.hidden = false; // заново — полоска времени с начала
     undo.timer = setTimeout(bkUndoHide, UNDO_MS);
@@ -1366,7 +1451,7 @@ button.txd-row:active { background: var(--chip); }
     var q = null; for (var i = 0; i < bk.queue.length; i++) if (bk.queue[i].id === u.id) q = bk.queue[i];
     if (!q) return;
     var p = u.prev || {}; // возвращаем только то, что меняло это решение; поправленное позже (комментарий) остается
-    if (p.category === undefined) delete q.category; else q.category = p.category;
+    if (p.category === undefined) { delete q.category; delete q.subcategory; delete q.parts; } else { q.category = p.category; q.subcategory = p.subcategory; q.parts = p.parts; }
     if (u.note !== undefined) { if (p.note === undefined) delete q.note; else q.note = p.note; }
     if (p.hold) q.hold = p.hold; else delete q.hold;
     q.v++;
@@ -1447,13 +1532,16 @@ button.txd-row:active { background: var(--chip); }
     var p = String(t.remittance).split(" / ").filter(function (x) { x = x.trim(); return !/^(to|from|payment from|refund from)\b/i.test(x) && x.toLowerCase() !== cp; }).join(" / ").trim();
     return p && /\p{L}{3,}/u.test(p) && p.toLowerCase() !== String(t.counterparty || "").toLowerCase() ? p : "";
   }
-  function txPending() { var from = bk.data ? bk.data.review_from : ""; return bkItems().filter(function (x) { return !x.category && String(x.date) >= from; }); }
+  function txPending() { var from = bk.data ? bk.data.review_from : ""; return bkItems().filter(function (x) { return bkNeeds(x) && String(x.date) >= from; }); }
   function txOpen(id, cont) { // cont — переход внутри разбора (следующая, отмена, похожая); с нуля — новая очередь
     var t = bkFind(id); if (!t) return;
     var was = bk.cur && bk.cur !== id && !bel.sheet.hidden ? bkFind(bk.cur) : null, dn = bel.note.value.trim();
     if (was && dn !== (was.note || "")) bkDecide(was.id, { note: dn }); // черновик комментария прежней не теряем
     if (!cont) { bk.sess = {}; bk.skipped = {}; bk.skipN = 0; }
-    bk.cur = id; bk.view = "main";
+    bk.cur = id; bk.view = t.category === SPLIT ? "split" : "main"; bk.sp = bk.view === "split" ? spFrom(t) : null;
+    var sg0 = bkNeeds(t) ? t.sugg : null; // раскрыта категория решения или подсказки, если у нее подкатегории
+    bk.open = t.category && t.category !== SPLIT && subsOf(t.category).length ? t.category : sg0 && subsOf(sg0.category).length ? sg0.category : null;
+    bel.split.textContent = "";
     bel.note.value = t.note || ""; bel.noteRow.hidden = !t.note;
     txFill(); bel.sheet.hidden = false;
     var sc = bel.scroll, on = bel.cats.querySelector(".tx-tile.sug, .tx-tile.on");
@@ -1468,10 +1556,10 @@ button.txd-row:active { background: var(--chip); }
   }
   function txFill() {
     var t = bkFind(bk.cur); if (!t) { txClose(); return; }
-    var sg = t.category ? null : t.sugg, nm = txName(t), k;
+    var sg = bkNeeds(t) ? t.sugg : null, nm = txName(t), k;
     // очередь: «N из M» — сколько разобрано в этот заход плюс сколько осталось (пропущенные остаются в «осталось»)
-    var pend = txPending(), done = 0, inQ = !t.category;
-    for (k in bk.sess) { var x = bkFind(Number(k)); if (x && x.category) done++; }
+    var pend = txPending(), done = 0, inQ = bkNeeds(t);
+    for (k in bk.sess) { var x = bkFind(Number(k)); if (x && !bkNeeds(x)) done++; }
     var total = done + pend.length;
     bel.q.textContent = inQ ? "К проверке" : "Размечена ✓";
     bel.pos.textContent = "";
@@ -1486,22 +1574,14 @@ button.txd-row:active { background: var(--chip); }
     bel.meta.appendChild(document.createTextNode(wd + shortDate(t.date) + (txKind(t) ? " · " + txKind(t) : "")));
     if (t.status === "PDNG") { var st = document.createElement("span"); st.className = "pend"; st.textContent = "в ожидании"; bel.meta.appendChild(document.createTextNode(" · ")); bel.meta.appendChild(st); }
     txCard(t);
-    // 13 категорий в его порядке; выбранная — ✓, подсказанная — ✦, обе залиты бирюзой
-    bel.cats.textContent = "";
-    ((bk.data && bk.data.categories) || []).forEach(function (c) {
-      var b = document.createElement("button"), p = catSplit(c), e = document.createElement("span"), n = document.createElement("span"), on = t.category === c, su = !!(sg && sg.category === c);
-      b.type = "button"; b.className = "tx-tile" + (on ? " on" : su ? " sug" : "");
-      e.className = "e"; e.textContent = txEm(p.em); e.setAttribute("aria-hidden", "true"); n.className = "nm"; n.textContent = p.nm;
-      b.appendChild(e); b.appendChild(n);
-      b.setAttribute("aria-label", p.nm + (on ? ", выбрана, касание снимает" : su ? ", подсказка" : ""));
-      b.addEventListener("click", function () { txCommit(c, b); });
-      bel.cats.appendChild(b);
-    });
+    // 13 категорий в его порядке; выбранная — ✓, подсказанная — ✦, обе залиты бирюзой; у категорий с подкатегориями — «›»
+    txGrid(bel.cats, t, sg, bk.open, function (c, sub, el) { txCommit({ category: c, subcategory: sub }, el); }, function (c) { bk.open = c; txFill(); }, true);
+    if (bk.view === "split" && !bel.split.childNodes.length) spRender(); // поле суммы в работе не перерисовывается ответом сервера
     txView(); txFoot(); txFade();
   }
   // карточка: подсказка с причиной (или что ее нет), его прежний комментарий, сколько еще от отправителя, вход в «Данные банка»
   function txCard(t) {
-    var c = bel.sugg, sg = t.category ? null : t.sugg, info = bk.txc[t.id], add = function (cls, txt) { var e = document.createElement("div"); e.className = cls; if (txt) e.textContent = txt; c.appendChild(e); return e; };
+    var c = bel.sugg, sg = bkNeeds(t) ? t.sugg : null, info = bk.txc[t.id], add = function (cls, txt) { var e = document.createElement("div"); e.className = cls; if (txt) e.textContent = txt; c.appendChild(e); return e; };
     c.textContent = ""; c.className = "tx-ctx";
     var pu = txPurpose(t); if (pu) add("q", "«" + pu + "»");
     var sim = info && info.similar ? info.similar : null, dup = info && info.dup, byHist = sg && (sg.source === "merchant" || sg.source === "brand") && sim && sim.length; // подсказка по прошлым — это и есть строка «Раньше»
@@ -1510,7 +1590,7 @@ button.txd-row:active { background: var(--chip); }
       b.textContent = sg.source === "ai" ? "✦ Claude" : sg.source === "purchase" ? "≈ Как покупка" : "≈ Как раньше"; a.appendChild(b); // возврат — в категорию покупки на ту же сумму
       if (sg.source === "ai" && why) w.textContent = ": «" + why + "»"; else if (sg.source !== "ai" && why) w.textContent = ": " + why; a.appendChild(w);
     }
-    var said = t.category ? t.note : sg && sg.note; if (said) add("yb", "💬 «" + said + "»");
+    var said = t.category ? t.note || (sg && sg.note) : sg && sg.note; if (said) add("yb", "💬 «" + said + "»"); // размечена до подкатегорий — его комментарий
     var h = document.createElement("button"), ht = document.createElement("span"), hb = document.createElement("b"); h.type = "button"; h.className = "hs"; h.addEventListener("click", txShowData);
     if (dup && dup.verdict === "possible") { h.className = "hs warn"; ht.textContent = "⚠ Возможен дубль"; }
     else if (sim && sim.length) {
@@ -1525,14 +1605,16 @@ button.txd-row:active { background: var(--chip); }
   // низ листа: что можно сделать с этой операцией сейчас
   function txFoot() {
     var t = bkFind(bk.cur); if (!t) return;
-    var sg = t.category ? null : t.sugg, data = bk.view === "data", noteNew = bel.note.value.trim() !== (t.note || "");
+    var needs = bkNeeds(t), sg = needs ? t.sugg : null, ready = sgReady(sg), data = bk.view === "data", split = bk.view === "split", noteNew = bel.note.value.trim() !== (t.note || "");
     var others = txPending().some(function (x) { return x.id !== t.id; });
-    bel.backMain.hidden = !data;
-    bel.cmt.hidden = data;
-    bel.skip.hidden = !!t.category || !others;
-    bel.ok.hidden = data ? true : t.category ? !noteNew : !sg;
-    bel.ok.textContent = t.category ? "Сохранить" : sg ? "✓ Принять " + txEm(catSplit(sg.category).em) : "";
-    bel.ok.setAttribute("aria-label", t.category ? "Сохранить комментарий" : sg ? "Принять подсказку: " + catLabel(sg.category) : "");
+    bel.backMain.hidden = !data && !split;
+    bel.backMain.textContent = split ? "‹ Одна категория" : "‹ К категориям";
+    bel.cmt.hidden = data || split;
+    bel.skip.hidden = split || !needs || !others;
+    bel.ok.hidden = data ? true : split ? false : !needs ? !noteNew : !ready;
+    bel.ok.disabled = split && !spValid().ok;
+    bel.ok.textContent = split ? spOkText() : !needs ? "Сохранить" : ready ? "✓ Принять " + txEm(catSplit(sg.category).em) : "";
+    bel.ok.setAttribute("aria-label", split ? spOkText() : !needs ? "Сохранить комментарий" : ready ? "Принять подсказку: " + decText(sg) : "");
     var three = !bel.ok.hidden && !bel.skip.hidden && !bel.cmt.hidden;
     bel.cmt.className = "tx-b" + (three || (!bel.ok.hidden && !bel.cmt.hidden) ? " icon" : "");
     bel.cmt.textContent = bel.cmt.className.indexOf("icon") > 0 ? "💬" : "💬 Комментарий";
@@ -1543,7 +1625,7 @@ button.txd-row:active { background: var(--chip); }
   function txNext(afterId) {
     var all = bkItems(), from = bk.data ? bk.data.review_from : "", pos = -1, i, best = null;
     for (i = 0; i < all.length; i++) if (all[i].id === afterId) pos = i;
-    var open = function (x) { return !x.category && String(x.date) >= from && x.id !== afterId; };
+    var open = function (x) { return bkNeeds(x) && String(x.date) >= from && x.id !== afterId; };
     for (i = pos + 1; i < all.length; i++) if (open(all[i]) && !bk.skipped[all[i].id]) return all[i].id;
     for (i = 0; i < all.length; i++) if (open(all[i]) && !bk.skipped[all[i].id]) return all[i].id;
     for (i = 0; i < all.length; i++) if (open(all[i]) && (!best || bk.skipped[all[i].id] < bk.skipped[best.id])) best = all[i];
@@ -1556,14 +1638,15 @@ button.txd-row:active { background: var(--chip); }
     txHide();
   }
   // касание по категории — решение сразу (4 с «Отменить»); 0,14 с плитка подсвечена — видно, что нажал; двойной тап не проходит
-  function txCommit(cat, tile) {
+  // d — {category, subcategory?, parts?}; выбранная плитка или подкатегория — касание снимает (его слово 05.11.2026): операция снова без категории
+  function txCommit(d, tile) {
     if (Date.now() < bk.okLock) return;
     var t = bkFind(bk.cur); if (!t) return;
-    if (cat === t.category) cat = ""; // выбранная — касание ее снимает (его слово 05.11.2026): операция снова без категории
+    if (d.category !== SPLIT && d.category === t.category && (d.subcategory || null) === (t.subcategory || null)) d = { category: "" };
     bk.okLock = Date.now() + 500;
     if (tile) tile.classList.add("tap");
     setTimeout(function () {
-      var here = bk.cur === t.id, n = bel.note.value.trim(), wasNew = !t.category, v = { category: cat };
+      var here = bk.cur === t.id, n = bel.note.value.trim(), wasNew = bkNeeds(t), v = { category: d.category, subcategory: d.subcategory || null, parts: d.parts || null };
       if (here && n !== (t.note || "")) v.note = n;
       var prev = bkDecide(t.id, v, true);
       if (wasNew) bk.sess[t.id] = 1;
@@ -1571,13 +1654,156 @@ button.txd-row:active { background: var(--chip); }
         var nx = wasNew ? txNext(t.id) : null;
         if (nx) { bk.okLock = Date.now() + 350; txOpen(nx, true); } else txHide();
       }
-      bkUndoShow(t, cat, prev, true, v.note); // набранный комментарий при отмене вернется в поле
+      bkUndoShow(t, v.category ? v : null, prev, true, v.note); // набранный комментарий при отмене вернется в поле
     }, tile ? 140 : 0);
+  }
+  // сетка категорий: плитка — выбор; у категории с подкатегориями — раскрыть их строкой под плиткой (dense ставит соседнюю
+  // плитку рядом), подкатегория — выбор; sel — текущее решение, sg — подсказка, open — раскрытая категория
+  function txGrid(box, sel, sg, open, onPick, onOpen, withSplit) {
+    box.textContent = "";
+    var openTile = null;
+    ((bk.data && bk.data.categories) || []).forEach(function (c) {
+      var subs = subsOf(c), b = document.createElement("button"), p = catSplit(c), e = document.createElement("span"), n = document.createElement("span");
+      var on = sel.category === c && (!subs.length || !!sel.subcategory), su = !on && !!(sg && sg.category === c);
+      b.type = "button"; b.className = "tx-tile" + (on ? " on" : su ? " sug" : "") + (open === c ? " open" : "");
+      e.className = "e"; e.textContent = txEm(p.em); e.setAttribute("aria-hidden", "true"); n.className = "nm"; n.textContent = p.nm;
+      b.appendChild(e); b.appendChild(n);
+      if (subs.length) {
+        var ch = document.createElement("span"); ch.className = "chev"; ch.setAttribute("aria-hidden", "true"); ch.textContent = open === c ? "▾" : "›"; b.appendChild(ch);
+        b.setAttribute("aria-expanded", open === c ? "true" : "false");
+      }
+      b.setAttribute("aria-label", p.nm + (on ? ", выбрана" + (subs.length ? ": " + sel.subcategory : ", касание снимает") : su ? ", подсказка" : "") + (subs.length ? ", подкатегории" : ""));
+      b.addEventListener("click", function () { if (subs.length) onOpen(open === c ? null : c); else onPick(c, null, b); });
+      box.appendChild(b);
+      if (open === c) openTile = b;
+    });
+    if (openTile) {
+      var row = document.createElement("div"); row.className = "tx-subs"; row.setAttribute("role", "group"); row.setAttribute("aria-label", "Подкатегория");
+      subsOf(open).forEach(function (x) {
+        var b = document.createElement("button"), on = sel.category === open && sel.subcategory === x, su = !on && !!(sg && sg.category === open && sg.subcategory === x);
+        b.type = "button"; b.className = "tx-sub" + (on ? " on" : su ? " sug" : ""); b.textContent = x;
+        b.addEventListener("click", function () { onPick(open, x, b); });
+        row.appendChild(b);
+      });
+      openTile.after(row);
+    }
+    if (withSplit) {
+      var sp = document.createElement("button"); sp.type = "button"; sp.className = "tx-tile tx-splittile"; sp.textContent = "✂ Разделить на несколько категорий";
+      sp.addEventListener("click", spStart); box.appendChild(sp);
+    }
+  }
+  // ---------- разделение (его «да» 10.11.2026): части «сумма + категория», последняя часть — остаток, до цента ----------
+  bk.sp = null; // {parts: [{a: текст суммы, category, subcategory}], pick: номер части, для которой выбирается категория, open}
+  function spFmt(c) { return (c / 100).toFixed(2).replace(".", ","); }
+  var spCtx = null;
+  function spMeasure(inp, txt) { // ширина текста шрифтом поля: поле ровно по сумме, «€» — сразу за ней
+    try { spCtx = spCtx || document.createElement("canvas").getContext("2d"); var cs = getComputedStyle(inp); spCtx.font = cs.fontWeight + " " + cs.fontSize + " " + cs.fontFamily; return spCtx.measureText(txt).width || 40; } catch (e) { return 60; }
+  }
+  function spCents(v) { return Math.round(parseAmount(v) * 100); }
+  function spFrom(t) {
+    if (t.category === SPLIT && t.parts && t.parts.length >= 2) return { parts: t.parts.map(function (x, i) { return { a: i < t.parts.length - 1 ? spFmt(Math.round(Math.abs(x.amount) * 100)) : "", category: x.category, subcategory: x.subcategory || null }; }), pick: null, open: null };
+    var sg = bkNeeds(t) ? t.sugg : null, f = t.category && t.category !== SPLIT ? { category: t.category, subcategory: t.subcategory || null } : sg ? { category: sg.category, subcategory: sg.subcategory || null } : { category: null, subcategory: null };
+    return { parts: [{ a: "", category: f.category, subcategory: f.subcategory }, { a: "", category: null, subcategory: null }], pick: null, open: null };
+  }
+  function spCalc() {
+    var t = bkFind(bk.cur), ps = bk.sp.parts, total = Math.round(Math.abs(t.amount) * 100), used = 0, empty = false;
+    for (var i = 0; i < ps.length - 1; i++) { var c = spCents(ps[i].a); if (!(c > 0)) empty = true; used += c; }
+    return { total: total, used: used, rest: total - used, empty: empty };
+  }
+  function spValid() {
+    if (!bk.sp) return { ok: false };
+    var c = spCalc();
+    if (c.empty || c.rest <= 0) return { ok: false };
+    for (var i = 0; i < bk.sp.parts.length; i++) { var x = bk.sp.parts[i]; if (!x.category || (subsOf(x.category).length && !x.subcategory)) return { ok: false }; }
+    return { ok: true };
+  }
+  function spOkText() { var n = bk.sp ? bk.sp.parts.length : 2; return "✓ Сохранить " + n + " " + (n < 5 ? "части" : "частей"); }
+  function spStart() {
+    var t = bkFind(bk.cur); if (!t) return;
+    bk.sp = spFrom(t); bk.view = "split"; txView(); spRender(); txFoot(); bel.scroll.scrollTop = 0; txFade();
+    var inp = bel.split.querySelector("input"); if (inp) inp.focus();
+  }
+  function spSync() { // сумма введена — остаток, строка «сходится» и кнопка без перерисовки (поле не теряет фокус)
+    var t = bkFind(bk.cur); if (!t || !bk.sp) return;
+    var c = spCalc(), cur = SYM[t.currency] || t.currency, rest = bel.split.querySelector(".sp-rest"), bal = bel.split.querySelector(".sp-bal");
+    if (rest) { rest.textContent = spFmt(Math.max(c.rest, 0)) + " " + cur; rest.parentNode.classList.toggle("bad", c.rest <= 0); }
+    if (bal) {
+      var a = bal.firstChild, b = bal.lastChild;
+      a.textContent = "Всего " + spFmt(c.total) + " " + cur;
+      b.textContent = c.rest < 0 ? "больше суммы на " + spFmt(-c.rest) + " " + cur : c.rest === 0 ? "последней части ничего не осталось" : c.empty ? "введи суммы" : "✓ сходится";
+      bal.className = "sp-bal" + (c.rest <= 0 ? " bad" : !c.empty ? " ok" : "");
+    }
+    txFoot();
+  }
+  function spRender() {
+    var t = bkFind(bk.cur), sp = bk.sp, box = bel.split; if (!t || !sp) return;
+    box.textContent = "";
+    if (sp.pick !== null && sp.parts[sp.pick]) { // категория для части — та же сетка с подкатегориями
+      var part = sp.parts[sp.pick], back = document.createElement("button");
+      back.type = "button"; back.className = "sp-back"; back.textContent = "‹ Часть " + (sp.pick + 1) + " из " + sp.parts.length + ": категория";
+      back.addEventListener("click", function () { sp.pick = null; spRender(); txFoot(); });
+      var g = document.createElement("div"); g.className = "tx-grid"; g.setAttribute("role", "group"); g.setAttribute("aria-label", "Категория части");
+      box.appendChild(back); box.appendChild(g);
+      txGrid(g, part, null, sp.open, function (c, sub) { part.category = c; part.subcategory = sub; sp.pick = null; sp.open = null; spRender(); txFoot(); bel.scroll.scrollTop = 0; },
+        function (c) { sp.open = c; spRender(); }, false);
+      return;
+    }
+    var cur = SYM[t.currency] || t.currency, h = document.createElement("div");
+    h.className = "sp-h"; h.textContent = "Разделить " + spFmt(Math.round(Math.abs(t.amount) * 100)) + " " + cur + " на категории"; box.appendChild(h);
+    sp.parts.forEach(function (x, i) {
+      var last = i === sp.parts.length - 1, row = document.createElement("div"), am = document.createElement("label"), cb = document.createElement("button"), fitNow = null;
+      row.className = "sp-part" + (sp.parts.length > 2 ? " x" : "");
+      am.className = "sp-amt";
+      if (!last) {
+        var w = document.createElement("span"), inp = document.createElement("input"), sym = document.createElement("span");
+        w.className = "in"; inp.type = "text"; inp.inputMode = "decimal"; inp.autocomplete = "off"; inp.placeholder = "0,00"; inp.value = x.a; inp.setAttribute("enterkeyhint", "done");
+        inp.setAttribute("aria-label", "Сумма части " + (i + 1)); sym.textContent = cur;
+        var fit = function () { inp.style.width = Math.ceil(spMeasure(inp, inp.value || inp.placeholder)) + 2 + "px"; }; // символ валюты — сразу за суммой
+        fitNow = fit; inp.addEventListener("input", function () { x.a = inp.value; fit(); spSync(); }); // ширина — когда поле уже на экране
+        inp.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); inp.blur(); } });
+        w.appendChild(inp); w.appendChild(sym); am.appendChild(w);
+      } else {
+        var v = document.createElement("span"), sm = document.createElement("small"); v.className = "v sp-rest"; sm.textContent = "остаток";
+        am.appendChild(v); am.appendChild(sm);
+      }
+      cb.type = "button"; cb.className = "tx-tile" + (x.category ? "" : " empty");
+      if (x.category) {
+        var p = catSplit(x.category), e = document.createElement("span"), n = document.createElement("span");
+        e.className = "e"; e.textContent = txEm(p.em); e.setAttribute("aria-hidden", "true"); n.className = "nm"; n.textContent = p.nm;
+        var needSub = subsOf(x.category).length > 0;
+        if (needSub) { var sm2 = document.createElement("small"); sm2.textContent = x.subcategory || "выбрать, чья"; n.appendChild(sm2); }
+        cb.appendChild(e); cb.appendChild(n);
+      } else cb.textContent = "Выбрать категорию";
+      cb.setAttribute("aria-label", "Категория части " + (i + 1) + ": " + (x.category ? decText(x) : "не выбрана"));
+      cb.addEventListener("click", function () { sp.pick = i; sp.open = x.category && subsOf(x.category).length ? x.category : null; spRender(); txFoot(); bel.scroll.scrollTop = 0; });
+      row.appendChild(am); row.appendChild(cb);
+      if (sp.parts.length > 2) {
+        var del = document.createElement("button"); del.type = "button"; del.className = "sp-x"; del.textContent = "✕"; del.setAttribute("aria-label", "Убрать часть " + (i + 1));
+        del.addEventListener("click", function () { sp.parts.splice(i, 1); spRender(); txFoot(); });
+        row.appendChild(del);
+      }
+      box.appendChild(row);
+      if (fitNow) fitNow();
+    });
+    if (sp.parts.length < 10) {
+      var add = document.createElement("button"); add.type = "button"; add.className = "sp-add"; add.textContent = "＋ Добавить часть";
+      add.addEventListener("click", function () { sp.parts.splice(sp.parts.length - 1, 0, { a: "", category: null, subcategory: null }); spRender(); txFoot(); var ins = bel.split.querySelectorAll("input"); if (ins.length) ins[ins.length - 1].focus(); });
+      box.appendChild(add);
+    }
+    var bal = document.createElement("div"); bal.className = "sp-bal"; bal.appendChild(document.createElement("span")); bal.appendChild(document.createElement("b")); box.appendChild(bal);
+    spSync();
+  }
+  function spSave() {
+    if (!spValid().ok) return;
+    var t = bkFind(bk.cur), sign = t.amount < 0 ? -1 : 1, c = spCalc(), ps = bk.sp.parts;
+    var parts = ps.map(function (x, i) { return { amount: sign * (i < ps.length - 1 ? spCents(x.a) : c.rest) / 100, category: x.category, subcategory: x.subcategory || null }; });
+    txCommit({ category: SPLIT, parts: parts }, null);
   }
   bel.ok.addEventListener("click", function () {
     var t = bkFind(bk.cur); if (!t) return;
-    if (t.category) { txClose(); return; } // «Сохранить» — комментарий к размеченной
-    if (t.sugg) txCommit(t.sugg.category, bel.cats.querySelector(".tx-tile.sug"));
+    if (bk.view === "split") { spSave(); return; }
+    if (!bkNeeds(t)) { txClose(); return; } // «Сохранить» — комментарий к размеченной
+    if (sgReady(t.sugg)) txCommit({ category: t.sugg.category, subcategory: t.sugg.subcategory || null }, bel.cats.querySelector(".tx-sub.sug, .tx-tile.sug"));
   });
   bel.skip.addEventListener("click", function () {
     if (Date.now() < bk.okLock) return;
@@ -1594,15 +1820,16 @@ button.txd-row:active { background: var(--chip); }
   });
   // «Похожие и данные банка»: второй вид листа; данные — с сервера по требованию, пока лист открыт — из памяти
   function txView() {
-    var data = bk.view === "data", t = bkFind(bk.cur);
+    var data = bk.view === "data", split = bk.view === "split", t = bkFind(bk.cur);
     bel.main.hidden = data; bel.data.hidden = !data; bel.mini.hidden = !data;
+    bel.sugg.hidden = split; bel.cats.hidden = split; bel.split.hidden = !split;
     if (data && t) {
       var nm = txName(t); txAva(bel.miniAva, nm, t.logo); bel.miniName.textContent = nm;
       bel.miniAmt.textContent = bkMoney(t.amount, t.currency); bel.miniAmt.className = "v " + (t.amount < 0 ? "minus" : t.amount > 0 ? "plus" : "");
     }
   }
   function txShowData() { bk.view = "data"; txView(); txFoot(); bel.scroll.scrollTop = 0; txRenderData(); txFade(); if (bk.cur) txLoad(bk.cur, true); }
-  bel.backMain.addEventListener("click", function () { bk.view = "main"; txView(); txFoot(); bel.scroll.scrollTop = 0; txFade(); });
+  bel.backMain.addEventListener("click", function () { if (bk.view === "split") { bk.sp = null; bel.split.textContent = ""; } bk.view = "main"; txView(); txFoot(); bel.scroll.scrollTop = 0; txFade(); });
   function txLoad(id, fresh) {
     var c = bk.txc[id];
     if (c && (c.loading || (!fresh && !c.err))) return;
@@ -1652,7 +1879,7 @@ button.txd-row:active { background: var(--chip); }
       var r = document.createElement("button"), d = document.createElement("span"), v = document.createElement("span"), a = document.createElement("span");
       r.type = "button"; r.className = "txd-row txd-sim";
       d.className = "d"; d.textContent = dmy(o.date) + (String(o.date).slice(0, 4) !== yr ? "." + String(o.date).slice(2, 4) : "");
-      v.className = "v"; v.textContent = o.category ? catLabel(o.category) : "без категории";
+      v.className = "v"; v.textContent = o.category ? decText(o) : "без категории";
       a.className = "a" + (o.amount > 0 ? " plus" : ""); a.textContent = bkMoney(o.amount, o.currency);
       r.appendChild(d); r.appendChild(v); r.appendChild(a);
       if (bkFind(o.id)) r.addEventListener("click", function () { txOpen(o.id, true); }); else r.disabled = true;
