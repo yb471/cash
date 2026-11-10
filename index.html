@@ -248,6 +248,15 @@ body.locked .bk-undo { display: none; }
 .tx-tile.sug .e, .tx-tile.on .e { box-shadow: none; }
 .tx-tile.sug::after, .tx-tile.on::after { position: absolute; top: 3px; right: 6px; font-size: 11px; font-weight: 700; }
 .tx-tile.sug::after { content: "✦"; } .tx-tile.on::after { content: "✓"; font-size: 13px; }
+/* подсказка, когда выбрана другая (его слово 10.11.2026: выбор — только выбор, сохраняет кнопка) — контур и ✦ */
+.tx-tile.hint { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 80%, transparent); }
+.tx-tile.hint::after { content: "✦"; position: absolute; top: 3px; right: 6px; color: var(--accent); font-size: 11px; font-weight: 700; }
+.tx-sub.hint { box-shadow: inset 0 0 0 2px var(--accent); } .tx-sub.hint::before { content: "✦ "; font-size: .8em; }
+/* сохраненная, когда выбор снят или выбрана другая — серый контур и ✓: видно, что было */
+.tx-tile.was { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--muted) 55%, transparent); }
+.tx-tile.was::after { content: "✓"; position: absolute; top: 3px; right: 6px; color: var(--muted); font-size: 13px; font-weight: 700; }
+.tx-sub.was { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--muted) 55%, transparent); } .tx-sub.was::after { content: " ✓"; }
+.tx-b.pri.unset { background: var(--chip); color: var(--minus); } /* снять разметку — не бирюзовой «сохранить» */
 /* подкатегории (его «да» 10.11.2026): у плитки «›», касание раскрывает их строкой прямо под ней, второе касание выбирает */
 .tx-tile .chev { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 14px; font-weight: 700; line-height: 1; } /* в правом отступе плитки: название не теряет ширину */
 .tx-tile.on .chev, .tx-tile.sug .chev { color: inherit; }
@@ -631,7 +640,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "135"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "136"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -1467,8 +1476,10 @@ button.txd-row:active { background: var(--chip); }
     if (bk.queue.length) { clearTimeout(bk.timer); bk.timer = setTimeout(bkSend, 900); }
   });
   // ---------- лист операции (его слово 05.11.2026: переосмыслить блок — лучшие финтех-приложения + твердость данных) ----------
-  // одна операция — одно касание: категория сохраняется сразу (4 с «Отменить»), открывается следующая; подсказка — подсвеченной
-  // плиткой, строкой причины и кнопкой «✓ Принять» под пальцем; «Пропустить» уводит операцию в конец очереди (по кругу);
+  // выбор и сохранение раздельно (его слово 10.11.2026: «автоприем при выборе — теряю чувство контроля»): касание плитки или
+  // подкатегории только выбирает (повторное — снимает выбор), сохраняет кнопка внизу — «✓ Принять» (выбрана подсказка),
+  // «✓ Сохранить», «Снять категорию»; после сохранения — следующая (4 с «Отменить»); подсказка выбрана заранее, строка
+  // причины — над сеткой; «Пропустить» уводит операцию в конец очереди (по кругу);
   // «Подробнее» — действие bank_tx функции cash: прошлые платежи отправителя, дубли, поля банка (только то, что помогает определить)
   var AVA = ["#3B7BC0", "#C0663B", "#8A5CC2", "#2F9468", "#B8498A", "#9C7F1E", "#3E8FA6", "#C24B4B"];
   bk.sess = {}; bk.skipped = {}; bk.skipN = 0; bk.view = "main"; bk.txc = {};
@@ -1541,6 +1552,8 @@ button.txd-row:active { background: var(--chip); }
     bk.cur = id; bk.view = t.category === SPLIT ? "split" : "main"; bk.sp = bk.view === "split" ? spFrom(t) : null;
     var sg0 = bkNeeds(t) ? t.sugg : null; // раскрыта категория решения или подсказки, если у нее подкатегории
     bk.open = t.category && t.category !== SPLIT && subsOf(t.category).length ? t.category : sg0 && subsOf(sg0.category).length ? sg0.category : null;
+    bk.sel = t.category && t.category !== SPLIT ? { category: t.category, subcategory: t.subcategory || null } : null; // выбор в листе, еще не сохранен
+    if (bkNeeds(t) && sg0) bk.sel = { category: sg0.category, subcategory: sg0.subcategory || null }; // ждет решения — выбрана подсказка
     bel.split.textContent = "";
     bel.note.value = t.note || ""; bel.noteRow.hidden = !t.note;
     txFill(); bel.sheet.hidden = false;
@@ -1575,7 +1588,8 @@ button.txd-row:active { background: var(--chip); }
     if (t.status === "PDNG") { var st = document.createElement("span"); st.className = "pend"; st.textContent = "в ожидании"; bel.meta.appendChild(document.createTextNode(" · ")); bel.meta.appendChild(st); }
     txCard(t);
     // 13 категорий в его порядке; выбранная — ✓, подсказанная — ✦, обе залиты бирюзой; у категорий с подкатегориями — «›»
-    txGrid(bel.cats, t, sg, bk.open, function (c, sub, el) { txCommit({ category: c, subcategory: sub }, el); }, function (c) { bk.open = c; txFill(); }, true);
+    txGrid(bel.cats, bk.sel, sg, bk.open, txSelect, function (c) { bk.open = c; txFill(); }, true,
+      t.category && t.category !== SPLIT && !bkNeeds(t) ? { category: t.category, subcategory: t.subcategory || null } : null);
     if (bk.view === "split" && !bel.split.childNodes.length) spRender(); // поле суммы в работе не перерисовывается ответом сервера
     txView(); txFoot(); txFade();
   }
@@ -1605,16 +1619,19 @@ button.txd-row:active { background: var(--chip); }
   // низ листа: что можно сделать с этой операцией сейчас
   function txFoot() {
     var t = bkFind(bk.cur); if (!t) return;
-    var needs = bkNeeds(t), sg = needs ? t.sugg : null, ready = sgReady(sg), data = bk.view === "data", split = bk.view === "split", noteNew = bel.note.value.trim() !== (t.note || "");
+    var needs = bkNeeds(t), data = bk.view === "data", split = bk.view === "split";
     var others = txPending().some(function (x) { return x.id !== t.id; });
     bel.backMain.hidden = !data && !split;
     bel.backMain.textContent = split ? "‹ Одна категория" : "‹ К категориям";
     bel.cmt.hidden = data || split;
     bel.skip.hidden = split || !needs || !others;
-    bel.ok.hidden = data ? true : split ? false : !needs ? !noteNew : !ready;
-    bel.ok.disabled = split && !spValid().ok;
-    bel.ok.textContent = split ? spOkText() : !needs ? "Сохранить" : ready ? "✓ Принять " + txEm(catSplit(sg.category).em) : "";
-    bel.ok.setAttribute("aria-label", split ? spOkText() : !needs ? "Сохранить комментарий" : ready ? "Принять подсказку: " + decText(sg) : "");
+    var a = txAct(t), em = bk.sel && a.ready && (a.act === "accept" || a.act === "save") ? " " + txEm(catSplit(bk.sel.category).em) : "";
+    bel.ok.hidden = data ? true : split ? false : a.act === "none";
+    bel.ok.disabled = split ? !spValid().ok : !a.ready; // ждет решения и ничего не выбрано — кнопка на месте, неактивна (низ не прыгает)
+    bel.ok.textContent = split ? spOkText() : !a.ready ? "Сохранить" : a.act === "accept" ? "✓ Принять" + em : a.act === "clear" ? "Снять категорию" : a.act === "note" ? "Сохранить" : "✓ Сохранить" + em;
+    bel.ok.className = "tx-b pri" + (!split && a.act === "clear" ? " unset" : "");
+    bel.ok.setAttribute("aria-label", split ? spOkText() : a.act === "accept" ? "Принять подсказку: " + decText(bk.sel) : a.act === "clear" ? "Снять категорию" :
+      a.act === "note" ? "Сохранить комментарий" : bk.sel && a.ready ? "Сохранить: " + decText(bk.sel) : "Сначала выбери категорию");
     var three = !bel.ok.hidden && !bel.skip.hidden && !bel.cmt.hidden;
     bel.cmt.className = "tx-b" + (three || (!bel.ok.hidden && !bel.cmt.hidden) ? " icon" : "");
     bel.cmt.textContent = bel.cmt.className.indexOf("icon") > 0 ? "💬" : "💬 Комментарий";
@@ -1637,12 +1654,26 @@ button.txd-row:active { background: var(--chip); }
     if (t && n !== (t.note || "")) bkDecide(t.id, { note: n }); // комментарий без категории тоже сохраняется
     txHide();
   }
-  // касание по категории — решение сразу (4 с «Отменить»); 0,14 с плитка подсвечена — видно, что нажал; двойной тап не проходит
-  // d — {category, subcategory?, parts?}; выбранная плитка или подкатегория — касание снимает (его слово 05.11.2026): операция снова без категории
+  // решение по кнопке листа (4 с «Отменить»); d — {category, subcategory?, parts?}, category «» — снять (операция снова без
+  // категории); двойное нажатие не проходит
+  function txSelect(c, sub) { // касание плитки или подкатегории — только выбор; то же еще раз — выбор снят
+    var x = bk.sel;
+    bk.sel = x && x.category === c && (x.subcategory || null) === (sub || null) ? null : { category: c, subcategory: sub || null };
+    txFill();
+  }
+  function selDone(x) { return !!x && !!x.category && (!subsOf(x.category).length || !!x.subcategory); } // можно сохранять
+  function selSame(a, b) { return (a ? a.category : null) === (b ? b.category : null) && ((a && a.subcategory) || null) === ((b && b.subcategory) || null); }
+  // что сделает кнопка листа: {act: accept | save | clear | note | none, ready}
+  function txAct(t) {
+    var sel = bk.sel, needs = bkNeeds(t), sg = needs ? t.sugg : null;
+    if (needs) return { act: sg && selSame(sel, sg) ? "accept" : "save", ready: selDone(sel) };
+    var changed = t.category === SPLIT ? !!sel : !selSame(sel, { category: t.category, subcategory: t.subcategory || null });
+    if (!changed) return { act: bel.note.value.trim() !== (t.note || "") ? "note" : "none", ready: true };
+    return sel ? { act: "save", ready: selDone(sel) } : { act: "clear", ready: true };
+  }
   function txCommit(d, tile) {
     if (Date.now() < bk.okLock) return;
     var t = bkFind(bk.cur); if (!t) return;
-    if (d.category !== SPLIT && d.category === t.category && (d.subcategory || null) === (t.subcategory || null)) d = { category: "" };
     bk.okLock = Date.now() + 500;
     if (tile) tile.classList.add("tap");
     setTimeout(function () {
@@ -1659,29 +1690,33 @@ button.txd-row:active { background: var(--chip); }
   }
   // сетка категорий: плитка — выбор; у категории с подкатегориями — раскрыть их строкой под плиткой (dense ставит соседнюю
   // плитку рядом), подкатегория — выбор; sel — текущее решение, sg — подсказка, open — раскрытая категория
-  function txGrid(box, sel, sg, open, onPick, onOpen, withSplit) {
+  function txGrid(box, sel, sg, open, onPick, onOpen, withSplit, saved) {
     box.textContent = "";
     var openTile = null;
     ((bk.data && bk.data.categories) || []).forEach(function (c) {
       var subs = subsOf(c), b = document.createElement("button"), p = catSplit(c), e = document.createElement("span"), n = document.createElement("span");
-      var on = sel.category === c && (!subs.length || !!sel.subcategory), su = !on && !!(sg && sg.category === c);
-      b.type = "button"; b.className = "tx-tile" + (on ? " on" : su ? " sug" : "") + (open === c ? " open" : "");
+      var on = !!sel && sel.category === c && (!subs.length || !!sel.subcategory), isSg = !!(sg && sg.category === c);
+      var su = on && isSg && (!subs.length || sel.subcategory === sg.subcategory); // выбрана сама подсказка
+      var was = !on && !!saved && saved.category === c && (!subs.length || !!saved.subcategory);
+      b.type = "button"; b.className = "tx-tile" + (su ? " sug" : on ? " on" : isSg ? " hint" : was ? " was" : "") + (open === c ? " open" : "");
       e.className = "e"; e.textContent = txEm(p.em); e.setAttribute("aria-hidden", "true"); n.className = "nm"; n.textContent = p.nm;
       b.appendChild(e); b.appendChild(n);
       if (subs.length) {
         var ch = document.createElement("span"); ch.className = "chev"; ch.setAttribute("aria-hidden", "true"); ch.textContent = open === c ? "▾" : "›"; b.appendChild(ch);
         b.setAttribute("aria-expanded", open === c ? "true" : "false");
       }
-      b.setAttribute("aria-label", p.nm + (on ? ", выбрана" + (subs.length ? ": " + sel.subcategory : ", касание снимает") : su ? ", подсказка" : "") + (subs.length ? ", подкатегории" : ""));
+      b.setAttribute("aria-label", p.nm + (on ? ", выбрана" + (subs.length ? ": " + sel.subcategory : ", касание снимает выбор") : "") + (isSg ? ", подсказка" : "") + (subs.length ? ", подкатегории" : ""));
       b.addEventListener("click", function () { if (subs.length) onOpen(open === c ? null : c); else onPick(c, null, b); });
       box.appendChild(b);
       if (open === c) openTile = b;
     });
     if (openTile) {
+      sel = sel || {};
       var row = document.createElement("div"); row.className = "tx-subs"; row.setAttribute("role", "group"); row.setAttribute("aria-label", "Подкатегория");
       subsOf(open).forEach(function (x) {
-        var b = document.createElement("button"), on = sel.category === open && sel.subcategory === x, su = !on && !!(sg && sg.category === open && sg.subcategory === x);
-        b.type = "button"; b.className = "tx-sub" + (on ? " on" : su ? " sug" : ""); b.textContent = x;
+        var b = document.createElement("button"), on = sel.category === open && sel.subcategory === x, isSg = !!(sg && sg.category === open && sg.subcategory === x);
+        var was = !on && !!saved && saved.category === open && saved.subcategory === x;
+        b.type = "button"; b.className = "tx-sub" + (on && isSg ? " sug" : on ? " on" : isSg ? " hint" : was ? " was" : ""); b.textContent = x;
         b.addEventListener("click", function () { onPick(open, x, b); });
         row.appendChild(b);
       });
@@ -1802,8 +1837,11 @@ button.txd-row:active { background: var(--chip); }
   bel.ok.addEventListener("click", function () {
     var t = bkFind(bk.cur); if (!t) return;
     if (bk.view === "split") { spSave(); return; }
-    if (!bkNeeds(t)) { txClose(); return; } // «Сохранить» — комментарий к размеченной
-    if (sgReady(t.sugg)) txCommit({ category: t.sugg.category, subcategory: t.sugg.subcategory || null }, bel.cats.querySelector(".tx-sub.sug, .tx-tile.sug"));
+    var a = txAct(t);
+    if (!a.ready || a.act === "none") return;
+    if (a.act === "note") { txClose(); return; } // только комментарий к размеченной
+    if (a.act === "clear") { txCommit({ category: "" }, null); return; }
+    txCommit({ category: bk.sel.category, subcategory: bk.sel.subcategory || null }, null);
   });
   bel.skip.addEventListener("click", function () {
     if (Date.now() < bk.okLock) return;
