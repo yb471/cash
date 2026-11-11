@@ -254,22 +254,29 @@ body.locked .bk-undo { display: none; }
 /* подсказка, когда выбрана другая (его слово 10.11.2026: выбор — только выбор, сохраняет кнопка) — контур и ✦ */
 .tx-tile.hint { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 80%, transparent); }
 .tx-tile.hint::after { content: "✦"; position: absolute; top: 3px; right: 6px; color: var(--accent); font-size: 11px; font-weight: 700; }
-.tx-sub.hint { box-shadow: inset 0 0 0 2px var(--accent); } .tx-sub.hint::before { content: "✦ "; font-size: .8em; }
 /* сохраненная, когда выбор снят или выбрана другая — серый контур и ✓: видно, что было */
 .tx-tile.was { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--muted) 55%, transparent); }
 .tx-tile.was::after { content: "✓"; position: absolute; top: 3px; right: 6px; color: var(--muted); font-size: 13px; font-weight: 700; }
-.tx-sub.was { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--muted) 55%, transparent); } .tx-sub.was::after { content: " ✓"; }
 .tx-b.pri.unset { background: var(--chip); color: var(--minus); } /* снять разметку — не бирюзовой «сохранить» */
-/* подкатегории (его «да» 10.11.2026): у плитки «›», касание раскрывает их строкой прямо под ней, второе касание выбирает */
+/* подкатегории (его «да» 10.11.2026; вид — его слово 11.11.2026, версия 138): касание по категории раскрывает группу — одна карточка; подкатегории — ветками дерева от значка категории, правее ее названия */
 .tx-tile .chev { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 14px; font-weight: 700; line-height: 1; } /* в правом отступе плитки: название не теряет ширину */
 .tx-tile.on .chev, .tx-tile.sug .chev { color: inherit; }
-.tx-tile.open:not(.on):not(.sug) { background: color-mix(in srgb, var(--accent) 12%, var(--tile)); box-shadow: inset 0 0 0 2px var(--accent); }
-.tx-tile.open:not(.on):not(.sug) .chev { color: var(--accent); }
-.tx-subs { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; margin: -2px 0 4px; }
-.tx-sub { flex: 1 1 auto; min-width: 0; min-height: 46px; padding: 6px 14px; white-space: nowrap; border: 0; border-radius: 23px; background: color-mix(in srgb, var(--accent) 13%, var(--surface)); color: var(--accent); font: inherit; font-size: calc(15 * var(--u)); font-weight: 600; line-height: 1.2; }
-.tx-sub.on, .tx-sub.sug { background: var(--accent); color: var(--accent-fg); }
-.tx-sub.on::after { content: " ✓"; } .tx-sub.sug::before { content: "✦ "; font-size: .8em; }
-.tx-sub:active, .tx-sub.tap { transform: scale(.97); }
+.tx-grid > .tx-tile.open { --tree: color-mix(in srgb, var(--muted) 85%, var(--tile)); border-radius: 14px 14px 0 0; background: var(--tile); color: var(--fg); box-shadow: none; font-weight: 600; }
+.tx-subs { --tree: color-mix(in srgb, var(--muted) 85%, var(--tile)); }
+.tx-tile.open .chev { transform: translateY(-50%) rotate(90deg); color: var(--accent); }
+.tx-subs { position: relative; grid-column: 1 / -1; display: flex; flex-direction: column; gap: 2px; margin-top: -6px; padding: 2px 6px 6px 40px; border-radius: 0 0 14px 14px; background: var(--tile); animation: subsin .18s ease-out; }
+.tx-subs::before { content: ""; position: absolute; left: 23px; top: 0; bottom: 28px; width: 2px; border-radius: 1px; background: var(--tree); } /* ствол от значка категории до последней ветки */
+@keyframes subsin { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+.tx-sub { position: relative; display: flex; align-items: center; min-height: 44px; padding: 6px 40px 6px 12px; border: 0; border-radius: 10px; background: transparent; color: var(--fg); font: inherit; font-size: calc(15 * var(--u)); font-weight: 500; line-height: 1.2; text-align: left; -webkit-tap-highlight-color: transparent; transition: background-color .12s; }
+.tx-sub::before { content: ""; position: absolute; left: -15px; top: 50%; width: 15px; height: 2px; margin-top: -1px; border-radius: 1px; background: var(--tree); } /* ветка к подкатегории */
+.tx-sub::after { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 15px; font-weight: 700; }
+.tx-sub.on, .tx-sub.sug { background: var(--accent); color: var(--accent-fg); font-weight: 600; }
+.tx-sub.on::after { content: "✓"; } .tx-sub.sug::after { content: "✦"; }
+.tx-sub.hint { color: var(--accent); font-weight: 600; } .tx-sub.hint::after { content: "✦"; color: var(--accent); }
+.tx-sub.was::after { content: "✓"; color: var(--muted); }
+.tx-grid > .tx-tile:has(small) { min-height: 54px; padding-top: 8px; padding-bottom: 8px; } /* свернутая с подкатегорией — две строки свободно */
+.tx-grid .nm small { display: block; margin-top: 2px; color: var(--muted); font-size: calc(13 * var(--u)); font-weight: 500; } .tx-tile.on .nm small, .tx-tile.sug .nm small { color: inherit; opacity: .85; }
+.tx-sub:active, .tx-sub.tap { background: color-mix(in srgb, var(--accent) 14%, var(--tile)); } .tx-sub.on:active, .tx-sub.sug:active, .tx-sub.on.tap, .tx-sub.sug.tap { background: var(--accent); }
 .tx-splittile { grid-column: 1 / -1; justify-content: center; min-height: 46px; background: transparent; border: 1.5px dashed color-mix(in srgb, var(--line) 70%, var(--muted)); color: var(--accent); font-weight: 600; }
 /* разделение на категории (его «да» 10.11.2026): части «сумма + категория», последняя — остаток, сходится до цента */
 .tx-split { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
@@ -441,7 +448,7 @@ button.txd-row:active { background: var(--chip); }
 .save.plus { background: var(--plus); color: #fff; }
 .save.edit { background: var(--edit); color: var(--edit-fg); }
 .save:disabled { opacity: .6; }
-@media (prefers-reduced-motion: reduce) { .bk-undo, .bk-undo.in-sheet, .catwrap.shake, .sheet-back, .sheet-body, .recent-list button.new, .ptr.spin svg { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .tx-subs, .bk-undo, .bk-undo.in-sheet, .catwrap.shake, .sheet-back, .sheet-body, .recent-list button.new, .ptr.spin svg { animation: none; } }
 /* остаток по записям от последнего пересчета и кнопка пересчета (его «да» 29.10.2026: сверка наличных раз в месяц) */
 /* сверка — своя карточка над формой: слева состояние (в наличии, Δ последней сверки), справа действие. Цвет сверки — фирменный
    бирюзовый, как кнопка «Записать сверку» в листе; красный и зеленый остаются за деньгами (расход, приход, Δ) */
@@ -666,7 +673,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "137"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "138"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -1715,12 +1722,15 @@ button.txd-row:active { background: var(--chip); }
       var on = !!sel && sel.category === c && (!subs.length || !!sel.subcategory), isSg = !!(sg && sg.category === c);
       var su = on && isSg && (!subs.length || sel.subcategory === sg.subcategory); // выбрана сама подсказка
       var was = !on && !!saved && saved.category === c && (!subs.length || !!saved.subcategory);
-      b.type = "button"; b.className = "tx-tile" + (su ? " sug" : on ? " on" : isSg ? " hint" : was ? " was" : "") + (open === c ? " open" : "");
+      var isOpen = open === c; // раскрытая — заголовок группы: выбор и подсказка видны на ее подкатегориях
+      b.type = "button"; b.className = "tx-tile" + (isOpen ? " open" : su ? " sug" : on ? " on" : isSg ? " hint" : was ? " was" : "");
       e.className = "e"; e.textContent = txEm(p.em); e.setAttribute("aria-hidden", "true"); n.className = "nm"; n.textContent = p.nm;
       b.appendChild(e); b.appendChild(n);
       if (subs.length) {
-        var ch = document.createElement("span"); ch.className = "chev"; ch.setAttribute("aria-hidden", "true"); ch.textContent = open === c ? "▾" : "›"; b.appendChild(ch);
-        b.setAttribute("aria-expanded", open === c ? "true" : "false");
+        var st = isOpen ? "" : on ? sel.subcategory : isSg && sg.subcategory ? sg.subcategory : was ? saved.subcategory : ""; // свернутая — подкатегория строкой под названием
+        if (st) { var sm = document.createElement("small"); sm.textContent = st; n.appendChild(sm); }
+        var ch = document.createElement("span"); ch.className = "chev"; ch.setAttribute("aria-hidden", "true"); ch.textContent = "›"; b.appendChild(ch);
+        b.setAttribute("aria-expanded", isOpen ? "true" : "false");
       }
       b.setAttribute("aria-label", p.nm + (on ? ", выбрана" + (subs.length ? ": " + sel.subcategory : ", касание снимает выбор") : "") + (isSg ? ", подсказка" : "") + (subs.length ? ", подкатегории" : ""));
       b.addEventListener("click", function () { if (subs.length) onOpen(open === c ? null : c); else onPick(c, null, b); });
