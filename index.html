@@ -238,7 +238,10 @@ body.locked .bk-undo { display: none; }
 .tx-ctx .hs > span { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .tx-ctx .hs > span:empty { display: none; }
 .tx-ctx .hs b { flex: none; white-space: nowrap; } /* «Подробнее ›» не обрезается — сокращается текст перед ним */
 .tx-ctx .hs b { color: var(--accent); font-weight: 600; } .tx-ctx .hs.ai { color: var(--accent); font-weight: 600; } .tx-ctx .hs.ai b { font-weight: 600; } .tx-ctx .hs.warn, .tx-ctx .hs.warn b { color: var(--warn); font-weight: 600; }
-.tx-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(calc(150 * var(--u)), 1fr)); grid-auto-flow: row dense; gap: 8px; } /* dense: строка подкатегорий под плиткой, соседняя плитка встает рядом */
+.tx-grid { display: grid; grid-template-columns: 1fr; gap: 6px; } /* по одной в ряд (его слово 10.11.2026): название целиком, строка подкатегорий — под своей плиткой */
+.tx-grid > .tx-tile { min-height: 46px; padding: 6px 30px 6px 8px; font-size: calc(15 * var(--u)); } .tx-grid > .tx-splittile { padding: 6px 12px; }
+.tx-grid > .tx-tile.tx-tile::after { top: 50%; right: 14px; transform: translateY(-50%); font-size: 15px; } /* ✓ / ✦ — справа по центру, как в списках; у плитки с подкатегориями — перед «›» */
+.tx-grid > .tx-tile:has(.chev) { padding-right: 52px; } .tx-grid > .tx-tile:has(.chev)::after { right: 30px; } .tx-grid > .tx-tile .chev { right: 12px; }
 #txMain [hidden] { display: none !important; }
 .tx-tile { position: relative; display: flex; align-items: center; gap: 8px; min-height: 50px; padding: 7px 10px 7px 8px; border: 0; border-radius: 14px; background: var(--tile); color: var(--fg); font: inherit; font-size: calc(14 * var(--u)); line-height: 1.18; font-weight: 500; text-align: left; -webkit-tap-highlight-color: transparent; transition: transform .12s, background-color .12s; }
 .tx-tile .e { flex: none; width: 32px; height: 32px; border-radius: 10px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); display: flex; align-items: center; justify-content: center; font-size: 19px; line-height: 1; }
@@ -291,12 +294,29 @@ body.locked .bk-undo { display: none; }
 .tx-b:disabled, .tx-b.pri:disabled { background: var(--chip); color: var(--muted); } /* не готово — серой, не бледной бирюзой */
 /* низ: комментарий по кнопке, «Пропустить», «Принять» подсказку */
 .tx-foot { flex: none; display: flex; flex-direction: column; gap: 8px; padding: 10px 14px max(10px, calc(env(safe-area-inset-bottom, 0px) - 10px)); background: var(--surface); border-top: 1px solid var(--line); }
-.tx-foot .comment { height: 44px; padding-right: 12px; }
+.tx-b.has::after { content: ""; display: inline-block; width: 8px; height: 8px; margin-left: 7px; border-radius: 50%; background: var(--accent); vertical-align: middle; } /* у операции есть комментарий */
+.tx-b.icon.has { position: relative; } .tx-b.icon.has::after { position: absolute; top: 9px; right: 9px; margin: 0; }
+/* «Комментарии для Claude» — свой лист поверх операции */
+.sheet-body.cm-body { --tile: color-mix(in srgb, var(--fg) 5%, var(--surface)); min-height: 50%; padding-bottom: max(18px, env(safe-area-inset-bottom, 0px)); border-radius: 28px 28px 0 0; }
+.cm-list { padding: 0 16px 8px; }
+.cm-hint { margin: 2px 2px 4px; color: var(--muted); font-size: calc(14 * var(--u)); line-height: 1.35; }
+.cm-item { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border-radius: 14px; background: var(--tile); }
+.cm-cards { display: flex; flex-direction: column; gap: 8px; }
+.cm-meta { color: var(--muted); font-size: calc(13 * var(--u)); line-height: 1.3; }
+.cm-text { color: var(--fg); font-size: calc(15 * var(--u)); line-height: 1.4; overflow-wrap: anywhere; }
+.cm-gone { color: var(--muted); font-size: calc(15 * var(--u)); font-style: italic; }
+.cm-acts { display: flex; align-items: center; gap: 18px; margin-top: 2px; }
+.cm-a { padding: 12px 0; margin: -8px 0; border: 0; background: none; color: var(--accent); font: inherit; font-size: calc(14 * var(--u)); font-weight: 600; }
+.cm-a.del { color: var(--minus); } .cm-a.mute { color: var(--muted); }
+.cm-add { align-self: flex-start; }
+.cm-ta { display: block; width: 100%; min-height: 46px; max-height: calc(8 * 1.4em + 24px); padding: 11px 12px; border: 1px solid var(--accent); border-radius: 12px; background: var(--surface); color: var(--fg); font: inherit; font-size: calc(16 * var(--u)); line-height: 1.4; resize: none; overflow-y: auto; outline: none; }
+.cm-save { margin-left: auto; height: 38px; padding: 0 18px; border: 0; border-radius: 19px; background: var(--accent); color: var(--accent-fg); font: inherit; font-size: calc(15 * var(--u)); font-weight: 600; }
+.cm-save:disabled { background: var(--chip); color: var(--muted); }
+.cm-msg { margin: 4px 2px; color: var(--muted); font-size: calc(14 * var(--u)); }
 .tx-btns { display: flex; flex-wrap: wrap; gap: 8px; } /* крупный системный текст — кнопки во второй ряд, а не обрезанные */
 .tx-b { flex: 1 1 calc(110 * var(--u)); min-width: 0; height: 50px; padding: 0 8px; border: 0; border-radius: 25px; background: var(--chip); color: var(--fg); font: inherit; font-size: calc(16 * var(--u)); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tx-b.icon { flex: none; width: 50px; padding: 0; font-size: 19px; }
 .tx-b.pri { flex: 1.25 1 calc(130 * var(--u)); background: var(--accent); color: var(--accent-fg); }
-.tx-b[aria-expanded="true"] { background: color-mix(in srgb, var(--accent) 16%, var(--chip)); color: var(--accent); }
 /* «Похожие и данные банка» */
 .txd-h { display: flex; justify-content: space-between; gap: 8px; margin: 16px 2px 7px; font-size: calc(12.5 * var(--u)); font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
 .txd-h:first-child { margin-top: 6px; }
@@ -602,14 +622,20 @@ button.txd-row:active { background: var(--chip); }
       <div id="txData" hidden></div>
     </div>
     <div class="tx-foot">
-      <div id="txNoteRow" hidden><input id="txNote" class="comment" type="text" placeholder="Комментарий для Claude (по желанию)" maxlength="500" autocomplete="off" enterkeyhint="done"></div>
       <div class="tx-btns">
         <button class="tx-b" id="txBackMain" type="button" hidden>‹ К категориям</button>
-        <button class="tx-b" id="txCmt" type="button" aria-label="Комментарий для Claude" aria-expanded="false">💬 Комментарий</button>
+        <button class="tx-b" id="txCmt" type="button" aria-label="Комментарии для Claude" aria-haspopup="dialog">💬 Комментарий</button>
         <button class="tx-b" id="txSkip" type="button">Пропустить ›</button>
         <button class="tx-b pri" id="txOk" type="button" hidden></button>
       </div>
     </div>
+  </div>
+</div>
+<div class="sheet" id="cmSheet" hidden>
+  <div class="sheet-back" id="cmBack"></div>
+  <div class="sheet-body cm-body" role="dialog" aria-label="Комментарии для Claude">
+    <div class="sheet-head"><span>Комментарии для Claude</span><button id="cmClose" type="button" aria-label="Закрыть">✕</button></div>
+    <div class="cm-list" id="cmList"></div>
   </div>
 </div>
 
@@ -640,7 +666,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "136"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "137"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -1100,9 +1126,10 @@ button.txd-row:active { background: var(--chip); }
   var bel = { bankBtn: B("bkBankBtn"), bankSheet: B("bkBankSheet"), bankList: B("bkBankList"), sync: B("bkSync"), syncSt: B("bkSyncSt"), review: B("bkReview"), all: B("bkAll"), pendingN: B("bkPendingN"),
     stPend: B("stPend"), stSuggP: B("stSuggP"), stAll: B("stAll"), stD30: B("stD30"), statBox: B("bkStatBox"), menu: B("bkMenu"), queueN: B("bkQueueN"), flush: B("bkFlush"), sheetLink: B("bkSheetLink"), access: B("bkAccess"), accessHint: B("bkAccessHint"), aiBtn: B("bkAiBtn"), aiSt: B("bkAiSt"), status: B("bkStatus"), list: B("bkList"), empty: B("bkEmpty"), more: B("bkMore"),
     sheet: B("txSheet"), back: B("txBack"), close: B("txClose"), title: B("txTitle"), amt: B("txAmt"), meta: B("txMeta"), sugg: B("txSugg"),
-    cats: B("txCats"), note: B("txNote"), ok: B("txOk"), prog: B("txProg"), q: B("txQ"), pos: B("txPos"), bar: B("txBar"), ava: B("txAva"),
+    cats: B("txCats"), ok: B("txOk"), prog: B("txProg"), q: B("txQ"), pos: B("txPos"), bar: B("txBar"), ava: B("txAva"),
     main: B("txMain"), data: B("txData"), mini: B("txMini"), miniAva: B("txMiniAva"), miniName: B("txMiniName"),
-    miniAmt: B("txMiniAmt"), scroll: B("txScroll"), noteRow: B("txNoteRow"), cmt: B("txCmt"), skip: B("txSkip"), backMain: B("txBackMain"), split: B("txSplit") };
+    miniAmt: B("txMiniAmt"), scroll: B("txScroll"), cmt: B("txCmt"), skip: B("txSkip"), backMain: B("txBackMain"), split: B("txSplit") };
+  var cm = { sheet: B("cmSheet"), list: B("cmList"), close: B("cmClose"), back: B("cmBack"), edit: null, gone: {} }; // «Комментарии для Claude»: edit — id в правке, gone — удаленные {id: текст} для «Вернуть»
   function bkStatus(t, kind) { bel.status.textContent = t || ""; bel.status.className = "status" + (kind ? " " + kind : ""); }
   function bkOverlay(t) { // операция с его еще не отправленными решениями поверх ответа сервера
     var q = null; for (var i = 0; i < bk.queue.length; i++) if (bk.queue[i].id === t.id) q = bk.queue[i];
@@ -1442,10 +1469,10 @@ button.txd-row:active { background: var(--chip); }
     bu.box.style.bottom = open ? "auto" : (r.height ? window.innerHeight - r.top + 8 : 16) + "px";
     bel.sheet.classList.toggle("undo-on", open);
   }
-  function bkUndoShow(t, d, prev, reopen, note) { // d — решение {category, subcategory, parts} или null (снята); note — комментарий, который пришел с ним (undefined — не трогало)
+  function bkUndoShow(t, d, prev, reopen) { // d — решение {category, subcategory, parts} или null (снята)
     if (!document.body.classList.contains("tab-bank")) return; // успел уйти из раздела — решение просто уйдет через 4 с
     if (undo) clearTimeout(undo.timer);
-    undo = { id: t.id, prev: prev, reopen: reopen, note: note, until: Date.now() + UNDO_MS };
+    undo = { id: t.id, prev: prev, reopen: reopen, until: Date.now() + UNDO_MS };
     bu.t.textContent = ""; var b = document.createElement("b"); b.textContent = d && d.category ? "✓ " + decText(d) : "Категория снята"; bu.t.appendChild(b);
     var who = txName(t); if (who) { var sm = document.createElement("small"); sm.textContent = who; bu.t.appendChild(sm); }
     bu.box.hidden = true; void bu.box.offsetWidth; bkUndoPlace(); bu.box.hidden = false; // заново — полоска времени с начала
@@ -1455,22 +1482,18 @@ button.txd-row:active { background: var(--chip); }
   bu.btn.addEventListener("click", function () {
     var u = undo; bkUndoHide();
     if (!u || Date.now() > u.until) return; // срок вышел — решение уже может уходить в базу
-    var cur = !bel.sheet.hidden ? bkFind(bk.cur) : null, dn = bel.note.value.trim();
-    if (cur && cur.id !== u.id && dn !== (cur.note || "")) bkDecide(cur.id, { note: dn }); // черновик комментария следующей не теряем
     var q = null; for (var i = 0; i < bk.queue.length; i++) if (bk.queue[i].id === u.id) q = bk.queue[i];
     if (!q) return;
     var p = u.prev || {}; // возвращаем только то, что меняло это решение; поправленное позже (комментарий) остается
     if (p.category === undefined) { delete q.category; delete q.subcategory; delete q.parts; } else { q.category = p.category; q.subcategory = p.subcategory; q.parts = p.parts; }
-    if (u.note !== undefined) { if (p.note === undefined) delete q.note; else q.note = p.note; }
     if (p.hold) q.hold = p.hold; else delete q.hold;
     q.v++;
     if (q.category === undefined && q.note === undefined) bk.queue.splice(bk.queue.indexOf(q), 1); // больше нечего отправлять
     ls("bank_queue", bk.queue);
     bkRender();
     delete bk.sess[u.id]; // в очереди он снова не разобран
-    if (u.reopen) { // из листа — назад к этой операции, с набранным комментарием
+    if (u.reopen) { // из листа — назад к этой операции
       bk.okLock = Date.now() + 350; txOpen(u.id, true);
-      if (u.note !== undefined) { bel.note.value = u.note; bel.noteRow.hidden = !u.note; txFoot(); bkUndoPlace(); }
     }
     else { var li = bel.list.querySelector('.bk-item[data-id="' + u.id + '"]'); if (li) li.classList.add("back"); }
     if (bk.queue.length) { clearTimeout(bk.timer); bk.timer = setTimeout(bkSend, 900); }
@@ -1546,8 +1569,6 @@ button.txd-row:active { background: var(--chip); }
   function txPending() { var from = bk.data ? bk.data.review_from : ""; return bkItems().filter(function (x) { return bkNeeds(x) && String(x.date) >= from; }); }
   function txOpen(id, cont) { // cont — переход внутри разбора (следующая, отмена, похожая); с нуля — новая очередь
     var t = bkFind(id); if (!t) return;
-    var was = bk.cur && bk.cur !== id && !bel.sheet.hidden ? bkFind(bk.cur) : null, dn = bel.note.value.trim();
-    if (was && dn !== (was.note || "")) bkDecide(was.id, { note: dn }); // черновик комментария прежней не теряем
     if (!cont) { bk.sess = {}; bk.skipped = {}; bk.skipN = 0; }
     bk.cur = id; bk.view = t.category === SPLIT ? "split" : "main"; bk.sp = bk.view === "split" ? spFrom(t) : null;
     var sg0 = bkNeeds(t) ? t.sugg : null; // раскрыта категория решения или подсказки, если у нее подкатегории
@@ -1555,7 +1576,7 @@ button.txd-row:active { background: var(--chip); }
     bk.sel = t.category && t.category !== SPLIT ? { category: t.category, subcategory: t.subcategory || null } : null; // выбор в листе, еще не сохранен
     if (bkNeeds(t) && sg0) bk.sel = { category: sg0.category, subcategory: sg0.subcategory || null }; // ждет решения — выбрана подсказка
     bel.split.textContent = "";
-    bel.note.value = t.note || ""; bel.noteRow.hidden = !t.note;
+    cm.edit = null; cm.gone = {};
     txFill(); bel.sheet.hidden = false;
     var sc = bel.scroll, on = bel.cats.querySelector(".tx-tile.sug, .tx-tile.on");
     sc.scrollTop = 0;
@@ -1604,7 +1625,7 @@ button.txd-row:active { background: var(--chip); }
       b.textContent = sg.source === "ai" ? "✦ Claude" : sg.source === "purchase" ? "≈ Как покупка" : "≈ Как раньше"; a.appendChild(b); // возврат — в категорию покупки на ту же сумму
       if (sg.source === "ai" && why) w.textContent = ": «" + why + "»"; else if (sg.source !== "ai" && why) w.textContent = ": " + why; a.appendChild(w);
     }
-    var said = t.category ? t.note || (sg && sg.note) : sg && sg.note; if (said) add("yb", "💬 «" + said + "»"); // размечена до подкатегорий — его комментарий
+    var said = t.note || (sg && sg.note); if (said) add("yb", "💬 «" + said + "»"); // его комментарий; нет — прежний к продавцу (из подсказки)
     var h = document.createElement("button"), ht = document.createElement("span"), hb = document.createElement("b"); h.type = "button"; h.className = "hs"; h.addEventListener("click", txShowData);
     if (dup && dup.verdict === "possible") { h.className = "hs warn"; ht.textContent = "⚠ Возможен дубль"; }
     else if (sim && sim.length) {
@@ -1628,14 +1649,15 @@ button.txd-row:active { background: var(--chip); }
     var a = txAct(t), em = bk.sel && a.ready && (a.act === "accept" || a.act === "save") ? " " + txEm(catSplit(bk.sel.category).em) : "";
     bel.ok.hidden = data ? true : split ? false : a.act === "none";
     bel.ok.disabled = split ? !spValid().ok : !a.ready; // ждет решения и ничего не выбрано — кнопка на месте, неактивна (низ не прыгает)
-    bel.ok.textContent = split ? spOkText() : !a.ready ? "Сохранить" : a.act === "accept" ? "✓ Принять" + em : a.act === "clear" ? "Снять категорию" : a.act === "note" ? "Сохранить" : "✓ Сохранить" + em;
+    bel.ok.textContent = split ? spOkText() : !a.ready ? "Сохранить" : a.act === "accept" ? "✓ Принять" + em : a.act === "clear" ? "Снять категорию" : "✓ Сохранить" + em;
     bel.ok.className = "tx-b pri" + (!split && a.act === "clear" ? " unset" : "");
     bel.ok.setAttribute("aria-label", split ? spOkText() : a.act === "accept" ? "Принять подсказку: " + decText(bk.sel) : a.act === "clear" ? "Снять категорию" :
-      a.act === "note" ? "Сохранить комментарий" : bk.sel && a.ready ? "Сохранить: " + decText(bk.sel) : "Сначала выбери категорию");
+      bk.sel && a.ready ? "Сохранить: " + decText(bk.sel) : "Сначала выбери категорию");
     var three = !bel.ok.hidden && !bel.skip.hidden && !bel.cmt.hidden;
-    bel.cmt.className = "tx-b" + (three || (!bel.ok.hidden && !bel.cmt.hidden) ? " icon" : "");
-    bel.cmt.textContent = bel.cmt.className.indexOf("icon") > 0 ? "💬" : "💬 Комментарий";
-    bel.cmt.setAttribute("aria-expanded", bel.noteRow.hidden ? "false" : "true");
+    var ic = three || (!bel.ok.hidden && !bel.cmt.hidden), has = !!(t.note && String(t.note).trim());
+    bel.cmt.className = "tx-b" + (ic ? " icon" : "") + (has ? " has" : ""); // точка — у операции есть комментарий
+    bel.cmt.textContent = ic ? "💬" : "💬 Комментарий";
+    bel.cmt.setAttribute("aria-label", has ? "Комментарии для Claude: у операции есть" : "Комментарии для Claude");
   }
   function txFade() { var sc = bel.scroll; sc.classList.toggle("more", sc.scrollTop + sc.clientHeight < sc.scrollHeight - 4); }
   // следующая: неразобранная ниже по списку, потом сверху; пропущенные — в конце, по порядку пропуска
@@ -1648,12 +1670,8 @@ button.txd-row:active { background: var(--chip); }
     for (i = 0; i < all.length; i++) if (open(all[i]) && (!best || bk.skipped[all[i].id] < bk.skipped[best.id])) best = all[i];
     return best ? best.id : null;
   }
-  function txHide() { bel.sheet.hidden = true; bk.cur = null; bel.note.blur(); if (undo) bkUndoPlace(); }
-  function txClose() {
-    var t = bkFind(bk.cur), n = bel.note.value.trim();
-    if (t && n !== (t.note || "")) bkDecide(t.id, { note: n }); // комментарий без категории тоже сохраняется
-    txHide();
-  }
+  function txHide() { bel.sheet.hidden = true; cm.sheet.hidden = true; bk.cur = null; if (undo) bkUndoPlace(); }
+  function txClose() { txHide(); } // комментарии сохраняются в своем листе сразу
   // решение по кнопке листа (4 с «Отменить»); d — {category, subcategory?, parts?}, category «» — снять (операция снова без
   // категории); двойное нажатие не проходит
   function txSelect(c, sub) { // касание плитки или подкатегории — только выбор; то же еще раз — выбор снят
@@ -1663,12 +1681,12 @@ button.txd-row:active { background: var(--chip); }
   }
   function selDone(x) { return !!x && !!x.category && (!subsOf(x.category).length || !!x.subcategory); } // можно сохранять
   function selSame(a, b) { return (a ? a.category : null) === (b ? b.category : null) && ((a && a.subcategory) || null) === ((b && b.subcategory) || null); }
-  // что сделает кнопка листа: {act: accept | save | clear | note | none, ready}
+  // что сделает кнопка листа: {act: accept | save | clear | none, ready}
   function txAct(t) {
     var sel = bk.sel, needs = bkNeeds(t), sg = needs ? t.sugg : null;
     if (needs) return { act: sg && selSame(sel, sg) ? "accept" : "save", ready: selDone(sel) };
     var changed = t.category === SPLIT ? !!sel : !selSame(sel, { category: t.category, subcategory: t.subcategory || null });
-    if (!changed) return { act: bel.note.value.trim() !== (t.note || "") ? "note" : "none", ready: true };
+    if (!changed) return { act: "none", ready: true };
     return sel ? { act: "save", ready: selDone(sel) } : { act: "clear", ready: true };
   }
   function txCommit(d, tile) {
@@ -1677,15 +1695,14 @@ button.txd-row:active { background: var(--chip); }
     bk.okLock = Date.now() + 500;
     if (tile) tile.classList.add("tap");
     setTimeout(function () {
-      var here = bk.cur === t.id, n = bel.note.value.trim(), wasNew = bkNeeds(t), v = { category: d.category, subcategory: d.subcategory || null, parts: d.parts || null };
-      if (here && n !== (t.note || "")) v.note = n;
+      var here = bk.cur === t.id, wasNew = bkNeeds(t), v = { category: d.category, subcategory: d.subcategory || null, parts: d.parts || null };
       var prev = bkDecide(t.id, v, true);
       if (wasNew) bk.sess[t.id] = 1;
       if (here) {
         var nx = wasNew ? txNext(t.id) : null;
         if (nx) { bk.okLock = Date.now() + 350; txOpen(nx, true); } else txHide();
       }
-      bkUndoShow(t, v.category ? v : null, prev, true, v.note); // набранный комментарий при отмене вернется в поле
+      bkUndoShow(t, v.category ? v : null, prev, true);
     }, tile ? 140 : 0);
   }
   // сетка категорий: плитка — выбор; у категории с подкатегориями — раскрыть их строкой под плиткой (dense ставит соседнюю
@@ -1839,23 +1856,18 @@ button.txd-row:active { background: var(--chip); }
     if (bk.view === "split") { spSave(); return; }
     var a = txAct(t);
     if (!a.ready || a.act === "none") return;
-    if (a.act === "note") { txClose(); return; } // только комментарий к размеченной
     if (a.act === "clear") { txCommit({ category: "" }, null); return; }
     txCommit({ category: bk.sel.category, subcategory: bk.sel.subcategory || null }, null);
   });
   bel.skip.addEventListener("click", function () {
     if (Date.now() < bk.okLock) return;
     var t = bkFind(bk.cur); if (!t) return;
-    var n = bel.note.value.trim(); if (n !== (t.note || "")) bkDecide(t.id, { note: n });
     bk.skipped[t.id] = ++bk.skipN;
     var nx = txNext(t.id);
     if (nx) { bk.okLock = Date.now() + 350; txOpen(nx, true); } else txHide();
   });
-  bel.cmt.addEventListener("click", function () {
-    bel.noteRow.hidden = !bel.noteRow.hidden;
-    if (!bel.noteRow.hidden) bel.note.focus(); else bel.note.blur();
-    txFoot(); if (undo) bkUndoPlace();
-  });
+  bel.cmt.addEventListener("click", cmOpen);
+  cm.close.addEventListener("click", cmClose); cm.back.addEventListener("click", cmClose);
   // «Похожие и данные банка»: второй вид листа; данные — с сервера по требованию, пока лист открыт — из памяти
   function txView() {
     var data = bk.view === "data", split = bk.view === "split", t = bkFind(bk.cur);
@@ -1875,11 +1887,87 @@ button.txd-row:active { background: var(--chip); }
     api("bank_tx", { id: id }).then(function (j) {
       bk.txc[id] = j;
       var t = bk.cur === id ? bkFind(id) : null; if (!t) return;
+      if (!cm.sheet.hidden) cmPast();
       if (bk.view === "data") { txRenderData(); txFade(); } else txCard(t);
     }).catch(function (e) {
       if (!bk.txc[id] || bk.txc[id].loading) bk.txc[id] = { err: explain(e) };
+      if (bk.cur === id && !cm.sheet.hidden) cmPast();
       if (bk.cur === id && bk.view === "data") txRenderData();
     });
+  }
+  // ---------- «Комментарии для Claude» (его слово 10.11.2026): отдельный лист по кнопке 💬 — комментарий этой операции и прежние
+  // к этому продавцу (дата, сумма и категория их операций); изменить, дополнить, удалить; сохраняется сразу, отдельно от категории
+  function cmQueued(id) { for (var i = 0; i < bk.queue.length; i++) if (bk.queue[i].id === id && bk.queue[i].note !== undefined) return bk.queue[i].note; return undefined; }
+  function cmOpen() {
+    var t = bkFind(bk.cur); if (!t) return;
+    cm.gone = {}; cm.edit = String(t.note || "").trim() ? null : t.id; // своего нет — сразу поле «Добавить»
+    cm.sheet.hidden = false; cmRender(true); cm.sheet.querySelector(".cm-body").scrollTop = 0;
+    txLoad(t.id, false);
+  }
+  function cmClose() { cm.sheet.hidden = true; cm.edit = null; cm.gone = {}; var t = bkFind(bk.cur); if (t) { txCard(t); txFoot(); } }
+  function cmRender(focus) { // вся страница листа; после загрузки с сервера — только «Раньше» (cmPast), поле в правке не трогается
+    var t = bkFind(bk.cur); if (!t) { cm.sheet.hidden = true; return; }
+    var box = cm.list, nm = txName(t) || "этого продавца", h = document.createElement("p"), own = document.createElement("div"), past = document.createElement("div");
+    box.textContent = ""; h.className = "cm-hint"; h.textContent = "Claude учитывает их, когда подбирает категорию для «" + nm + "»."; box.appendChild(h);
+    own.id = "cmOwn"; past.id = "cmPast"; cmSec(box, "Эта операция"); box.appendChild(own); cmSec(box, "Раньше к «" + nm + "»"); box.appendChild(past);
+    own.appendChild(cmItem({ id: t.id, note: t.note || "" }, true)); cmPast();
+    var ta = focus && box.querySelector("textarea"); if (ta) { ta.focus(); var L = ta.value.length; ta.setSelectionRange(L, L); }
+  }
+  function cmSec(box, title) { var e = document.createElement("div"); e.className = "txd-h"; e.textContent = title; box.appendChild(e); }
+  function cmPast() {
+    var box = document.getElementById("cmPast"), t = bkFind(bk.cur); if (!box || !t) return;
+    var info = bk.txc[t.id], msg = function (txt) { var e = document.createElement("p"); e.className = "cm-msg"; e.textContent = txt; box.appendChild(e); return e; };
+    box.textContent = "";
+    if (!info || info.loading) { msg("Загружаю…"); return; }
+    if (info.err) {
+      var m = msg("Не загрузилось: " + info.err + " "), rb = document.createElement("button"); rb.type = "button"; rb.className = "txd-retry"; rb.textContent = "Повторить";
+      rb.addEventListener("click", function () { delete bk.txc[t.id]; cmPast(); txLoad(t.id, true); }); m.appendChild(rb); return;
+    }
+    var list = (info.notes || []).filter(function (o) { var q = cmQueued(o.id); return String(q !== undefined ? q : o.note || "").trim() || cm.gone[o.id] !== undefined; });
+    if (!list.length) { msg("Других комментариев к этому продавцу нет"); return; }
+    var l = document.createElement("div"); l.className = "cm-cards"; box.appendChild(l);
+    list.forEach(function (o) { l.appendChild(cmItem(o, false)); });
+    if (info.notes_more) msg("Показаны последние 50");
+  }
+  function cmSet(id, v) { // сразу на экране: своя — через очередь решений, прежние — в памяти листа; в базу — пачкой, как решения
+    bkDecide(id, { note: v });
+    var info = bk.txc[bk.cur]; if (info && info.notes) info.notes.forEach(function (o) { if (o.id === id) o.note = v; });
+    var t = bkFind(bk.cur); if (t) { txCard(t); txFoot(); }
+  }
+  function cmItem(o, own) {
+    var w = document.createElement("div"), id = o.id, q = cmQueued(id), note = String(q !== undefined ? q : o.note || "").trim(), add = function (tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt) e.textContent = txt; w.appendChild(e); return e; };
+    var btn = function (box, txt, cls, fn) { var b = document.createElement("button"); b.type = "button"; b.className = cls; b.textContent = txt; b.addEventListener("click", fn); box.appendChild(b); return b; };
+    w.className = "cm-item" + (own ? " own" : "");
+    if (!own) add("div", "cm-meta", shortDate(o.date) + " · " + money(o.amount, o.currency) + (o.category ? " · " + (o.category === SPLIT ? "✂ Разделено" : decText(o)) : ""));
+    var acts;
+    if (!note && cm.gone[id] !== undefined && cm.edit !== id) { // удален — можно вернуть, пока лист открыт
+      add("div", "cm-gone", "Комментарий удален"); acts = add("div", "cm-acts");
+      btn(acts, "Вернуть", "cm-a", function () { var v = cm.gone[id]; delete cm.gone[id]; cmSet(id, v); cmRender(); });
+      return w;
+    }
+    if (cm.edit === id) {
+      var ta = document.createElement("textarea"); ta.className = "cm-ta"; ta.rows = 1; ta.maxLength = 500; ta.value = note; ta.setAttribute("enterkeyhint", "done");
+      ta.placeholder = "Что это и куда относить"; ta.setAttribute("aria-label", "Комментарий для Claude"); w.appendChild(ta);
+      acts = add("div", "cm-acts");
+      if (note) btn(acts, "Отмена", "cm-a mute", function () { cm.edit = null; cmRender(); });
+      var sv = btn(acts, "Сохранить", "cm-save", function () { cmSave(id, ta.value, note); });
+      var grow = function () { ta.style.height = "auto"; ta.style.height = ta.scrollHeight + 2 + "px"; sv.disabled = ta.value.trim() === note; };
+      ta.addEventListener("input", grow); ta.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); if (!sv.disabled) cmSave(id, ta.value, note); else ta.blur(); } });
+      setTimeout(grow, 0); sv.disabled = true;
+      return w;
+    }
+    if (!note) { btn(w, "＋ Добавить комментарий", "cm-a cm-add", function () { cm.edit = id; cmRender(true); }); return w; }
+    add("div", "cm-text", note); acts = add("div", "cm-acts");
+    btn(acts, "Изменить", "cm-a", function () { cm.edit = id; cmRender(true); });
+    btn(acts, "Удалить", "cm-a del", function () { cm.gone[id] = note; if (cm.edit === id) cm.edit = null; cmSet(id, ""); cmRender(); });
+    return w;
+  }
+  function cmSave(id, raw, was) {
+    var v = String(raw || "").replace(/\s+/g, " ").trim().slice(0, 500); // как сохранит сервер: одной строкой
+    cm.edit = null;
+    if (v === was) { cmRender(); return; }
+    if (!v) cm.gone[id] = was; // стер все — это удаление, его можно вернуть
+    cmSet(id, v); cmRender();
   }
   function txSec(box, title, note) {
     var h = document.createElement("div"), a = document.createElement("span"), b = document.createElement("em");
@@ -1938,8 +2026,6 @@ button.txd-row:active { background: var(--chip); }
     if (bf.reference && String(bf.remittance || "").indexOf(bf.reference) < 0) txRow(bl, "Референс", bf.reference, { mono: true, copy: bf.reference });
   }
   bel.close.addEventListener("click", txClose); bel.back.addEventListener("click", txClose);
-  bel.note.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); bel.note.blur(); } });
-  bel.note.addEventListener("input", txFoot);
   B("txScroll").addEventListener("scroll", txFade, { passive: true });
   bel.review.addEventListener("click", function () { bk.filter = "review"; prefs.bkFilter = "review"; ls("cash_prefs", prefs); bkRender(); window.scrollTo(0, 0); });
   bel.all.addEventListener("click", function () { bk.filter = "all"; prefs.bkFilter = "all"; ls("cash_prefs", prefs); bkRender(); window.scrollTo(0, 0); });
@@ -2043,8 +2129,9 @@ button.txd-row:active { background: var(--chip); }
   sheetSwipe(el.sheet, null, sheetClose);
   sheetSwipe(el.countSheet, null, countClose);
   sheetSwipe(bel.sheet, ".tx-scroll", txClose);
+  sheetSwipe(cm.sheet, null, cmClose);
   sheetSwipe(bel.bankSheet, null, function () { bel.bankSheet.hidden = true; });
-  document.addEventListener("keydown", function (e) { if (e.key === "Escape") { if (!el.sheet.hidden) sheetClose(); if (!el.countSheet.hidden) countClose(); if (!bel.sheet.hidden) txClose(); if (!bel.bankSheet.hidden) bel.bankSheet.hidden = true; } });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") { if (!cm.sheet.hidden) { cmClose(); return; } if (!el.sheet.hidden) sheetClose(); if (!el.countSheet.hidden) countClose(); if (!bel.sheet.hidden) txClose(); if (!bel.bankSheet.hidden) bel.bankSheet.hidden = true; } });
   el.comment.addEventListener("input", renderTpl);
   el.btnClear.addEventListener("pointerdown", function (e) { e.preventDefault(); }); // не ронять клавиатуру, если она открыта
   el.btnClear.addEventListener("click", function () { el.comment.value = ""; renderTpl(); if (document.activeElement === el.comment) el.comment.focus(); });
