@@ -162,7 +162,7 @@ body.locked .bk-undo { display: none; }
 .bk-meta { grid-area: m; min-width: 0; color: var(--muted); font-size: calc(13 * var(--u)); line-height: calc(18 * var(--u)); overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; } /* назначение — до двух строк */
 .bk-meta .pend { color: var(--warn); font-weight: 600; }
 .bk-sub { grid-area: s; min-width: 0; color: var(--muted); font-size: calc(14 * var(--u)); line-height: calc(19 * var(--u)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* категория — одной строкой, целиком (его слово 09.11.2026); многоточие — только если не влезла и мелким шрифтом (очень крупный системный текст) */
-.bk-sub.sg, .bk-sub.pick { color: var(--accent); } .bk-sub.sg.guess { color: var(--muted); } /* предположение Claude — серым, принять только в листе */ /* подсказка и «Выбрать категорию» — цветом, без жирного (его слово 09.11.2026: все-таки выделять) */ .bk-sub.wait { opacity: .7; }
+.bk-sub.sg, .bk-sub.pick { color: var(--accent); } /* подсказка и «Выбрать категорию» — цветом, без жирного (его слово 09.11.2026: все-таки выделять) */ .bk-sub.wait { opacity: .7; }
 .bk-ok { grid-area: ok; justify-self: end; align-self: start; position: relative; margin: 2px 0 -8px; width: calc(37 * var(--u) + 3px); height: calc(37 * var(--u) + 3px); padding: 0; border: 0; border-radius: 50%; background: color-mix(in srgb, var(--accent) 13%, var(--surface)); color: var(--accent); font-size: 18px; font-weight: 700; line-height: 1; display: flex; align-items: center; justify-content: center; }
 .bk-ok::before { content: ""; position: absolute; inset: -4px; } /* касание — не меньше 44px */
 @media (prefers-color-scheme: dark) { .bk-ok { background: color-mix(in srgb, var(--accent) 22%, var(--surface)); } } /* в темной кружок заметнее */
@@ -671,7 +671,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "140"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "141"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -1162,7 +1162,7 @@ button.txd-row:active { background: var(--chip); }
   var SPLIT = "✂ Разделено";
   function subsOf(cat) { var s = bk.data && bk.data.subcategories; return (s && cat && s[cat]) || []; }
   function bkNeeds(t) { return !t.category || (t.category !== SPLIT && subsOf(t.category).length > 0 && !t.subcategory); } // ждет его решения
-  function sgReady(sg) { return !!sg && !sg.guess && (!subsOf(sg.category).length || !!sg.subcategory); } // догадку Claude (guess) — только через лист: не принять вслепую (его «ок» 12.11.2026) // подсказку можно принять одним касанием
+  function sgReady(sg) { return !!sg && (!subsOf(sg.category).length || !!sg.subcategory); } // подсказку можно принять одним касанием; уверенность не показываем — одна рекомендация (его слово 12.11.2026) // подсказку можно принять одним касанием
   function splitLabel(parts) {
     var em = []; (parts || []).forEach(function (x) { var e = catSplit(x.category).em; if (e && em.indexOf(e) < 0) em.push(e); });
     return SPLIT + (em.length ? " · " + em.join(" ") : "");
@@ -1188,8 +1188,8 @@ button.txd-row:active { background: var(--chip); }
     r.className = "bk-sub";
     if (!needs) { full = decText(t); short = t.category === SPLIT ? "" : decShort(t); if (t.wait) r.className += " wait"; }
     else if (sg) {
-      var pre = sg.source === "ai" ? "✦ " : "≈ "; r.className += sg.guess ? " sg guess" : " sg"; full = pre + decText(sg); short = sg.subcategory ? pre + decShort(sg) : "";
-      r.title = sg.guess ? "предположение Claude" : sg.source === "ai" ? "подсказка Claude" : sg.source === "purchase" ? "как покупка на ту же сумму" : "по твоим прошлым решениям";
+      var pre = "✦ "; r.className += " sg"; full = pre + decText(sg); short = sg.subcategory ? pre + decShort(sg) : ""; // одна рекомендация: ✦, без источника и уверенности (его слово 12.11.2026)
+      r.title = "рекомендация";
     }
     else if (t.category) { r.className += " pick"; full = catLabel(t.category) + " · уточнить"; } // размечена до подкатегорий
     else { r.className += " pick"; full = "Выбрать категорию"; }
@@ -1627,7 +1627,7 @@ button.txd-row:active { background: var(--chip); }
     var sim = info && info.similar ? info.similar : null, dup = info && info.dup, byHist = sg && (sg.source === "merchant" || sg.source === "brand") && sim && sim.length; // подсказка по прошлым — это и есть строка «Раньше»
     if (sg && !byHist) {
       var a = add("ai"), b = document.createElement("b"), w = document.createElement("span"), why = sg.why && sg.why !== "предложение Claude" ? sg.why : "";
-      b.textContent = sg.source === "ai" ? (sg.guess ? "✦ Claude · предположение" : "✦ Claude") : sg.source === "purchase" ? "≈ Как покупка" : "≈ Как раньше"; a.appendChild(b); // возврат — в категорию покупки на ту же сумму
+      b.textContent = sg.source === "ai" ? "✦ Claude" : sg.source === "purchase" ? "✦ Как покупка" : "✦ Как раньше"; a.appendChild(b); // возврат — в категорию покупки на ту же сумму
       if (sg.source === "ai" && why) w.textContent = ": «" + why + "»"; else if (sg.source !== "ai" && why) w.textContent = ": " + why; a.appendChild(w);
     }
     var said = t.note || (sg && sg.note); if (said) add("yb", "💬 «" + said + "»"); // его комментарий; нет — прежний к продавцу (из подсказки)
@@ -1638,7 +1638,7 @@ button.txd-row:active { background: var(--chip); }
       for (k in n) if (!top || n[k] > n[top]) top = k;
       var cnt = sim.length + (info.similar_more ? "+" : ""), word = sim.length % 10 >= 2 && sim.length % 10 <= 4 && (sim.length % 100 < 10 || sim.length % 100 >= 20) ? " раза" : " раз";
       if (byHist) h.className = "hs ai";
-      ht.textContent = (byHist ? "≈ " : "") + "Раньше " + cnt + word + (top ? ": " + catLabel(top) + (n[top] < sim.length ? " ×" + n[top] : "") : ", без категории");
+      ht.textContent = (byHist ? "✦ " : "") + "Раньше " + cnt + word + (top ? ": " + catLabel(top) + (n[top] < sim.length ? " ×" + n[top] : "") : ", без категории");
     } else if (sim) ht.textContent = "Раньше не было";
     hb.textContent = "Подробнее ›"; h.appendChild(ht); h.appendChild(hb); c.appendChild(h);
   }
