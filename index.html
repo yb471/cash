@@ -590,7 +590,7 @@ button.txd-row:active { background: var(--chip); }
   <button class="tab on" type="button" data-tab="cash" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 9.5v5M18 9.5v5"/></svg>Cash</button>
   <button class="tab" type="button" data-tab="bank"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9.5 12 4l9 5.5"/><path d="M4 20h16"/><path d="M6 11v6M10 11v6M14 11v6M18 11v6"/></svg>Bank</button>
   <button class="tab" type="button" data-tab="debts"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-2-1.5-2 1.5-2-1.5-2 1.5-2-1.5L6 21z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>Debts</button> <!-- его слово 13.11.2026: возле Bank, пока заглушка -->
-  <button class="tab" type="button" data-tab="invest"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 17 6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Invest</button>
+  <button class="tab" type="button" data-tab="assets"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 17 6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Assets</button> <!-- было Invest, его слово 13.11.2026 -->
 </div></nav>
 
 <div class="sheet" id="sheet" hidden>
@@ -671,7 +671,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "154"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "155"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -2132,12 +2132,12 @@ button.txd-row:active { background: var(--chip); }
   // клавиатура открыта — видимая часть окна заметно ниже окна (фокус без касания на iOS клавиатуру не открывает, по нему не судим)
   window.addEventListener("resize", function () { bkFitSub(); }); // поворот, смена размера текста
   if (window.visualViewport) { var vv = window.visualViewport; vv.addEventListener("resize", function () { document.body.classList.toggle("kb", vv.height < window.innerHeight * 0.8); }); }
-  var SECTIONS = { dashboard: "Dashboard", cash: "Cash YB", bank: "Bank", debts: "Debts", invest: "Invest" };
+  var SECTIONS = { dashboard: "Dashboard", cash: "Cash YB", bank: "Bank", debts: "Debts", assets: "Assets" };
   Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (b) {
     b.addEventListener("click", function () {
       var t = b.getAttribute("data-tab");
       Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (x) { var on = x === b; x.classList.toggle("on", on); if (on) x.setAttribute("aria-current", "page"); else x.removeAttribute("aria-current"); });
-      document.body.classList.toggle("tab-other", t === "dashboard" || t === "debts" || t === "invest");
+      document.body.classList.toggle("tab-other", t === "dashboard" || t === "debts" || t === "assets");
       document.body.classList.toggle("tab-bank", t === "bank");
       bkUndoHide(); // ушел из раздела — решение остается и уйдет в базу
       $("section").textContent = SECTIONS[t];
