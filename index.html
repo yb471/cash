@@ -211,7 +211,7 @@ body.locked .bk-undo { display: none; }
 /* логотип продавца (его «да» 08.11.2026): картинка от функции cash поверх букв; не загрузилась — остаются буквы */
 .ava { position: relative; overflow: hidden; }
 .ava img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #FFFFFF; opacity: 0; transition: opacity .15s ease-out; }
-.ava.lg img { opacity: 1; }
+.ava.lg img { opacity: 1; } .ava.now img { transition: none; } /* уже показанный логотип — сразу, без проявления (его слово 13.11.2026) */
 .ava.lg { box-shadow: 0 0 0 1px var(--line); }
 /* шапка: логотип на две строки; имя и сумма — первая строка, «день, дата · тип» — вся ширина под ними (длинная сумма не сжимает дату) */
 .tx-who { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "ava n amt" "ava m m"; column-gap: 12px; align-items: start; padding-top: 2px; }
@@ -671,7 +671,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "157"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "158"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -1565,6 +1565,11 @@ button.txd-row:active { background: var(--chip); }
     try { if (window.Intl && Intl.Segmenter && s) return new Intl.Segmenter("ru", { granularity: "grapheme" }).segment(s).containing(0).segment; } catch (e) { /* старый Safari */ }
     return s;
   }
+  // логотипы, которые телефон уже показывал (его слово 13.11.2026: «вижу, как подгружаются»): при перерисовке списка — сразу,
+  // без букв и проявления; помнит и после перезапуска (картинки — из HTTP-кэша, функция отдает их на 30 дней)
+  var bkLogoOk = {}, bkLogoT = null;
+  (ls("bk_logos") || []).forEach(function (k) { bkLogoOk[k] = 1; });
+  function bkLogoSeen(k) { if (bkLogoOk[k]) return; bkLogoOk[k] = 1; clearTimeout(bkLogoT); bkLogoT = setTimeout(function () { ls("bk_logos", Object.keys(bkLogoOk).slice(-600)); }, 1000); }
   function txAva(node, name, logo) { // буквы на мягком цвете, цвет по имени — всегда один и тот же; есть логотип — он поверх букв
     var key = name + "|" + (logo || "");
     if (node.dataset.k === key) return; // тот же продавец (перерисовка листа) — не трогать, без мигания
@@ -1573,12 +1578,13 @@ button.txd-row:active { background: var(--chip); }
     for (i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % 9973;
     node.textContent = ((w[0] || "?").charAt(0) + (w[1] ? w[1].charAt(0) : "")).toUpperCase();
     node.style.setProperty("--h", AVA[h % AVA.length]);
-    node.classList.remove("lg");
+    node.classList.remove("lg", "now");
     if (!logo) return;
-    var im = document.createElement("img");
-    im.alt = ""; im.decoding = "async"; im.referrerPolicy = "no-referrer";
-    im.onload = function () { if (node.dataset.k === key) node.classList.add("lg"); };
-    im.onerror = function () { im.remove(); };
+    var im = document.createElement("img"), known = !!bkLogoOk[logo]; // уже показывался — из кэша, сразу на место букв
+    if (known) node.classList.add("lg", "now");
+    im.alt = ""; im.decoding = known ? "sync" : "async"; im.referrerPolicy = "no-referrer";
+    im.onload = function () { if (node.dataset.k === key) node.classList.add("lg"); bkLogoSeen(logo); };
+    im.onerror = function () { im.remove(); if (node.dataset.k === key) node.classList.remove("lg", "now"); delete bkLogoOk[logo]; };
     im.src = FN + "?logo=" + encodeURIComponent(logo);
     node.appendChild(im);
   }
