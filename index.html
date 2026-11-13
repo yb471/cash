@@ -579,7 +579,6 @@ button.txd-row:active { background: var(--chip); }
     <div class="status" id="bkStatus"></div>
     <ul class="bk-list" id="bkList"></ul>
     <div class="bk-empty" id="bkEmpty" hidden></div>
-    <button class="more-btn" id="bkMore" type="button" hidden></button>
   </section>
 </div>
 
@@ -668,7 +667,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "150"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "151"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -1126,7 +1125,7 @@ button.txd-row:active { background: var(--chip); }
   bk.queue.forEach(function (q) { delete q.hold; }); // после перезапуска отменять нечем — ничего не задерживаем (и часы не застопорят)
   var B = function (id) { return document.getElementById(id); };
   var bel = { bankBtn: B("bkBankBtn"), bankSheet: B("bkBankSheet"), bankList: B("bkBankList"), refresh: B("bkRefresh"), upd: B("bkUpd"), bankNm: B("bkBankNm"), search: B("bkQ"), qx: B("bkQx"), period: B("bkPeriod"), allN: B("bkAllN"), perSheet: B("bkPerSheet"), perBody: B("bkPerBody"), review: B("bkReview"), all: B("bkAll"), pendingN: B("bkPendingN"),
-    stPend: B("stPend"), stSuggP: B("stSuggP"), stAll: B("stAll"), stD30: B("stD30"), menu: B("bkMenu"), queueN: B("bkQueueN"), flush: B("bkFlush"), sheetLink: B("bkSheetLink"), access: B("bkAccess"), accessHint: B("bkAccessHint"), status: B("bkStatus"), list: B("bkList"), empty: B("bkEmpty"), more: B("bkMore"),
+    stPend: B("stPend"), stSuggP: B("stSuggP"), stAll: B("stAll"), stD30: B("stD30"), menu: B("bkMenu"), queueN: B("bkQueueN"), flush: B("bkFlush"), sheetLink: B("bkSheetLink"), access: B("bkAccess"), accessHint: B("bkAccessHint"), status: B("bkStatus"), list: B("bkList"), empty: B("bkEmpty"),
     sheet: B("txSheet"), back: B("txBack"), close: B("txClose"), title: B("txTitle"), amt: B("txAmt"), meta: B("txMeta"), sugg: B("txSugg"),
     cats: B("txCats"), ok: B("txOk"), prog: B("txProg"), q: B("txQ"), pos: B("txPos"), bar: B("txBar"), ava: B("txAva"),
     main: B("txMain"), data: B("txData"), mini: B("txMini"), miniAva: B("txMiniAva"), miniName: B("txMiniName"),
@@ -1150,12 +1149,13 @@ button.txd-row:active { background: var(--chip); }
   function bkMoney(n, cur) { return n ? money(n, cur) : "0,00 " + (SYM[cur] || cur); } // проверка карты на 0 — без знака и цвета
   function bkItems() { return bk.data && bk.data.items ? bk.data.items.map(bkOverlay) : []; }
   function bkFound() { // поиск и период — для обеих вкладок (его слово 13.11.2026: вкладки — итог поиска): {all, review}
-    var from = bk.data ? bk.data.review_from : "", q = bkQTokens(), pr = bkPeriodRange(), all = [], review = [];
+    // телефон держит все годы сразу (BK_FROM): период и поиск считаются здесь, без догрузки
+    var q = bkQTokens(), pr = bkPeriodRange(), all = [], review = [];
     bkItems().forEach(function (t) {
       var d = String(t.date);
       if (d < pr[0] || d >= pr[1] || (q.length && !bkMatch(t, q))) return;
       all.push(t);
-      if (d >= from && bkNeeds(t) && !bk.leaving[t.id]) review.push(t); // подтвержденная (и уезжающая после ✓) — не в «К проверке»
+      if (bkNeeds(t) && !bk.leaving[t.id]) review.push(t); // «К проверке» — все неразмеченные периода (его слово 13.11.2026); подтвержденная и уезжающая после ✓ — нет
     });
     return { all: all, review: review };
   }
@@ -1179,11 +1179,7 @@ button.txd-row:active { background: var(--chip); }
     return [p.y + "-" + String(p.m).padStart(2, "0") + "-01", ny + "-" + String(nm).padStart(2, "0") + "-01"];
   }
   function bkPeriodLabel() { var p = bk.period; return !p || !p.y ? "Все годы" : p.m ? MONTHS[p.m - 1] + " " + p.y : String(p.y); }
-  function bkPeriodFrom() { var r = bkPeriodRange(); return r[0] === "0000" ? "2020-01-01" : r[0].slice(0, 8) + "01"; } // начало периода для bank_list from
-  function bkEnsurePeriod() { // нужный период еще не загружен — догрузить с его начала («все годы» — с самого начала)
-    var want = bkPeriodFrom();
-    if (bk.data && bk.data.from && want < bk.data.from) { bkStatus("Загружаю…", ""); bkLoad(want); }
-  }
+  var BK_FROM = "2020-01-01"; // все годы одной загрузкой (его слово 13.11.2026): ~2400 операций, ~1 с — период переключается сразу
   function catLabel(c) { var p = catSplit(c); return (p.em ? p.em + " " : "") + p.nm; } // эмодзи вперед: короче и читается быстрее
   // подкатегории и разделение (его «да» 10.11.2026): у категории с подкатегориями решение — с подкатегорией; разделенная —
   // категория SPLIT и части [{amount, category, subcategory}]
@@ -1396,9 +1392,8 @@ button.txd-row:active { background: var(--chip); }
     var empty = !vis.length;
     bel.empty.hidden = !empty;
     bel.empty.innerHTML = bkQTokens().length ? "Ничего не найдено"
-      : bk.filter === "review" ? (pending.length ? "За этот период проверять нечего" : "<b>Все размечено ✓</b>Новые операции придут с ночной выгрузкой банка")
+      : bk.filter === "review" ? (items.some(bkNeeds) ? "За этот период проверять нечего" : "<b>Все размечено ✓</b>Новые операции придут с ночной выгрузкой банка")
       : bk.period && bk.period.y ? "За этот период операций нет" : "Операций пока нет";
-    bel.more.hidden = true; // «Показать <месяц>» заменен периодом
     bel.period.textContent = bkPeriodLabel();
   }
   // подход Claude: кнопка и понятное состояние — работает (с ходом) или закончил (когда и что изменил)
@@ -1444,18 +1439,10 @@ button.txd-row:active { background: var(--chip); }
     })
       .catch(function (e) { bk.aiStarting = false; bkAiRender(); bkStatus(explain(e), "err"); });
   }
-  function bkPrevMonth() { // месяц до самого раннего загруженного
-    if (!bk.data || !bk.data.from) return "";
-    var y = Number(bk.data.from.slice(0, 4)), m = Number(bk.data.from.slice(5, 7)) - 1;
-    if (m < 1) { m = 12; y--; }
-    return y + "-" + String(m).padStart(2, "0") + "-01";
-  }
   function bkApply(j) { connected(true); bk.data = j; bk.loaded = true; ls("bank_cache", j); prefs.bank = j.bank; ls("cash_prefs", prefs); bkRender(); if (!bel.sheet.hidden && bk.cur) txFill(); }
-  function bkLoad(from) {
+  function bkLoad() {
     if (!token()) { bkRender(); return Promise.resolve(false); }
-    var f = from || (bk.data && bk.data.from) || undefined;
-    if (bk.period !== undefined) { var w = bkPeriodFrom(); if (!f || w < f) f = w; } // период — сразу весь: числа на обеих вкладках
-    return api("bank_list", { bank: prefs.bank, from: f }).then(function (j) { bkApply(j); bkStatus("", ""); if (bk.queue.length) bkSend(); return true; })
+    return api("bank_list", { bank: prefs.bank, from: BK_FROM }).then(function (j) { bkApply(j); bkStatus("", ""); if (bk.queue.length) bkSend(); return true; })
       .catch(function (e) { if (e && e.code === "network") connected(false); if (e && e.code === "unauthorized") { token(null); showSetup("Код не подошел"); } bkStatus(explain(e), "err"); bkRender(); return false; });
   }
   function bkDecide(id, v, hold) { // его решение: сразу на экране, в базу — пачкой; hold — пока можно «Отменить», не отправляется
@@ -1485,7 +1472,7 @@ button.txd-row:active { background: var(--chip); }
       if (q.note !== undefined) o.note = q.note;
       return { op: o, q: q, v: q.v };
     });
-    api("bank_set", { bank: prefs.bank, from: bk.data && bk.data.from, items: batch.map(function (x) { return x.op; }) }).then(function (j) {
+    api("bank_set", { bank: prefs.bank, from: BK_FROM, items: batch.map(function (x) { return x.op; }) }).then(function (j) {
       bk.queue = bk.queue.filter(function (q) { return !batch.some(function (x) { return x.q === q && x.v === q.v; }); }); // поправленное за время отправки уйдет следующим
       ls("bank_queue", bk.queue); bk.sending = false; bkApply(j); bkStatus("", "");
       if (bk.queue.length) { clearTimeout(bk.timer); bk.timer = setTimeout(bkSend, 400); }
@@ -1603,7 +1590,7 @@ button.txd-row:active { background: var(--chip); }
     var p = String(t.remittance).split(" / ").filter(function (x) { x = x.trim(); return !/^(to|from|payment from|refund from)\b/i.test(x) && x.toLowerCase() !== cp; }).join(" / ").trim();
     return p && /\p{L}{3,}/u.test(p) && p.toLowerCase() !== String(t.counterparty || "").toLowerCase() ? p : "";
   }
-  function txPending() { var from = bk.data ? bk.data.review_from : ""; return bkItems().filter(function (x) { return bkNeeds(x) && String(x.date) >= from; }); }
+  function txPending() { return bkFound().review; } // очередь листа — «К проверке» текущего периода и поиска
   function txOpen(id, cont) { // cont — переход внутри разбора (следующая, отмена, похожая); с нуля — новая очередь
     var t = bkFind(id); if (!t) return;
     if (!cont) { bk.sess = {}; bk.skipped = {}; bk.skipN = 0; }
@@ -1702,9 +1689,10 @@ button.txd-row:active { background: var(--chip); }
   function txFade() { var sc = bel.scroll; sc.classList.toggle("more", sc.scrollTop + sc.clientHeight < sc.scrollHeight - 4); }
   // следующая: неразобранная ниже по списку, потом сверху; пропущенные — в конце, по порядку пропуска
   function txNext(afterId) {
-    var all = bkItems(), from = bk.data ? bk.data.review_from : "", pos = -1, i, best = null;
+    var all = bkItems(), inQ = {}, pos = -1, i, best = null;
+    txPending().forEach(function (x) { inQ[x.id] = true; });
     for (i = 0; i < all.length; i++) if (all[i].id === afterId) pos = i;
-    var open = function (x) { return bkNeeds(x) && String(x.date) >= from && x.id !== afterId; };
+    var open = function (x) { return inQ[x.id] && x.id !== afterId; };
     for (i = pos + 1; i < all.length; i++) if (open(all[i]) && !bk.skipped[all[i].id]) return all[i].id;
     for (i = 0; i < all.length; i++) if (open(all[i]) && !bk.skipped[all[i].id]) return all[i].id;
     for (i = 0; i < all.length; i++) if (open(all[i]) && (!best || bk.skipped[all[i].id] < bk.skipped[best.id])) best = all[i];
@@ -2071,7 +2059,7 @@ button.txd-row:active { background: var(--chip); }
   bel.close.addEventListener("click", txClose); bel.back.addEventListener("click", txClose);
   B("txScroll").addEventListener("scroll", txFade, { passive: true });
   bel.review.addEventListener("click", function () { bk.filter = "review"; prefs.bkFilter = "review"; ls("cash_prefs", prefs); bkRender(); window.scrollTo(0, 0); });
-  bel.all.addEventListener("click", function () { bk.filter = "all"; prefs.bkFilter = "all"; ls("cash_prefs", prefs); bkEnsurePeriod(); bkRender(); window.scrollTo(0, 0); });
+  bel.all.addEventListener("click", function () { bk.filter = "all"; prefs.bkFilter = "all"; ls("cash_prefs", prefs); bkRender(); window.scrollTo(0, 0); });
   bk.q = ""; bk.period = prefs.bkPeriod !== undefined ? prefs.bkPeriod : { y: new Date().getFullYear(), m: null };
   var qTimer = 0;
   bel.search.addEventListener("input", function () { bel.qx.hidden = !bel.search.value; clearTimeout(qTimer); qTimer = setTimeout(function () { bk.q = bel.search.value; bkRender(); }, 120); });
@@ -2083,7 +2071,8 @@ button.txd-row:active { background: var(--chip); }
     box.textContent = "";
     var yrs = document.createElement("div"); yrs.className = "yrs"; box.appendChild(yrs);
     var yb = function (label, val) { var b = document.createElement("button"); b.type = "button"; b.textContent = label; if (val === y) b.className = "on";
-      b.addEventListener("click", function () { bk.period = { y: val, m: null }; if (!val) bkPerApply(); else bkPerRender(); }); yrs.appendChild(b); };
+      b.addEventListener("click", function () { bk.period = { y: val, m: null }; if (!val) { bkPerApply(); return; } // год — сразу весь год, лист открыт: месяц по желанию
+        prefs.bkPeriod = bk.period; ls("cash_prefs", prefs); bkRender(); window.scrollTo(0, 0); bkPerRender(); }); yrs.appendChild(b); };
     for (i = 2024; i <= cy; i++) yb(String(i), i);
     yb("Все годы", null);
     if (!y) return;
@@ -2094,11 +2083,10 @@ button.txd-row:active { background: var(--chip); }
     SH.forEach(function (nm, k) { var b = document.createElement("button"); b.type = "button"; b.textContent = nm; if (p.m === k + 1) b.className = "on";
       b.disabled = y === cy && k > now.getMonth(); b.addEventListener("click", function () { bk.period = { y: y, m: k + 1 }; bkPerApply(); }); mos.appendChild(b); });
   }
-  function bkPerApply() { bel.perSheet.hidden = true; prefs.bkPeriod = bk.period; ls("cash_prefs", prefs); bkEnsurePeriod(); bkRender(); window.scrollTo(0, 0); }
+  function bkPerApply() { bel.perSheet.hidden = true; prefs.bkPeriod = bk.period; ls("cash_prefs", prefs); bkRender(); window.scrollTo(0, 0); }
   bel.period.addEventListener("click", function () { bkPerRender(); bel.perSheet.hidden = false; });
   B("bkPerClose").addEventListener("click", function () { bel.perSheet.hidden = true; });
   B("bkPerBack").addEventListener("click", function () { bel.perSheet.hidden = true; });
-  bel.more.addEventListener("click", function () { var p = bkPrevMonth(); if (!p) return; bel.more.disabled = true; bkLoad(p).then(function () { bel.more.disabled = false; }); });
   bel.bankBtn.addEventListener("click", function () { // выбор банка — лист снизу, как категории в Cash
     var banks = (bk.data && bk.data.banks) || [];
     if (!banks.length) return;
@@ -2125,7 +2113,7 @@ button.txd-row:active { background: var(--chip); }
     var a = bk.data && bk.data.ai;
     if (bk.syncing || bk.aiStarting || (a && a.state === "running") || !token()) return;
     bk.syncing = true; bk.syncRes = null; bkAiRender();
-    api("bank_sync", { bank: prefs.bank, from: bk.data && bk.data.from }, 130000).then(function (j) {
+    api("bank_sync", { bank: prefs.bank, from: BK_FROM }, 130000).then(function (j) {
       bk.syncing = false; bk.syncRes = j.sync || null; bkApply(j);
       var x = j.sync || {};
       if (x.error) bkStatus("Выгрузка: банк не ответил — " + x.error, "err");
