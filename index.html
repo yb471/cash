@@ -229,7 +229,7 @@ body.locked .bk-undo { display: none; }
 @keyframes undofade { from { opacity: 0; } to { opacity: 1; } }
 .txd-retry { padding: 0; border: 0; background: none; color: var(--accent); font: inherit; font-weight: 600; text-align: left; }
 /* сетка категорий: две колонки, при крупном системном тексте — сама одна */
-.tx-ctx { display: flex; flex-direction: column; gap: 5px; margin: 12px 0 14px; padding-left: 58px; font-size: calc(14 * var(--u)); line-height: 1.3; }
+.tx-ctx { display: flex; flex-direction: column; gap: 5px; margin: 12px 0 14px; padding-left: 0; /* от края логотипа: место под ним не пустует (его слово 13.11.2026) */ font-size: calc(14 * var(--u)); line-height: 1.3; }
 .tx-ctx:empty { display: none; }
 .tx-ctx .q { color: var(--fg); overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
 .tx-ctx .ai { color: var(--accent); } .tx-ctx .ai b { font-weight: 600; } .tx-ctx .ai span { color: var(--muted); }
@@ -671,7 +671,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "141"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "142"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
