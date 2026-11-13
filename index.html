@@ -233,7 +233,7 @@ body.locked .bk-undo { display: none; }
 .tx-ctx:empty { display: none; }
 .tx-ctx .q { color: var(--fg); overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
 .tx-ctx .ai { color: var(--accent); } .tx-ctx .ai b { font-weight: 600; } .tx-ctx .ai span { color: var(--muted); }
-.tx-ctx .yb { color: var(--fg); }
+.tx-ctx .yb { color: var(--fg); } .tx-ctx .pur { color: var(--fg); overflow-wrap: anywhere; }
 .tx-ctx .hs { display: flex; align-items: baseline; gap: 6px; max-width: 100%; padding: 0; border: 0; background: none; color: var(--muted); font: inherit; text-align: left; }
 .tx-ctx .hs > span { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .tx-ctx .hs > span:empty { display: none; }
 .tx-ctx .hs b { flex: none; white-space: nowrap; } /* «Подробнее ›» не обрезается — сокращается текст перед ним */
@@ -671,7 +671,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "142"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "143"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -1146,7 +1146,10 @@ button.txd-row:active { background: var(--chip); }
     return o;
   }
   // возврат по карте: отправителем банк пишет владельца счета (его самого), продавец — только в назначении «Refund from …»
-  function refundFrom(t) { var m = t && t.kind === "CARD_REFUND" ? /^refund from\s+(.+)$/i.exec(String(t.remittance || "").trim()) : null; return m ? m[1] : ""; }
+  function refundFrom(t) { // возврат по спору (CARD_CHARGEBACK): «Refund from Revolut for <продавец> claim» (его «да» 13.11.2026)
+    var r = String((t && t.remittance) || "").trim(), m = !t ? null : t.kind === "CARD_REFUND" ? /^refund from\s+(.+)$/i.exec(r) : t.kind === "CARD_CHARGEBACK" ? /^refund from revolut for\s+(.+?)(?:\s+claim)?$/i.exec(r) : null;
+    return m ? m[1] : "";
+  }
   function bkMoney(n, cur) { return n ? money(n, cur) : "0,00 " + (SYM[cur] || cur); } // проверка карты на 0 — без знака и цвета
   function bkItems() { return bk.data && bk.data.items ? bk.data.items.map(bkOverlay) : []; }
   function bkVisible() {
@@ -1624,8 +1627,10 @@ button.txd-row:active { background: var(--chip); }
     var c = bel.sugg, sg = bkNeeds(t) ? t.sugg : null, info = bk.txc[t.id], add = function (cls, txt) { var e = document.createElement("div"); e.className = cls; if (txt) e.textContent = txt; c.appendChild(e); return e; };
     c.textContent = ""; c.className = "tx-ctx";
     var pu = txPurpose(t); if (pu) add("q", "«" + pu + "»");
+    var pur = info && info.purchase; // возврат — за какую покупку (его «да» 13.11.2026): тот же продавец, та же сумма
+    if (pur) add("pur", "↺ За покупку " + shortDate(pur.date) + " · " + money(pur.amount, pur.currency) + " · " + (pur.category ? (pur.category === SPLIT ? splitLabel(pur.parts) : decText(pur)) : "без категории"));
     var sim = info && info.similar ? info.similar : null, dup = info && info.dup, byHist = sg && (sg.source === "merchant" || sg.source === "brand") && sim && sim.length; // подсказка по прошлым — это и есть строка «Раньше»
-    if (sg && !byHist) {
+    if (sg && !byHist && !(pur && sg.source === "purchase")) { // подсказка по покупке — уже в строке «За покупку»
       var a = add("ai"), b = document.createElement("b"), w = document.createElement("span"), why = sg.why && sg.why !== "предложение Claude" ? sg.why : "";
       b.textContent = sg.source === "ai" ? "✦ Claude" : sg.source === "purchase" ? "✦ Как покупка" : "✦ Как раньше"; a.appendChild(b); // возврат — в категорию покупки на ту же сумму
       if (sg.source === "ai" && why) w.textContent = ": «" + why + "»"; else if (sg.source !== "ai" && why) w.textContent = ": " + why; a.appendChild(w);
