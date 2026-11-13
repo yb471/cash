@@ -85,7 +85,8 @@ body.tab-bank #bankPage { display: flex; }
 /* вкладки Bank компактнее (его слово 13.11.2026): 44px, вровень с поиском и периодом */
 .bk-top .seg { padding: 4px; border-radius: 12px; } .bk-top .seg-btn { height: 36px; border-radius: 9px; font-size: calc(15 * var(--u)); }
 /* поиск и период (его слово 13.11.2026): поле поиска как в iOS, справа период «2026 ▾» / «Ноябрь 2026 ▾»; под ними вкладки с числом найденного */
-.bk-find { display: flex; gap: 8px; align-items: center; }
+.bk-find { display: flex; gap: 8px; align-items: center; margin-top: 4px; } /* от поля банка 16px — другая группа (его «да» 13.11.2026) */
+.bk-find + .bk-top { margin-top: -4px; } /* вкладки — итог поиска: 8px, одна группа с ним */
 .bk-search { flex: 1; min-width: 0; height: 44px; display: flex; align-items: center; gap: 6px; padding: 0 2px 0 10px; border-radius: 12px; background: var(--chip); color: var(--muted); }
 .bk-search input { flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; color: var(--fg); font: inherit; font-size: calc(16 * var(--u)); outline: none; -webkit-appearance: none; appearance: none; }
 .bk-search input::-webkit-search-cancel-button { display: none; }
@@ -669,7 +670,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "152"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "153"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
