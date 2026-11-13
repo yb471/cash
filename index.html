@@ -670,7 +670,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "146"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "147"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -1637,9 +1637,13 @@ button.txd-row:active { background: var(--chip); }
     var sim = info && info.similar ? info.similar : null, dup = info && info.dup;
     var h = document.createElement("button"), ht = document.createElement("span"), hb = document.createElement("b"); h.type = "button"; h.className = "hs"; h.addEventListener("click", txShowData);
     if (dup && dup.verdict === "possible") { h.className = "hs warn"; ht.textContent = "⚠ Возможен дубль ·"; }
-    else if (sim) { // сколько раз было раньше (его слово 13.11.2026), по ключу продавца; 0 — продавец впервые
-      var cnt = sim.length, w10 = cnt % 10, w100 = cnt % 100, word = w10 >= 2 && w10 <= 4 && (w100 < 10 || w100 >= 20) ? " раза" : " раз";
-      ht.textContent = cnt ? "Раньше " + cnt + (info.similar_more ? "+" : "") + word + " ·" : "Новый продавец ·";
+    else { // сколько раз было раньше (его слово 13.11.2026), по ключу продавца; 0 — продавец впервые; число — сразу из списка (seen),
+      // а не из дозагрузки «Подробнее»: строка не прыгает; прежний сервер без seen — из «Подробнее»
+      var hasSeen = typeof t.seen === "number", cnt = hasSeen ? t.seen : sim ? sim.length : null;
+      if (cnt !== null) {
+        var w10 = cnt % 10, w100 = cnt % 100, word = w10 >= 2 && w10 <= 4 && (w100 < 10 || w100 >= 20) ? " раза" : " раз";
+        ht.textContent = cnt ? "Раньше " + cnt + (!hasSeen && info.similar_more ? "+" : "") + word + " ·" : "Новый продавец ·";
+      }
     }
     hb.textContent = "Подробнее ›"; h.appendChild(ht); h.appendChild(hb); c.appendChild(h);
   }
