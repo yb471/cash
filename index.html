@@ -69,25 +69,23 @@ body.tab-other .gear { visibility: hidden; }
 body.tab-bank .app > :not(.top):not(#bankPage) { display: none !important; }
 body.tab-bank #bankPage { display: flex; }
 .bk-top { display: flex; flex-direction: column; gap: 10px; }
-/* верх раздела — один ряд (его слово 13.11.2026): поле банка как «Категория» в Cash | «Сделать выгрузку» | «Связать категории»;
-   кнопкам — сколько влезает: на узком экране название переносится на вторую строку, не сокращается; сводка — в меню «⋯» */
-.bk-head { display: grid; grid-template-columns: auto minmax(min-content, 1fr) minmax(min-content, 1fr); gap: 8px; align-items: center; } /* поле банка — целиком в первую очередь, кнопки — поровну остальное */
-@media (max-width: 400px) { #bkAiSt .ch { display: none; } } /* «· ✎N» держал ширину кнопки — на узком экране поле банка важнее */
+/* верх раздела (его слово 13.11.2026): поле банка — название и под ним дата обновления (или ход работы); справа одна кнопка ↻ без
+   надписи — выгружает банк и связывает неразобранные категории; сводка — в меню «⋯» */
+.bk-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; }
 .bk-head .catwrap { min-width: 0; }
+.bk-banksel { display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 1px; }
+.bk-banksel .nm { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.2; }
+.bk-banksel .st { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: calc(12 * var(--u)); font-weight: 500; line-height: 1.2; color: var(--muted); font-variant-numeric: tabular-nums; }
+.bk-banksel .st:empty { display: none; } .bk-banksel .st.err { color: var(--minus); } .bk-banksel .st.warn { color: var(--warn); }
+.bk-refresh { width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; padding: 0; border: 1.5px solid var(--accent); border-radius: 14px; background: transparent; color: var(--accent); }
+.bk-refresh:active { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.bk-refresh.run svg { animation: ptrspin .9s linear infinite; } .bk-refresh:disabled { opacity: 1; }
 
 .seg-btn .n { font-variant-numeric: tabular-nums; color: var(--accent); margin-left: 4px; }
 
-/* кнопка действия с датой: две строки — что делает и когда было в последний раз (или ход работы) */
-.bk-act { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 50px; padding: 6px 11px; border: 1.5px solid var(--accent); border-radius: 14px; background: transparent; color: var(--accent); }
-.bk-act .t { font-weight: 700; font-size: calc(14 * var(--u)); line-height: 1.2; text-align: center; letter-spacing: -.015em; text-wrap: balance; } /* как «Сделать сверку» в Cash */
-.bk-act .s { font-size: calc(11 * var(--u)); color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.bk-act .s.ok { color: var(--plus); } .bk-act .s.warn { color: var(--warn); } .bk-act .s.err { color: var(--minus); }
-.bk-act:disabled { opacity: .65; }
 /* срок доступа к банку: за 10 дней (как напоминание в календаре) — оранжевый и как продлить, истек — красный */
 #bkAccess.warn { color: var(--warn); font-weight: 600; } #bkAccess.err { color: var(--minus); font-weight: 600; }
 .bk-hint { margin: -4px 0 0; font-size: calc(13 * var(--u)); color: var(--muted); }
-/* «Связать категории» не задает ширину колонки — ее держит «Сделать выгрузку»; надпись в одну строку */
-.bk-act.run .t::before { content: "↻ "; display: inline-block; animation: ptrspin .9s linear infinite; }
 /* список (его слово 09.11.2026: без островков по дням, тексту шире) — одна белая лента от края до края экрана со скругленным верхом
    и низом; дни внутри — заголовок (без суммы дня, не липнет) и тонкая линия над ним; дата — просто текстом, темно-серым, без фона
    (его слово 09.11.2026: полосы во всю ширину и «таблетки» не надо); строка — логотип, чистое имя, под ним категория
@@ -547,10 +545,9 @@ button.txd-row:active { background: var(--chip); }
       <div class="line"><span>Версия</span><span id="bkVer"></span></div>
       <div class="line"><a id="bkSheetLink" href="https://docs.google.com/spreadsheets/d/1cKYM1-z92p6Q14BxznyrYuXFfWDnJfb1w0Dj51CcAhk/edit#gid=0" target="_blank" rel="noopener">Открыть вкладку YB Revolut</a></div>
     </section>
-    <div class="bk-head"> <!-- один ряд: банк | «Сделать выгрузку» | «Связать категории» (его слово 13.11.2026; сводка — в меню «⋯») -->
-      <div class="catwrap"><button class="catsel set" id="bkBankBtn" type="button" aria-haspopup="dialog">YB Revolut</button></div>
-      <button class="bk-act" id="bkSync" type="button"><span class="t">Сделать выгрузку</span><span class="s" id="bkSyncSt"></span></button>
-      <button class="bk-act" id="bkAiBtn" type="button"><span class="t">Связать категории</span><span class="s" id="bkAiSt"></span></button>
+    <div class="bk-head"> <!-- банк с датой обновления | ↻ — выгрузить банк и связать категории (его слово 13.11.2026; сводка — в меню «⋯») -->
+      <div class="catwrap"><button class="catsel set bk-banksel" id="bkBankBtn" type="button" aria-haspopup="dialog"><span class="nm" id="bkBankNm">YB Revolut</span><span class="st" id="bkUpd"></span></button></div>
+      <button class="bk-refresh" id="bkRefresh" type="button" aria-label="Обновить: выгрузить банк и связать категории"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     </div>
     <div class="bk-top">
       <div class="seg" role="group" aria-label="Какие операции">
@@ -643,7 +640,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "148"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "149"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -1100,8 +1097,8 @@ button.txd-row:active { background: var(--chip); }
   var UNDO_MS = 4000, undo = null; // «Отменить» после подтверждения категории: столько решение ждет на телефоне (его слово 05.11.2026)
   bk.queue.forEach(function (q) { delete q.hold; }); // после перезапуска отменять нечем — ничего не задерживаем (и часы не застопорят)
   var B = function (id) { return document.getElementById(id); };
-  var bel = { bankBtn: B("bkBankBtn"), bankSheet: B("bkBankSheet"), bankList: B("bkBankList"), sync: B("bkSync"), syncSt: B("bkSyncSt"), review: B("bkReview"), all: B("bkAll"), pendingN: B("bkPendingN"),
-    stPend: B("stPend"), stSuggP: B("stSuggP"), stAll: B("stAll"), stD30: B("stD30"), menu: B("bkMenu"), queueN: B("bkQueueN"), flush: B("bkFlush"), sheetLink: B("bkSheetLink"), access: B("bkAccess"), accessHint: B("bkAccessHint"), aiBtn: B("bkAiBtn"), aiSt: B("bkAiSt"), status: B("bkStatus"), list: B("bkList"), empty: B("bkEmpty"), more: B("bkMore"),
+  var bel = { bankBtn: B("bkBankBtn"), bankSheet: B("bkBankSheet"), bankList: B("bkBankList"), refresh: B("bkRefresh"), upd: B("bkUpd"), bankNm: B("bkBankNm"), review: B("bkReview"), all: B("bkAll"), pendingN: B("bkPendingN"),
+    stPend: B("stPend"), stSuggP: B("stSuggP"), stAll: B("stAll"), stD30: B("stD30"), menu: B("bkMenu"), queueN: B("bkQueueN"), flush: B("bkFlush"), sheetLink: B("bkSheetLink"), access: B("bkAccess"), accessHint: B("bkAccessHint"), status: B("bkStatus"), list: B("bkList"), empty: B("bkEmpty"), more: B("bkMore"),
     sheet: B("txSheet"), back: B("txBack"), close: B("txClose"), title: B("txTitle"), amt: B("txAmt"), meta: B("txMeta"), sugg: B("txSugg"),
     cats: B("txCats"), ok: B("txOk"), prog: B("txProg"), q: B("txQ"), pos: B("txPos"), bar: B("txBar"), ava: B("txAva"),
     main: B("txMain"), data: B("txData"), mini: B("txMini"), miniAva: B("txMiniAva"), miniName: B("txMiniName"),
@@ -1268,8 +1265,7 @@ button.txd-row:active { background: var(--chip); }
     bel.review.classList.toggle("on", bk.filter === "review"); bel.all.classList.toggle("on", bk.filter === "all");
     if (!d) { if (!bel.status.textContent) bkStatus(token() ? "Загружаю операции…" : "Сначала введи код доступа", ""); bel.list.textContent = ""; return; }
     var banks = d.banks || [];
-    bel.bankBtn.textContent = d.bank || "Банк";
-    bkSyncRender();
+    bel.bankNm.textContent = d.bank || "Банк";
     var pending = items.filter(function (t) { return bkNeeds(t) && String(t.date) >= d.review_from; });
     bel.pendingN.textContent = pending.length ? " " + pending.length : "";
     // сводка: неразобрано, с подсказкой — по экрану (с его неотправленными решениями), точность — с сервера
@@ -1332,19 +1328,18 @@ button.txd-row:active { background: var(--chip); }
   // подход Claude: кнопка и понятное состояние — работает (с ходом) или закончил (когда и что изменил)
   function hm(iso) { var t = new Date(iso); return isNaN(t) ? "" : String(t.getHours()).padStart(2, "0") + ":" + String(t.getMinutes()).padStart(2, "0"); }
   function dmhm(iso) { var t = new Date(iso); return isNaN(t) ? "" : String(t.getDate()).padStart(2, "0") + "." + String(t.getMonth() + 1).padStart(2, "0") + " " + hm(iso); }
-  function bkAiRender() { // под «Связать категории»: ход работы (↻ работаю: N из M) или когда связывал последний раз
-    var d = bk.data || {}, a = d.ai || null, run = !!(a && a.state === "running");
-    var busy = !!(run || bk.aiStarting); // toggle с undefined переключал бы класс, а не снимал
-    bel.aiBtn.disabled = busy; bel.aiBtn.classList.toggle("run", busy);
-    var t = "", k = "";
-    if (bk.aiStarting) t = "запускаю…";
-    else if (run) t = "работаю" + (a.total ? ": " + Math.min(a.done || 0, a.total) + " из " + a.total : "…");
-    else if (d.ai_ready === false) t = "не подключено";
-    else if (a && a.state === "done") t = dmhm(a.finished); // серым, как дата под «Сделать выгрузку»; «· ✎N» — отдельным span, на узком экране скрыт
-    else if (a && a.state === "error") { t = "ошибка " + dmhm(a.finished || a.started); k = "err"; }
-    else t = "еще не было";
-    bel.aiSt.textContent = t; bel.aiSt.className = "s" + (k ? " " + k : "");
-    if (!bk.aiStarting && !run && d.ai_ready !== false && a && a.state === "done" && a.changed) { var ch = document.createElement("span"); ch.className = "ch"; ch.textContent = " · ✎" + a.changed; bel.aiSt.appendChild(ch); }
+  // под названием банка: ход работы («выгружаю…», «связываю 5 из 53»), сбой — красным, иначе когда обновлялось; ↻ крутится, пока идет
+  function bkAiRender() {
+    var d = bk.data || {}, a = d.ai || null, run = !!(a && a.state === "running"), x = bk.syncRes, busy = !!(bk.syncing || run || bk.aiStarting);
+    bel.refresh.disabled = busy; bel.refresh.classList.toggle("run", busy);
+    var t = "", k = "", last = d.synced_at ? dmhm(d.synced_at) : "";
+    if (bk.syncing) t = "выгружаю…";
+    else if (bk.aiStarting) t = "связываю…";
+    else if (run) t = "связываю" + (a.total ? " " + Math.min(a.done || 0, a.total) + " из " + a.total : "…");
+    else if (x && x.error) { t = "ошибка выгрузки"; k = "err"; }
+    else if (a && a.state === "error" && (!last || String(a.finished || a.started) > String(d.synced_at))) { t = "ошибка связывания"; k = "err"; }
+    else t = last ? "обновлено " + last : "еще не обновлялось";
+    bel.upd.textContent = t; bel.upd.className = "st" + (k ? " " + k : "");
     if (run) bkAiPoll();
   }
   function bkAiPoll() {
@@ -1363,16 +1358,16 @@ button.txd-row:active { background: var(--chip); }
   bel.flush.addEventListener("click", function () { // «Отправить» — сразу все, и то, что еще можно было отменить
     bkUndoHide(); bk.queue.forEach(function (q) { delete q.hold; }); ls("bank_queue", bk.queue); clearTimeout(bk.timer); bkSend();
   });
-  bel.aiBtn.addEventListener("click", function () {
+  function bkAiStart() { // связать неразобранные: Claude проходит их заново (рутинная сессия)
     if (!bk.data || bk.aiStarting) return;
     bk.aiStarting = true; bkAiRender();
     api("bank_ai_run").then(function (j) {
       bk.aiStarting = false; bk.data.ai = j.ai; bk.data.ai_ready = j.ai_ready; bkAiRender();
-      if (j.ai_ready === false) bkStatus("«Связать категории» подключу после твоего выбора в чате: API или рутинная сессия", "warn");
+      if (j.ai_ready === false) bkStatus("Связывание категорий не подключено", "warn");
       else if (j.ai && j.ai.state === "error") bkStatus("Claude: " + (j.ai.error || "ошибка"), "err");
     })
       .catch(function (e) { bk.aiStarting = false; bkAiRender(); bkStatus(explain(e), "err"); });
-  });
+  }
   function bkPrevMonth() { // месяц до самого раннего загруженного
     if (!bk.data || !bk.data.from) return "";
     var y = Number(bk.data.from.slice(0, 4)), m = Number(bk.data.from.slice(5, 7)) - 1;
@@ -2021,27 +2016,20 @@ button.txd-row:active { background: var(--chip); }
   B("bkBankClose").addEventListener("click", function () { bel.bankSheet.hidden = true; });
   B("bkBankBack").addEventListener("click", function () { bel.bankSheet.hidden = true; });
   // «Обновить» — выгрузка операций из банка сейчас (как ночная, но по его просьбе): сервер берет только проведенные банком
-  function bkSyncRender() { // под «Сделать выгрузку»: ход, итог или когда выгружалось последний раз
-    var d = bk.data || {}, x = bk.syncRes, t = "", k = "", last = d.synced_at ? dmhm(d.synced_at) : "";
-    bel.sync.disabled = !!bk.syncing; bel.sync.classList.toggle("run", !!bk.syncing);
-    if (bk.syncing) t = "загружаю…";
-    else if (x && x.error) { t = "ошибка"; k = "err"; }
-    else if (x && x.skipped === "recent") { t = "только что · " + last; k = "warn"; }
-    else if (x && x.skipped) { t = "банк занят"; k = "warn"; }
-    else if (x) { t = last + (x.inserted ? " · +" + x.inserted : " · нет новых"); k = x.errors && x.errors.length ? "warn" : "ok"; }
-    else t = last || "еще не было";
-    bel.syncSt.textContent = t; bel.syncSt.className = "s" + (k ? " " + k : "");
-  }
-  bel.sync.addEventListener("click", function () {
-    if (bk.syncing || !token()) return;
-    bk.syncing = true; bk.syncRes = null; bkSyncRender();
+  // ↻ (его слово 13.11.2026): выгрузить банк, затем связать неразобранные; выгрузка сама будит Claude, когда прошла — если нет
+  // (была меньше 2 минут назад, банк занят или не ответил), связывание запускается отдельно: по уже загруженным операциям
+  bel.refresh.addEventListener("click", function () {
+    var a = bk.data && bk.data.ai;
+    if (bk.syncing || bk.aiStarting || (a && a.state === "running") || !token()) return;
+    bk.syncing = true; bk.syncRes = null; bkAiRender();
     api("bank_sync", { bank: prefs.bank, from: bk.data && bk.data.from }, 130000).then(function (j) {
       bk.syncing = false; bk.syncRes = j.sync || null; bkApply(j);
       var x = j.sync || {};
       if (x.error) bkStatus("Выгрузка: банк не ответил — " + x.error, "err");
       else if (x.errors && x.errors.length) bkStatus("Выгрузка: " + x.errors.join("; "), "warn");
-      else if (x.skipped === "busy") bkStatus("Банк сейчас занят ночной выгрузкой — попробуй через минуту", "warn");
-    }).catch(function (e) { bk.syncing = false; bk.syncRes = { error: explain(e) }; bkSyncRender(); bkStatus(explain(e), "err"); });
+      else if (x.skipped === "busy") bkStatus("Банк сейчас занят ночной выгрузкой — связываю по уже загруженным", "warn");
+      if (!(j.ai && j.ai.state === "running") && j.ai_ready !== false) bkAiStart();
+    }).catch(function (e) { bk.syncing = false; bk.syncRes = { error: explain(e) }; bkAiRender(); bkStatus(explain(e), "err"); });
   });
   function bankOpen() { bkRender(); if (!bk.loaded) bkLoad(); else if (bk.queue.length) bkSend(); }
 
