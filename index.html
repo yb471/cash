@@ -69,38 +69,17 @@ body.tab-other .gear { visibility: hidden; }
 body.tab-bank .app > :not(.top):not(#bankPage) { display: none !important; }
 body.tab-bank #bankPage { display: flex; }
 .bk-top { display: flex; flex-direction: column; gap: 10px; }
-/* строка банка: поле выбора как «Категория» в Cash (лист снизу), справа «Сделать выгрузку» с датой (его слово 03.11.2026) */
-/* две строки одной сеткой: колонка кнопок — по ширине «Сделать выгрузку», как в версии 71; сводка — шириной поля банка
-   (его слово 03.11.2026: строку банка не трогать, первую строку — по ней) */
-.bk-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 10px; }
-.bk-bankrow { display: contents; }
-.bk-bankrow .catwrap { min-width: 0; align-self: center; }
+/* верх раздела — один ряд (его слово 13.11.2026): поле банка как «Категория» в Cash | «Сделать выгрузку» | «Связать категории»;
+   кнопкам — сколько влезает: на узком экране название переносится на вторую строку, не сокращается; сводка — в меню «⋯» */
+.bk-head { display: grid; grid-template-columns: auto minmax(min-content, 1fr) minmax(min-content, 1fr); gap: 8px; align-items: center; } /* поле банка — целиком в первую очередь, кнопки — поровну остальное */
+@media (max-width: 400px) { #bkAiSt .ch { display: none; } } /* «· ✎N» держал ширину кнопки — на узком экране поле банка важнее */
+.bk-head .catwrap { min-width: 0; }
 
 .seg-btn .n { font-variant-numeric: tabular-nums; color: var(--accent); margin-left: 4px; }
 
-/* верх раздела (его слово 04.11.2026) — две строки одной сетки: поле банка | «Сделать выгрузку» с датой; сводка | «Связать
-   категории» с датой последнего запуска (такая же плитка, отдельно от сводки). Сводка: «Связано: N (X%) из M» и «Точность:
-   Y% · 30 д Z%», шрифты как «В наличии» в Cash (подписи 13px серые, значения 14px полужирные), рамка и радиус как у поля банка */
-/* размер — ровно поле банка: та же колонка, высота 50 и радиус 12 (его слово 04.11.2026: нижний блок был больше — 54–61 против 50) */
-.bk-statbox { min-width: 0; height: 50px; align-self: center; justify-content: center; padding: 2px 8px 2px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); font-size: calc(14 * var(--u)); color: var(--muted); }
-/* не влезает строка — сначала уже промежутки (.snug), потом компактный вид, как у Cash на узком экране (.tight), потом текст
-   чуть мельче (--k до 0,76; его слово 04.11.2026: лучше мельче, чем прятать); только если и так не влезает — прячутся «· 30 д Z%»
-   и «(X%)» (.hide30); многоточие — последняя страховка. Ступень ставит bkFitBal */
-#bkStatBox .k { font-size: calc(13 * var(--u) * var(--k, 1)); } #bkStatBox b { font-size: calc(14 * var(--u) * var(--k, 1)); }
-#bkStatBox.tight .k { font-size: calc(12 * var(--u) * var(--k, 1)); } #bkStatBox.tight b { font-size: calc(13 * var(--u) * var(--k, 1)); }
-.bk-statbox .bal-l > :last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.bk-statbox .bal-l > :not(:last-child) { flex: none; }
-.bk-statbox .bal-l { line-height: 1.2; }
-.bk-statbox.snug .bal-l { gap: 4px; }
-.bk-statbox.tall { height: auto; min-height: 50px; } /* очень крупный системный текст: лучше выше, чем обрезать */
-.bk-statbox.tight { padding-left: 10px; }
-.bk-statbox.hide30 #stD30, .bk-statbox.hide30 #stPend .pct { display: none; }
-/* «Связать категории» не задает ширину колонки — ее держит «Сделать выгрузку»; название в одну строку */
-#bkAiBtn { width: 0; min-width: 100%; padding-left: 6px; padding-right: 6px; }
-#bkAiBtn .t { white-space: nowrap; letter-spacing: -.01em; }
 /* кнопка действия с датой: две строки — что делает и когда было в последний раз (или ход работы) */
 .bk-act { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 50px; padding: 6px 11px; border: 1.5px solid var(--accent); border-radius: 14px; background: transparent; color: var(--accent); }
-.bk-act .t { font-weight: 700; font-size: calc(14 * var(--u)); line-height: 1.2; text-align: center; letter-spacing: -.015em; } /* как «Сделать сверку» в Cash */
+.bk-act .t { font-weight: 700; font-size: calc(14 * var(--u)); line-height: 1.2; text-align: center; letter-spacing: -.015em; text-wrap: balance; } /* как «Сделать сверку» в Cash */
 .bk-act .s { font-size: calc(11 * var(--u)); color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .bk-act .s.ok { color: var(--plus); } .bk-act .s.warn { color: var(--warn); } .bk-act .s.err { color: var(--minus); }
 .bk-act:disabled { opacity: .65; }
@@ -559,6 +538,8 @@ button.txd-row:active { background: var(--chip); }
 
   <section id="bankPage" aria-label="Банк"> <!-- сводка — сразу под названием (его слово 02.11.2026) -->
     <section class="card" id="bkMenu" hidden> <!-- меню «⋯» раздела, как в Cash (его слово 03.11.2026) -->
+      <div class="line"><span>Связано</span><span class="bk-mstat"><b id="stSuggP">—</b> <span id="stPend"></span></span></div> <!-- сводка — в меню (его слово 13.11.2026) -->
+      <div class="line"><span>Точность</span><span class="bk-mstat"><b id="stAll">—</b> <span id="stD30"></span></span></div>
       <div class="line"><span>Связь с базой</span><span id="bkConn">—</span></div>
       <div class="line"><span>Не отправлено</span><span><span id="bkQueueN">0</span> <button id="bkFlush" type="button" hidden>Отправить</button></span></div>
       <div class="line"><span>Доступ к банку</span><span id="bkAccess">—</span></div>
@@ -566,18 +547,10 @@ button.txd-row:active { background: var(--chip); }
       <div class="line"><span>Версия</span><span id="bkVer"></span></div>
       <div class="line"><a id="bkSheetLink" href="https://docs.google.com/spreadsheets/d/1cKYM1-z92p6Q14BxznyrYuXFfWDnJfb1w0Dj51CcAhk/edit#gid=0" target="_blank" rel="noopener">Открыть вкладку YB Revolut</a></div>
     </section>
-    <div class="bk-head"> <!-- банк | выгрузка; сводка | «Связать категории» (его слово 04.11.2026) -->
-      <div class="bk-bankrow">
-        <div class="catwrap"><button class="catsel set" id="bkBankBtn" type="button" aria-haspopup="dialog">YB Revolut</button></div>
-        <button class="bk-act" id="bkSync" type="button"><span class="t">Сделать выгрузку</span><span class="s" id="bkSyncSt"></span></button>
-      </div>
-      <div class="bk-bankrow">
-        <div class="bk-statbox bal-info" id="bkStatBox">
-          <div class="bal-l"><span class="k">Связано:</span><b id="stSuggP">—</b><span class="k" id="stPend"></span></div>
-          <div class="bal-l"><span class="k">Точность:</span><b id="stAll">—</b><span class="k" id="stD30"></span></div>
-        </div>
-        <button class="bk-act" id="bkAiBtn" type="button"><span class="t">Связать категории</span><span class="s" id="bkAiSt"></span></button>
-      </div>
+    <div class="bk-head"> <!-- один ряд: банк | «Сделать выгрузку» | «Связать категории» (его слово 13.11.2026; сводка — в меню «⋯») -->
+      <div class="catwrap"><button class="catsel set" id="bkBankBtn" type="button" aria-haspopup="dialog">YB Revolut</button></div>
+      <button class="bk-act" id="bkSync" type="button"><span class="t">Сделать выгрузку</span><span class="s" id="bkSyncSt"></span></button>
+      <button class="bk-act" id="bkAiBtn" type="button"><span class="t">Связать категории</span><span class="s" id="bkAiSt"></span></button>
     </div>
     <div class="bk-top">
       <div class="seg" role="group" aria-label="Какие операции">
@@ -670,7 +643,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "147"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "148"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -1128,7 +1101,7 @@ button.txd-row:active { background: var(--chip); }
   bk.queue.forEach(function (q) { delete q.hold; }); // после перезапуска отменять нечем — ничего не задерживаем (и часы не застопорят)
   var B = function (id) { return document.getElementById(id); };
   var bel = { bankBtn: B("bkBankBtn"), bankSheet: B("bkBankSheet"), bankList: B("bkBankList"), sync: B("bkSync"), syncSt: B("bkSyncSt"), review: B("bkReview"), all: B("bkAll"), pendingN: B("bkPendingN"),
-    stPend: B("stPend"), stSuggP: B("stSuggP"), stAll: B("stAll"), stD30: B("stD30"), statBox: B("bkStatBox"), menu: B("bkMenu"), queueN: B("bkQueueN"), flush: B("bkFlush"), sheetLink: B("bkSheetLink"), access: B("bkAccess"), accessHint: B("bkAccessHint"), aiBtn: B("bkAiBtn"), aiSt: B("bkAiSt"), status: B("bkStatus"), list: B("bkList"), empty: B("bkEmpty"), more: B("bkMore"),
+    stPend: B("stPend"), stSuggP: B("stSuggP"), stAll: B("stAll"), stD30: B("stD30"), menu: B("bkMenu"), queueN: B("bkQueueN"), flush: B("bkFlush"), sheetLink: B("bkSheetLink"), access: B("bkAccess"), accessHint: B("bkAccessHint"), aiBtn: B("bkAiBtn"), aiSt: B("bkAiSt"), status: B("bkStatus"), list: B("bkList"), empty: B("bkEmpty"), more: B("bkMore"),
     sheet: B("txSheet"), back: B("txBack"), close: B("txClose"), title: B("txTitle"), amt: B("txAmt"), meta: B("txMeta"), sugg: B("txSugg"),
     cats: B("txCats"), ok: B("txOk"), prog: B("txProg"), q: B("txQ"), pos: B("txPos"), bar: B("txBar"), ava: B("txAva"),
     main: B("txMain"), data: B("txData"), mini: B("txMini"), miniAva: B("txMiniAva"), miniName: B("txMiniName"),
@@ -1256,20 +1229,6 @@ button.txd-row:active { background: var(--chip); }
     return r;
   }
 
-  // сводка не влезает рядом с кнопкой — компактный вид как у Cash на узком экране; блок скрыт (другой раздел) — проверим при открытии
-  function bkFitBal() {
-    var box = bel.statBox, ls = box.querySelectorAll(".bal-l > :last-child"), i;
-    var wide = function () { for (i = 0; i < ls.length; i++) if (ls[i].scrollWidth > ls[i].clientWidth + 0.5) return true; return false; };
-    var high = function () { return box.scrollHeight > box.clientHeight + 0.5; }; // две строки не входят в высоту поля банка
-    var over = function () { return wide() || high(); };
-    if (!box.clientWidth) return;
-    box.classList.remove("snug", "tight", "hide30", "tall"); box.style.setProperty("--k", "1");
-    if (wide()) box.classList.add("snug");
-    if (over()) box.classList.add("tight");
-    for (var k = 0.96; over() && k > 0.75; k -= 0.04) box.style.setProperty("--k", k.toFixed(2)); // мельче, но все видно
-    if (wide()) box.classList.add("hide30");
-    if (high()) box.classList.add("tall");
-  }
   // категория — одной строкой без переноса и сокращения (его слово 09.11.2026): не входит левее ✓ — строка до правого края,
   // ✓ строкой ниже; не входит и так (крупный системный текст, «в ожидании» + длинная категория) — шрифт строки мельче, не меньше 11px
   function bkFitSub() {
@@ -1322,9 +1281,7 @@ button.txd-row:active { background: var(--chip); }
     bel.stPend.appendChild(pc); bel.stPend.appendChild(document.createTextNode("из " + pending.length));
     var pct = function (a) { return a && a.n ? Math.round(a.ok / a.n * 100) + "%" : "—"; }, sa = d.stats && d.stats.all, s30 = d.stats && d.stats.d30;
     bel.stAll.textContent = pct(sa); bel.stD30.textContent = s30 && s30.n ? "· 30 д " + pct(s30) : "";
-    bel.statBox.title = "Связано " + withSugg + " из " + pending.length + "; верных подсказок " + (sa ? sa.ok + " из " + sa.n : "—") + " всего, " + (s30 ? s30.ok + " из " + s30.n : "—") + " за 30 дней";
     bkAiRender();
-    bkFitBal();
     var vis = bkVisible();
     bel.list.textContent = "";
     var lastD = "", rows = null;
@@ -1383,10 +1340,11 @@ button.txd-row:active { background: var(--chip); }
     if (bk.aiStarting) t = "запускаю…";
     else if (run) t = "работаю" + (a.total ? ": " + Math.min(a.done || 0, a.total) + " из " + a.total : "…");
     else if (d.ai_ready === false) t = "не подключено";
-    else if (a && a.state === "done") t = dmhm(a.finished) + (a.changed ? " · ✎" + a.changed : ""); // серым, как дата под «Сделать выгрузку»
+    else if (a && a.state === "done") t = dmhm(a.finished); // серым, как дата под «Сделать выгрузку»; «· ✎N» — отдельным span, на узком экране скрыт
     else if (a && a.state === "error") { t = "ошибка " + dmhm(a.finished || a.started); k = "err"; }
     else t = "еще не было";
     bel.aiSt.textContent = t; bel.aiSt.className = "s" + (k ? " " + k : "");
+    if (!bk.aiStarting && !run && d.ai_ready !== false && a && a.state === "done" && a.changed) { var ch = document.createElement("span"); ch.className = "ch"; ch.textContent = " · ✎" + a.changed; bel.aiSt.appendChild(ch); }
     if (run) bkAiPoll();
   }
   function bkAiPoll() {
@@ -2089,7 +2047,7 @@ button.txd-row:active { background: var(--chip); }
 
   // меню разделов: Cash и Bank работают, остальные — заглушка (его слово 02.11.2026)
   // клавиатура открыта — видимая часть окна заметно ниже окна (фокус без касания на iOS клавиатуру не открывает, по нему не судим)
-  window.addEventListener("resize", function () { bkFitBal(); bkFitSub(); }); // поворот, смена размера текста
+  window.addEventListener("resize", function () { bkFitSub(); }); // поворот, смена размера текста
   if (window.visualViewport) { var vv = window.visualViewport; vv.addEventListener("resize", function () { document.body.classList.toggle("kb", vv.height < window.innerHeight * 0.8); }); }
   var SECTIONS = { dashboard: "Dashboard", cash: "Cash YB", bank: "Bank", invest: "Invest" };
   Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (b) {
