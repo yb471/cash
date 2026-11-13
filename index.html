@@ -82,6 +82,8 @@ body.tab-bank #bankPage { display: flex; }
 .bk-refresh.run svg { animation: ptrspin .9s linear infinite; } .bk-refresh:disabled { opacity: 1; }
 
 .seg-btn .n { font-variant-numeric: tabular-nums; color: var(--accent); margin-left: 4px; } .seg-btn .n.zero { color: var(--muted); } /* 0 — нечего выделять */
+/* вкладки Bank компактнее (его слово 13.11.2026): 44px, вровень с поиском и периодом */
+.bk-top .seg { padding: 4px; border-radius: 12px; } .bk-top .seg-btn { height: 36px; border-radius: 9px; font-size: calc(15 * var(--u)); }
 /* поиск и период (его слово 13.11.2026): поле поиска как в iOS, справа период «2026 ▾» / «Ноябрь 2026 ▾»; под ними вкладки с числом найденного */
 .bk-find { display: flex; gap: 8px; align-items: center; }
 .bk-search { flex: 1; min-width: 0; height: 44px; display: flex; align-items: center; gap: 6px; padding: 0 2px 0 10px; border-radius: 12px; background: var(--chip); color: var(--muted); }
@@ -667,7 +669,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "151"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "152"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
