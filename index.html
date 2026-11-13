@@ -81,7 +81,24 @@ body.tab-bank #bankPage { display: flex; }
 .bk-refresh:active { background: color-mix(in srgb, var(--accent) 12%, transparent); }
 .bk-refresh.run svg { animation: ptrspin .9s linear infinite; } .bk-refresh:disabled { opacity: 1; }
 
-.seg-btn .n { font-variant-numeric: tabular-nums; color: var(--accent); margin-left: 4px; }
+.seg-btn .n { font-variant-numeric: tabular-nums; color: var(--accent); margin-left: 4px; } .seg-btn .n.zero { color: var(--muted); } /* 0 — нечего выделять */
+/* поиск и период (его слово 13.11.2026): поле поиска как в iOS, справа период «2026 ▾» / «Ноябрь 2026 ▾»; под ними вкладки с числом найденного */
+.bk-find { display: flex; gap: 8px; align-items: center; }
+.bk-search { flex: 1; min-width: 0; height: 44px; display: flex; align-items: center; gap: 6px; padding: 0 2px 0 10px; border-radius: 12px; background: var(--chip); color: var(--muted); }
+.bk-search input { flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; color: var(--fg); font: inherit; font-size: calc(16 * var(--u)); outline: none; -webkit-appearance: none; appearance: none; }
+.bk-search input::-webkit-search-cancel-button { display: none; }
+.bk-search button { flex: none; width: 40px; height: 40px; padding: 7px; border: 0; border-radius: 50%; background: color-mix(in srgb, var(--muted) 30%, transparent) content-box; /* кружок 26px, касание 40px */ color: var(--surface); font-size: 12px; font-weight: 700; line-height: 1; }
+.bk-period { flex: none; height: 44px; padding: 0 12px; border: 0; border-radius: 12px; background: var(--chip); color: var(--fg); font: inherit; font-size: calc(15 * var(--u)); font-weight: 600; white-space: nowrap; }
+.bk-period::after { content: " ▾"; color: var(--muted); font-size: .8em; }
+.bk-sent { list-style: none; height: 1px; }
+.bk-per { padding: 4px 14px 18px; }
+.bk-per .yrs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.bk-per .yrs button, .bk-per .mos button { height: 44px; border: 0; border-radius: 12px; background: var(--chip); color: var(--fg); font: inherit; font-size: calc(15 * var(--u)); font-weight: 600; }
+.bk-per .yrs button { flex: 1 1 auto; min-width: 64px; padding: 0 10px; white-space: nowrap; }
+.bk-per .mos { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.bk-per .mos .whole { grid-column: 1 / -1; }
+.bk-per button.on { background: var(--accent); color: var(--accent-fg); }
+.bk-per button:disabled { opacity: .35; }
 
 /* срок доступа к банку: за 10 дней (как напоминание в календаре) — оранжевый и как продлить, истек — красный */
 #bkAccess.warn { color: var(--warn); font-weight: 600; } #bkAccess.err { color: var(--minus); font-weight: 600; }
@@ -549,10 +566,14 @@ button.txd-row:active { background: var(--chip); }
       <div class="catwrap"><button class="catsel set bk-banksel" id="bkBankBtn" type="button" aria-haspopup="dialog"><span class="nm" id="bkBankNm">YB Revolut</span><span class="st" id="bkUpd"></span></button></div>
       <button class="bk-refresh" id="bkRefresh" type="button" aria-label="Обновить: выгрузить банк и связать категории"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     </div>
-    <div class="bk-top">
+    <div class="bk-find"> <!-- поиск и период — над вкладками, они их итог (его слово 13.11.2026) -->
+      <label class="bk-search"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5 20 20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><input id="bkQ" type="search" placeholder="Поиск" autocomplete="off" enterkeyhint="search" aria-label="Поиск по операциям"><button id="bkQx" type="button" aria-label="Очистить" hidden>✕</button></label>
+      <button class="bk-period" id="bkPeriod" type="button" aria-haspopup="dialog"></button>
+    </div>
+    <div class="bk-top"> <!-- итог поиска и периода: две вкладки с числом найденного (его слово 13.11.2026) -->
       <div class="seg" role="group" aria-label="Какие операции">
         <button class="seg-btn neutral on" id="bkReview" type="button">К проверке<span class="n" id="bkPendingN"></span></button>
-        <button class="seg-btn neutral" id="bkAll" type="button">Все</button>
+        <button class="seg-btn neutral" id="bkAll" type="button">Все<span class="n" id="bkAllN"></span></button>
       </div>
     </div>
     <div class="status" id="bkStatus"></div>
@@ -614,6 +635,13 @@ button.txd-row:active { background: var(--chip); }
 </div>
 
 
+<div class="sheet" id="bkPerSheet" hidden>
+  <div class="sheet-back" id="bkPerBack"></div>
+  <div class="sheet-body" role="dialog" aria-label="Период">
+    <div class="sheet-head"><span>Период</span><button id="bkPerClose" type="button" aria-label="Закрыть">✕</button></div>
+    <div class="bk-per" id="bkPerBody"></div>
+  </div>
+</div>
 <div class="sheet" id="bkBankSheet" hidden>
   <div class="sheet-back" id="bkBankBack"></div>
   <div class="sheet-body" role="dialog" aria-label="Банк">
@@ -640,7 +668,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "149"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "150"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -1097,7 +1125,7 @@ button.txd-row:active { background: var(--chip); }
   var UNDO_MS = 4000, undo = null; // «Отменить» после подтверждения категории: столько решение ждет на телефоне (его слово 05.11.2026)
   bk.queue.forEach(function (q) { delete q.hold; }); // после перезапуска отменять нечем — ничего не задерживаем (и часы не застопорят)
   var B = function (id) { return document.getElementById(id); };
-  var bel = { bankBtn: B("bkBankBtn"), bankSheet: B("bkBankSheet"), bankList: B("bkBankList"), refresh: B("bkRefresh"), upd: B("bkUpd"), bankNm: B("bkBankNm"), review: B("bkReview"), all: B("bkAll"), pendingN: B("bkPendingN"),
+  var bel = { bankBtn: B("bkBankBtn"), bankSheet: B("bkBankSheet"), bankList: B("bkBankList"), refresh: B("bkRefresh"), upd: B("bkUpd"), bankNm: B("bkBankNm"), search: B("bkQ"), qx: B("bkQx"), period: B("bkPeriod"), allN: B("bkAllN"), perSheet: B("bkPerSheet"), perBody: B("bkPerBody"), review: B("bkReview"), all: B("bkAll"), pendingN: B("bkPendingN"),
     stPend: B("stPend"), stSuggP: B("stSuggP"), stAll: B("stAll"), stD30: B("stD30"), menu: B("bkMenu"), queueN: B("bkQueueN"), flush: B("bkFlush"), sheetLink: B("bkSheetLink"), access: B("bkAccess"), accessHint: B("bkAccessHint"), status: B("bkStatus"), list: B("bkList"), empty: B("bkEmpty"), more: B("bkMore"),
     sheet: B("txSheet"), back: B("txBack"), close: B("txClose"), title: B("txTitle"), amt: B("txAmt"), meta: B("txMeta"), sugg: B("txSugg"),
     cats: B("txCats"), ok: B("txOk"), prog: B("txProg"), q: B("txQ"), pos: B("txPos"), bar: B("txBar"), ava: B("txAva"),
@@ -1121,12 +1149,40 @@ button.txd-row:active { background: var(--chip); }
   }
   function bkMoney(n, cur) { return n ? money(n, cur) : "0,00 " + (SYM[cur] || cur); } // проверка карты на 0 — без знака и цвета
   function bkItems() { return bk.data && bk.data.items ? bk.data.items.map(bkOverlay) : []; }
-  function bkVisible() {
-    var from = bk.data ? bk.data.review_from : "";
-    return bkItems().filter(function (t) {
-      if (bk.filter === "all") return true;
-      return String(t.date) >= from && bkNeeds(t) && !bk.leaving[t.id]; // подтвержденная (и уезжающая после ✓) — не в «К проверке»
+  function bkFound() { // поиск и период — для обеих вкладок (его слово 13.11.2026: вкладки — итог поиска): {all, review}
+    var from = bk.data ? bk.data.review_from : "", q = bkQTokens(), pr = bkPeriodRange(), all = [], review = [];
+    bkItems().forEach(function (t) {
+      var d = String(t.date);
+      if (d < pr[0] || d >= pr[1] || (q.length && !bkMatch(t, q))) return;
+      all.push(t);
+      if (d >= from && bkNeeds(t) && !bk.leaving[t.id]) review.push(t); // подтвержденная (и уезжающая после ✓) — не в «К проверке»
     });
+    return { all: all, review: review };
+  }
+  // ---------- поиск и период (его слово 13.11.2026) ----------
+  // поиск: имя продавца, текст банка, назначение, строка Claude, его комментарий, категория, сумма; без регистра, умлаутов и «е» с точками;
+  // несколько слов — все должны найтись; период «Все» — год и по желанию месяц (по умолчанию текущий год)
+  function bkNorm(s) { return String(s || "").toLowerCase().normalize("NFKD").replace(/\p{M}/gu, "").replace(/\u0451/g, "\u0435"); } // е с точками → е
+  function bkQTokens() { return bkNorm(bk.q).split(/\s+/).filter(Boolean); }
+  function bkMatch(t, q) {
+    if (!t._hay) {
+      var a = Math.abs(Number(t.amount) || 0).toFixed(2), parts = Array.isArray(t.parts) ? t.parts.map(function (p) { return (p.category || "") + " " + (p.subcategory || ""); }).join(" ") : "";
+      t._hay = bkNorm([txName(t), t.counterparty, t.remittance, t.about, t.note, t.category, t.subcategory, parts, a, a.replace(".", ",")].join(" | "));
+    }
+    for (var i = 0; i < q.length; i++) if (t._hay.indexOf(q[i]) < 0) return false;
+    return true;
+  }
+  function bkPeriodRange() { // [с, до) по датам; null — все годы
+    var p = bk.period; if (!p || !p.y) return ["0000", "9999"];
+    if (!p.m) return [p.y + "-01-01", (p.y + 1) + "-01-01"];
+    var ny = p.m === 12 ? p.y + 1 : p.y, nm = p.m === 12 ? 1 : p.m + 1;
+    return [p.y + "-" + String(p.m).padStart(2, "0") + "-01", ny + "-" + String(nm).padStart(2, "0") + "-01"];
+  }
+  function bkPeriodLabel() { var p = bk.period; return !p || !p.y ? "Все годы" : p.m ? MONTHS[p.m - 1] + " " + p.y : String(p.y); }
+  function bkPeriodFrom() { var r = bkPeriodRange(); return r[0] === "0000" ? "2020-01-01" : r[0].slice(0, 8) + "01"; } // начало периода для bank_list from
+  function bkEnsurePeriod() { // нужный период еще не загружен — догрузить с его начала («все годы» — с самого начала)
+    var want = bkPeriodFrom();
+    if (bk.data && bk.data.from && want < bk.data.from) { bkStatus("Загружаю…", ""); bkLoad(want); }
   }
   function catLabel(c) { var p = catSplit(c); return (p.em ? p.em + " " : "") + p.nm; } // эмодзи вперед: короче и читается быстрее
   // подкатегории и разделение (его «да» 10.11.2026): у категории с подкатегориями решение — с подкатегорией; разделенная —
@@ -1228,8 +1284,56 @@ button.txd-row:active { background: var(--chip); }
 
   // категория — одной строкой без переноса и сокращения (его слово 09.11.2026): не входит левее ✓ — строка до правого края,
   // ✓ строкой ниже; не входит и так (крупный системный текст, «в ожидании» + длинная категория) — шрифт строки мельче, не меньше 11px
-  function bkFitSub() {
-    var subs = bel.list.querySelectorAll(".bk-sub"), i, over = [], fs = [], rg = document.createRange();
+  var BK_CHUNK = 80, bkObs = null;
+  function bkRow(t) { // строка операции списка
+    var li = document.createElement("li"), b = document.createElement("div"), aw = document.createElement("span"), av = document.createElement("span"), cp = document.createElement("span"), a = document.createElement("span");
+    li.className = "bk-item"; li.setAttribute("data-id", t.id);
+    b.className = "bk-row"; b.setAttribute("role", "button"); b.tabIndex = 0; // div: внутри — кнопка ✓
+    b.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); b.click(); } });
+    aw.className = "bk-avw"; av.className = "ava"; av.setAttribute("aria-hidden", "true"); aw.appendChild(av);
+    var nm = txName(t); txAva(av, nm, t.logo);
+    var bt = bkBadge(t); if (bt) { var bd = document.createElement("span"); bd.className = "bdg"; bd.textContent = bt[0]; bd.title = bt[1]; aw.appendChild(bd); }
+    cp.className = "bk-cp"; cp.textContent = nm;
+    a.className = "a " + (t.amount < 0 ? "minus" : t.amount > 0 ? "plus" : "zero"); a.textContent = bkMoney(t.amount, t.currency);
+    b.appendChild(aw); b.appendChild(cp); b.appendChild(a); b.appendChild(bkSub(t));
+    var mt = bkMeta(t); if (mt) { b.appendChild(mt); b.className += " m3"; }
+    b.addEventListener("click", function () { if (b._sw) { b._sw = false; return; } txOpen(t.id); }); // после смахивания касание не открывает лист
+    li.appendChild(b);
+    var needs = bkNeeds(t);
+    if (needs) bkSwipe(li, b, t);
+    if (needs && sgReady(t.sugg)) {
+      li.className += " has-ok";
+      var ok = document.createElement("button"); ok.type = "button"; ok.className = "bk-ok"; ok.textContent = "✓";
+      ok.setAttribute("aria-label", "Принять: " + decText(t.sugg));
+      ok.addEventListener("click", function (e) { e.stopPropagation(); bkAccept(li, t); }); // строку не открывает
+      b.appendChild(ok);
+    } else if (needs) { // подсказки нет (или без нужной подкатегории) — та же кнопка, серая, со знаком вопроса: открыть выбор категории (его слово 09.11.2026)
+      li.className += " has-ok";
+      var pk = document.createElement("button"); pk.type = "button"; pk.className = "bk-ok pick"; pk.textContent = "?";
+      pk.setAttribute("aria-label", "Выбрать категорию");
+      pk.addEventListener("click", function (e) { e.stopPropagation(); txOpen(t.id); });
+      b.appendChild(pk);
+    }
+    return li;
+  }
+  function bkMore(n) { // дорисовать еще n (BK_CHUNK) строк списка; низ списка у края экрана — еще
+    var vis = bk.vis || [], to = Math.min(vis.length, bk.shown + (n || BK_CHUNK)), subs = [];
+    if (bk.sent) { if (bkObs) bkObs.unobserve(bk.sent); bk.sent.remove(); bk.sent = null; }
+    for (var k = bk.shown; k < to; k++) {
+      var t = vis[k], day = String(t.date);
+      if (day !== bk.lastD) { var g = bkDayHead(day); bel.list.appendChild(g); bk.rows = g.lastChild; bk.lastD = day; }
+      var li = bkRow(t); subs.push(li.querySelector(".bk-sub")); bk.rows.appendChild(li);
+    }
+    bk.shown = to;
+    bkFitSub(subs.filter(Boolean));
+    if (to < vis.length && "IntersectionObserver" in window) {
+      if (!bkObs) bkObs = new IntersectionObserver(function (es) { if (es.some(function (e) { return e.isIntersecting; })) bkMore(); }, { rootMargin: "0px 0px 1200px 0px" });
+      bk.sent = document.createElement("li"); bk.sent.className = "bk-sent"; bk.sent.setAttribute("aria-hidden", "true");
+      bel.list.appendChild(bk.sent); bkObs.observe(bk.sent);
+    } else if (to < vis.length) bkMore(vis.length); // без наблюдателя — все сразу
+  }
+  function bkFitSub(only) { // only — подписи новых строк (дорисовка), без него — все
+    var subs = only || bel.list.querySelectorAll(".bk-sub"), i, over = [], fs = [], rg = document.createRange();
     if (!bel.list.clientWidth) return; // раздел скрыт — проверим при открытии
     // точная ширина текста: scrollWidth округляет, и лишние доли пикселя уходят в многоточие
     var need = function (s) { rg.selectNodeContents(s); return rg.getBoundingClientRect().width; };
@@ -1267,7 +1371,9 @@ button.txd-row:active { background: var(--chip); }
     var banks = d.banks || [];
     bel.bankNm.textContent = d.bank || "Банк";
     var pending = items.filter(function (t) { return bkNeeds(t) && String(t.date) >= d.review_from; });
-    bel.pendingN.textContent = pending.length ? " " + pending.length : "";
+    var found = bkFound(), num = function (n) { return " " + n.toLocaleString("ru-RU"); };
+    bel.pendingN.textContent = num(found.review.length); bel.allN.textContent = num(found.all.length); // итог поиска и периода, 0 тоже
+    bel.pendingN.classList.toggle("zero", !found.review.length); bel.allN.classList.toggle("zero", !found.all.length);
     // сводка: неразобрано, с подсказкой — по экрану (с его неотправленными решениями), точность — с сервера
     // «Связано: 14 (44%) из 33» (его слово 04.11.2026): сколько неразобранных с подсказкой, доля, всего неразобранных
     var withSugg = pending.filter(function (t) { return t.sugg; }).length;
@@ -1278,52 +1384,22 @@ button.txd-row:active { background: var(--chip); }
     var pct = function (a) { return a && a.n ? Math.round(a.ok / a.n * 100) + "%" : "—"; }, sa = d.stats && d.stats.all, s30 = d.stats && d.stats.d30;
     bel.stAll.textContent = pct(sa); bel.stD30.textContent = s30 && s30.n ? "· 30 д " + pct(s30) : "";
     bkAiRender();
-    var vis = bkVisible();
+    var vis = bk.filter === "all" ? found.all : found.review;
     bel.list.textContent = "";
-    var lastD = "", rows = null;
-    vis.forEach(function (t) {
-      var day = String(t.date);
-      if (day !== lastD) { var g = bkDayHead(day); bel.list.appendChild(g); rows = g.lastChild; lastD = day; }
-      var li = document.createElement("li"), b = document.createElement("div"), aw = document.createElement("span"), av = document.createElement("span"), cp = document.createElement("span"), a = document.createElement("span");
-      li.className = "bk-item"; li.setAttribute("data-id", t.id);
-      b.className = "bk-row"; b.setAttribute("role", "button"); b.tabIndex = 0; // div: внутри — кнопка ✓
-      b.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); b.click(); } });
-      aw.className = "bk-avw"; av.className = "ava"; av.setAttribute("aria-hidden", "true"); aw.appendChild(av);
-      var nm = txName(t); txAva(av, nm, t.logo);
-      var bt = bkBadge(t); if (bt) { var bd = document.createElement("span"); bd.className = "bdg"; bd.textContent = bt[0]; bd.title = bt[1]; aw.appendChild(bd); }
-      cp.className = "bk-cp"; cp.textContent = nm;
-      a.className = "a " + (t.amount < 0 ? "minus" : t.amount > 0 ? "plus" : "zero"); a.textContent = bkMoney(t.amount, t.currency);
-      b.appendChild(aw); b.appendChild(cp); b.appendChild(a); b.appendChild(bkSub(t));
-      var mt = bkMeta(t); if (mt) { b.appendChild(mt); b.className += " m3"; }
-      b.addEventListener("click", function () { if (b._sw) { b._sw = false; return; } txOpen(t.id); }); // после смахивания касание не открывает лист
-      li.appendChild(b);
-      var needs = bkNeeds(t);
-      if (needs) bkSwipe(li, b, t);
-      if (needs && sgReady(t.sugg)) {
-        li.className += " has-ok";
-        var ok = document.createElement("button"); ok.type = "button"; ok.className = "bk-ok"; ok.textContent = "✓";
-        ok.setAttribute("aria-label", "Принять: " + decText(t.sugg));
-        ok.addEventListener("click", function (e) { e.stopPropagation(); bkAccept(li, t); }); // строку не открывает
-        b.appendChild(ok);
-      } else if (needs) { // подсказки нет (или без нужной подкатегории) — та же кнопка, серая, со знаком вопроса: открыть выбор категории (его слово 09.11.2026)
-        li.className += " has-ok";
-        var pk = document.createElement("button"); pk.type = "button"; pk.className = "bk-ok pick"; pk.textContent = "?";
-        pk.setAttribute("aria-label", "Выбрать категорию");
-        pk.addEventListener("click", function (e) { e.stopPropagation(); txOpen(t.id); });
-        b.appendChild(pk);
-      }
-      rows.appendChild(li);
-    });
-    bkFitSub();
+    var key = bk.filter + "|" + bkQTokens().join(" ") + "|" + bkPeriodLabel(), keep = key === bk.listKey ? bk.shown || 0 : 0; // тот же список — столько же строк, прокрутка на месте
+    bk.listKey = key; bk.vis = vis; bk.shown = 0; bk.lastD = ""; bk.rows = null;
+    bkMore(Math.max(BK_CHUNK, keep)); // за год — до 1300 строк: сразу первые BK_CHUNK, остальные по мере прокрутки
+
     var seen = false; try { seen = localStorage.getItem("bk_swiped") === "1"; } catch (er) { /* приватный режим */ }
     if (!bel.hint) { bel.hint = document.createElement("p"); bel.hint.className = "bk-swhint"; bel.hint.textContent = "Смахни операцию вправо — принять подсказку. Нажми — открыть."; bel.list.parentNode.insertBefore(bel.hint, bel.list); }
     bel.hint.hidden = seen || bk.filter !== "review" || !vis.length;
     var empty = !vis.length;
     bel.empty.hidden = !empty;
-    bel.empty.innerHTML = bk.filter === "review" ? "<b>Все размечено ✓</b>Новые операции придут с ночной выгрузкой банка" : "Операций пока нет";
-    var prev = bkPrevMonth();
-    bel.more.hidden = bk.filter !== "all" || !prev;
-    if (prev) bel.more.textContent = "Показать " + MONTHS[Number(prev.slice(5, 7)) - 1].toLowerCase() + " " + prev.slice(0, 4);
+    bel.empty.innerHTML = bkQTokens().length ? "Ничего не найдено"
+      : bk.filter === "review" ? (pending.length ? "За этот период проверять нечего" : "<b>Все размечено ✓</b>Новые операции придут с ночной выгрузкой банка")
+      : bk.period && bk.period.y ? "За этот период операций нет" : "Операций пока нет";
+    bel.more.hidden = true; // «Показать <месяц>» заменен периодом
+    bel.period.textContent = bkPeriodLabel();
   }
   // подход Claude: кнопка и понятное состояние — работает (с ходом) или закончил (когда и что изменил)
   function hm(iso) { var t = new Date(iso); return isNaN(t) ? "" : String(t.getHours()).padStart(2, "0") + ":" + String(t.getMinutes()).padStart(2, "0"); }
@@ -1378,6 +1454,7 @@ button.txd-row:active { background: var(--chip); }
   function bkLoad(from) {
     if (!token()) { bkRender(); return Promise.resolve(false); }
     var f = from || (bk.data && bk.data.from) || undefined;
+    if (bk.period !== undefined) { var w = bkPeriodFrom(); if (!f || w < f) f = w; } // период — сразу весь: числа на обеих вкладках
     return api("bank_list", { bank: prefs.bank, from: f }).then(function (j) { bkApply(j); bkStatus("", ""); if (bk.queue.length) bkSend(); return true; })
       .catch(function (e) { if (e && e.code === "network") connected(false); if (e && e.code === "unauthorized") { token(null); showSetup("Код не подошел"); } bkStatus(explain(e), "err"); bkRender(); return false; });
   }
@@ -1994,7 +2071,33 @@ button.txd-row:active { background: var(--chip); }
   bel.close.addEventListener("click", txClose); bel.back.addEventListener("click", txClose);
   B("txScroll").addEventListener("scroll", txFade, { passive: true });
   bel.review.addEventListener("click", function () { bk.filter = "review"; prefs.bkFilter = "review"; ls("cash_prefs", prefs); bkRender(); window.scrollTo(0, 0); });
-  bel.all.addEventListener("click", function () { bk.filter = "all"; prefs.bkFilter = "all"; ls("cash_prefs", prefs); bkRender(); window.scrollTo(0, 0); });
+  bel.all.addEventListener("click", function () { bk.filter = "all"; prefs.bkFilter = "all"; ls("cash_prefs", prefs); bkEnsurePeriod(); bkRender(); window.scrollTo(0, 0); });
+  bk.q = ""; bk.period = prefs.bkPeriod !== undefined ? prefs.bkPeriod : { y: new Date().getFullYear(), m: null };
+  var qTimer = 0;
+  bel.search.addEventListener("input", function () { bel.qx.hidden = !bel.search.value; clearTimeout(qTimer); qTimer = setTimeout(function () { bk.q = bel.search.value; bkRender(); }, 120); });
+  bel.search.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); bel.search.blur(); } });
+  bel.qx.addEventListener("pointerdown", function (e) { e.preventDefault(); });
+  bel.qx.addEventListener("click", function () { bel.search.value = ""; bk.q = ""; bel.qx.hidden = true; bkRender(); });
+  function bkPerRender() {
+    var box = bel.perBody, now = new Date(), cy = now.getFullYear(), p = bk.period || {}, y = p.y || null, i;
+    box.textContent = "";
+    var yrs = document.createElement("div"); yrs.className = "yrs"; box.appendChild(yrs);
+    var yb = function (label, val) { var b = document.createElement("button"); b.type = "button"; b.textContent = label; if (val === y) b.className = "on";
+      b.addEventListener("click", function () { bk.period = { y: val, m: null }; if (!val) bkPerApply(); else bkPerRender(); }); yrs.appendChild(b); };
+    for (i = 2024; i <= cy; i++) yb(String(i), i);
+    yb("Все годы", null);
+    if (!y) return;
+    var mos = document.createElement("div"); mos.className = "mos"; box.appendChild(mos);
+    var whole = document.createElement("button"); whole.type = "button"; whole.className = "whole" + (!p.m ? " on" : ""); whole.textContent = "Весь " + y;
+    whole.addEventListener("click", function () { bk.period = { y: y, m: null }; bkPerApply(); }); mos.appendChild(whole);
+    var SH = ["Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"];
+    SH.forEach(function (nm, k) { var b = document.createElement("button"); b.type = "button"; b.textContent = nm; if (p.m === k + 1) b.className = "on";
+      b.disabled = y === cy && k > now.getMonth(); b.addEventListener("click", function () { bk.period = { y: y, m: k + 1 }; bkPerApply(); }); mos.appendChild(b); });
+  }
+  function bkPerApply() { bel.perSheet.hidden = true; prefs.bkPeriod = bk.period; ls("cash_prefs", prefs); bkEnsurePeriod(); bkRender(); window.scrollTo(0, 0); }
+  bel.period.addEventListener("click", function () { bkPerRender(); bel.perSheet.hidden = false; });
+  B("bkPerClose").addEventListener("click", function () { bel.perSheet.hidden = true; });
+  B("bkPerBack").addEventListener("click", function () { bel.perSheet.hidden = true; });
   bel.more.addEventListener("click", function () { var p = bkPrevMonth(); if (!p) return; bel.more.disabled = true; bkLoad(p).then(function () { bel.more.disabled = false; }); });
   bel.bankBtn.addEventListener("click", function () { // выбор банка — лист снизу, как категории в Cash
     var banks = (bk.data && bk.data.banks) || [];
@@ -2090,6 +2193,7 @@ button.txd-row:active { background: var(--chip); }
   sheetSwipe(bel.sheet, ".tx-scroll", txClose);
   sheetSwipe(cm.sheet, null, cmClose);
   sheetSwipe(bel.bankSheet, null, function () { bel.bankSheet.hidden = true; });
+  sheetSwipe(bel.perSheet, null, function () { bel.perSheet.hidden = true; });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") { if (!cm.sheet.hidden) { cmClose(); return; } if (!el.sheet.hidden) sheetClose(); if (!el.countSheet.hidden) countClose(); if (!bel.sheet.hidden) txClose(); if (!bel.bankSheet.hidden) bel.bankSheet.hidden = true; } });
   el.comment.addEventListener("input", renderTpl);
   el.btnClear.addEventListener("pointerdown", function (e) { e.preventDefault(); }); // не ронять клавиатуру, если она открыта
