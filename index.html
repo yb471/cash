@@ -382,6 +382,10 @@ button.txd-row:active { background: var(--chip); }
 .sheet-list button.on::after { content: "✓"; flex: none; margin-left: 4px; color: var(--accent); font-weight: 700; font-size: calc(17 * var(--u)); }
 .sheet-list .em { flex: none; width: 58px; font-size: calc(16 * var(--u)); text-align: center; line-height: 1; white-space: nowrap; letter-spacing: -2px; } /* три эмодзи влезают в колонку */
 .sheet-list .nm { flex: 1; min-width: 0; }
+.more-list button { gap: 12px; padding-left: 14px; } .more-list .em { width: 24px; } /* значок — под заголовком листа */
+.more-list .em svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; vertical-align: middle; color: var(--muted); }
+.more-list button.on .em svg { color: var(--accent); }
+.tab[data-tab="more"] svg circle { fill: currentColor; stroke: none; }
 .sheet-list .chev { flex: none; color: var(--muted); font-weight: 600; } /* подкатегории (его «да» 10.11.2026): касание раскрывает их под категорией */
 .sheet-list .sub button { padding-left: 94px; min-height: 46px; } /* правее названия категории — видно, чья подкатегория */ .sheet-list .sub button .nm { font-weight: 500; }
 @keyframes sheetup { from { transform: translateY(40px); opacity: .6; } to { transform: none; opacity: 1; } }
@@ -587,10 +591,9 @@ button.txd-row:active { background: var(--chip); }
 
 <nav class="tabbar" aria-label="Разделы"><div class="tabbar-in">
   <button class="tab" type="button" data-tab="dashboard"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg>Dashboard</button>
-  <button class="tab" type="button" data-tab="assets"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 15.5A9 9 0 1 1 8.5 3.7"/><path d="M12 3v9h9a9 9 0 0 0-9-9z"/></svg>Assets</button> <!-- после Dashboard (его слово 14.11.2026); было Invest; значок — круговая диаграмма: состав имущества (его «давай» 13.11.2026, вместо мешка с $ в 156) -->
   <button class="tab on" type="button" data-tab="cash" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 9.5v5M18 9.5v5"/></svg>Cash</button>
   <button class="tab" type="button" data-tab="bank"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9.5 12 4l9 5.5"/><path d="M4 20h16"/><path d="M6 11v6M10 11v6M14 11v6M18 11v6"/></svg>Bank</button>
-  <button class="tab" type="button" data-tab="debts"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-2-1.5-2 1.5-2-1.5-2 1.5-2-1.5L6 21z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>Debts</button> <!-- его слово 13.11.2026: возле Bank, пока заглушка -->
+  <button class="tab" type="button" data-tab="more" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg>More</button> <!-- остальные разделы — меню (его слово 17.11.2026) -->
 </div></nav>
 
 <div class="sheet" id="sheet" hidden>
@@ -645,6 +648,17 @@ button.txd-row:active { background: var(--chip); }
     <div class="bk-per" id="bkPerBody"></div>
   </div>
 </div>
+<div class="sheet" id="moreSheet" hidden> <!-- «More» нижнего меню: остальные разделы (его слово 17.11.2026) -->
+  <div class="sheet-back" id="moreBack"></div>
+  <div class="sheet-body" role="dialog" aria-label="Разделы">
+    <div class="sheet-head"><span>Разделы</span><button id="moreClose" type="button" aria-label="Закрыть">✕</button></div>
+    <ul class="sheet-list more-list" id="moreList">
+      <li><button type="button" data-tab="assets"><span class="em"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 15.5A9 9 0 1 1 8.5 3.7"/><path d="M12 3v9h9a9 9 0 0 0-9-9z"/></svg></span><span class="nm">Assets</span></button></li>
+      <li><button type="button" data-tab="debts"><span class="em"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-2-1.5-2 1.5-2-1.5-2 1.5-2-1.5L6 21z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg></span><span class="nm">Debts</span></button></li>
+    </ul>
+  </div>
+</div>
+
 <div class="sheet" id="bkBankSheet" hidden>
   <div class="sheet-back" id="bkBankBack"></div>
   <div class="sheet-body" role="dialog" aria-label="Банк">
@@ -671,7 +685,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "159"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "160"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -2139,18 +2153,31 @@ button.txd-row:active { background: var(--chip); }
   window.addEventListener("resize", function () { bkFitSub(); }); // поворот, смена размера текста
   if (window.visualViewport) { var vv = window.visualViewport; vv.addEventListener("resize", function () { document.body.classList.toggle("kb", vv.height < window.innerHeight * 0.8); }); }
   var SECTIONS = { dashboard: "Dashboard", cash: "Cash YB", bank: "Bank", debts: "Debts", assets: "Assets" };
+  var MORE = { assets: 1, debts: 1 }; // разделы в «More» (его слово 17.11.2026): внизу только Dashboard, Cash, Bank и More
+  var moreSheet = $("moreSheet"), moreList = $("moreList");
+  function showTab(t) {
+    var tabFor = MORE[t] ? "more" : t; // раздел из меню — подсвечен «More»
+    Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (x) { var on = x.getAttribute("data-tab") === tabFor; x.classList.toggle("on", on); if (on) x.setAttribute("aria-current", "page"); else x.removeAttribute("aria-current"); });
+    Array.prototype.forEach.call(moreList.querySelectorAll("button"), function (x) { x.classList.toggle("on", x.getAttribute("data-tab") === t); });
+    document.body.classList.toggle("tab-other", t === "dashboard" || !!MORE[t]);
+    document.body.classList.toggle("tab-bank", t === "bank");
+    bkUndoHide(); // ушел из раздела — решение остается и уйдет в базу
+    $("section").textContent = SECTIONS[t];
+    window.scrollTo(0, 0);
+    if (t === "bank") bankOpen();
+  }
   Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (b) {
     b.addEventListener("click", function () {
       var t = b.getAttribute("data-tab");
-      Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (x) { var on = x === b; x.classList.toggle("on", on); if (on) x.setAttribute("aria-current", "page"); else x.removeAttribute("aria-current"); });
-      document.body.classList.toggle("tab-other", t === "dashboard" || t === "debts" || t === "assets");
-      document.body.classList.toggle("tab-bank", t === "bank");
-      bkUndoHide(); // ушел из раздела — решение остается и уйдет в базу
-      $("section").textContent = SECTIONS[t];
-      window.scrollTo(0, 0);
-      if (t === "bank") bankOpen();
+      if (t === "more") { moreSheet.hidden = false; return; } // меню разделов, раздел не меняется
+      showTab(t);
     });
   });
+  Array.prototype.forEach.call(moreList.querySelectorAll("button"), function (b) {
+    b.addEventListener("click", function () { moreSheet.hidden = true; showTab(b.getAttribute("data-tab")); });
+  });
+  $("moreClose").addEventListener("click", function () { moreSheet.hidden = true; });
+  $("moreBack").addEventListener("click", function () { moreSheet.hidden = true; });
   el.btnMoreRecent.addEventListener("click", function () { state.shown = state.rendered + 10; renderRecent(); }); // по 10 за раз (его слово 27.10.2026), месяц целиком
   // лист закрывается свайпом вниз (его слово 04.11.2026): тянется за пальцем от шапки или когда список листа в самом верху;
   // отпустил ниже 90px или резким движением — уезжает и закрывается, иначе возвращается на место
@@ -2192,6 +2219,7 @@ button.txd-row:active { background: var(--chip); }
   sheetSwipe(cm.sheet, null, cmClose);
   sheetSwipe(bel.bankSheet, null, function () { bel.bankSheet.hidden = true; });
   sheetSwipe(bel.perSheet, null, function () { bel.perSheet.hidden = true; });
+  sheetSwipe(moreSheet, null, function () { moreSheet.hidden = true; });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") { if (!cm.sheet.hidden) { cmClose(); return; } if (!el.sheet.hidden) sheetClose(); if (!el.countSheet.hidden) countClose(); if (!bel.sheet.hidden) txClose(); if (!bel.bankSheet.hidden) bel.bankSheet.hidden = true; } });
   el.comment.addEventListener("input", renderTpl);
   el.btnClear.addEventListener("pointerdown", function (e) { e.preventDefault(); }); // не ронять клавиатуру, если она открыта
