@@ -584,7 +584,7 @@ button.txd-row:active { background: var(--chip); }
   <section id="soon">Раздел в работе</section>
 
   <section id="assetsPage" aria-label="Assets"> <!-- его счета: итог в EUR, остаток и дата обновления каждого (его слово 19.11.2026) -->
-    <div class="seg" role="group" aria-label="Чей остаток"><button class="seg-btn neutral on" type="button" data-who="me">Yaroslav Burda</button><button class="seg-btn neutral" type="button" data-who="nastia">Anastasiia Burda</button><button class="seg-btn neutral" type="button" data-who="family">Burda Family</button></div> <!-- его слово 19.11.2026; счета Насти подключим позже -->
+    <div class="seg" role="group" aria-label="Чей остаток"><button class="seg-btn neutral on" type="button" data-who="family">Family Total</button><button class="seg-btn neutral" type="button" data-who="me">Yaroslav Burda</button><button class="seg-btn neutral" type="button" data-who="nastia">Anastasiia Burda</button></div> <!-- его слово 19.11.2026; счета Насти подключим позже -->
     <div class="as-total"><b id="asTotal">—</b><small id="asNote"></small></div>
     <div class="status" id="asStatus"></div>
     <ul class="as-list" id="asList"></ul>
@@ -717,7 +717,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "165"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "166"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -2223,9 +2223,10 @@ button.txd-row:active { background: var(--chip); }
   // телефон помнит и рисует сразу, свежее — с сервера при входе в раздел и свайпом вниз
   // чей остаток (его слово 19.11.2026): мой, Настин, общий по семье; счета Насти пока не подключены («подключим позже») —
   // у нее пусто, семья — пока только его счета, и это написано
-  var as = { data: ls("cash_assets"), busy: null, who: ({ nastia: 1, family: 1 })[ls("cash_assets_who")] ? ls("cash_assets_who") : "me" };
+  var as = { data: ls("cash_assets"), busy: null, who: "family" }; // всегда открывается на Family Total (его слово 19.11.2026)
+  ls("cash_assets_who", null); // выбор больше не запоминается
   Array.prototype.forEach.call(document.querySelectorAll("#assetsPage .seg-btn"), function (b) {
-    b.addEventListener("click", function () { as.who = b.getAttribute("data-who"); ls("cash_assets_who", as.who); asRender(); });
+    b.addEventListener("click", function () { as.who = b.getAttribute("data-who"); asRender(); });
   });
   function asRender() {
     var d = as.data, list = $("asList"), note = [];
