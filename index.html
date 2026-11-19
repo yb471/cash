@@ -69,6 +69,7 @@ body.tab-other .gear { visibility: hidden; }
 body.tab-assets .app > :not(.top):not(#assetsPage) { display: none !important; }
 body.tab-assets #assetsPage { display: flex; }
 body.tab-assets .gear { visibility: hidden; }
+#assetsPage .seg { grid-template-columns: 1fr 1fr 1fr; padding: 4px; border-radius: 12px; } #assetsPage .seg-btn { height: 36px; border-radius: 9px; font-size: calc(15 * var(--u)); }
 .as-total { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; font-variant-numeric: tabular-nums; }
 .as-total .k { color: var(--muted); font-size: calc(13 * var(--u)); }
 .as-total b { font-size: calc(28 * var(--u)); font-weight: 700; letter-spacing: -.3px; line-height: 1.15; }
@@ -584,7 +585,8 @@ button.txd-row:active { background: var(--chip); }
   <section id="soon">Раздел в работе</section>
 
   <section id="assetsPage" aria-label="Assets"> <!-- его счета: итог в EUR, остаток и дата обновления каждого (его слово 19.11.2026) -->
-    <div class="as-total"><span class="k">Всего на счетах</span><b id="asTotal">—</b><small id="asNote"></small></div>
+    <div class="seg" role="group" aria-label="Чей остаток"><button class="seg-btn neutral on" type="button" data-who="me">Мой</button><button class="seg-btn neutral" type="button" data-who="nastia">Настин</button><button class="seg-btn neutral" type="button" data-who="family">Семья</button></div> <!-- его слово 19.11.2026; счета Насти подключим позже -->
+    <div class="as-total"><span class="k" id="asLabel">Мой остаток</span><b id="asTotal">—</b><small id="asNote"></small></div>
     <div class="status" id="asStatus"></div>
     <ul class="as-list" id="asList"></ul>
   </section>
@@ -716,7 +718,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "162"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "163"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -2220,11 +2222,20 @@ button.txd-row:active { background: var(--chip); }
   }
   // раздел Assets (его слово 19.11.2026): счета банков и наличные — остаток и когда обновлен, итог в EUR; последнее показанное
   // телефон помнит и рисует сразу, свежее — с сервера при входе в раздел и свайпом вниз
-  var as = { data: ls("cash_assets"), busy: null };
+  // чей остаток (его слово 19.11.2026): мой, Настин, общий по семье; счета Насти пока не подключены («подключим позже») —
+  // у нее пусто, семья — пока только его счета, и это написано
+  var as = { data: ls("cash_assets"), busy: null, who: ({ nastia: 1, family: 1 })[ls("cash_assets_who")] ? ls("cash_assets_who") : "me" };
+  var AS_LABEL = { me: "Мой остаток", nastia: "Остаток Насти", family: "Всего по семье" };
+  Array.prototype.forEach.call(document.querySelectorAll("#assetsPage .seg-btn"), function (b) {
+    b.addEventListener("click", function () { as.who = b.getAttribute("data-who"); ls("cash_assets_who", as.who); asRender(); });
+  });
   function asRender() {
     var d = as.data, list = $("asList"), note = [];
-    list.textContent = "";
-    if (!d) { $("asTotal").textContent = "—"; $("asNote").textContent = ""; return; }
+    list.textContent = ""; $("asLabel").textContent = AS_LABEL[as.who];
+    Array.prototype.forEach.call(document.querySelectorAll("#assetsPage .seg-btn"), function (b) { var on = b.getAttribute("data-who") === as.who; b.classList.toggle("on", on); b.setAttribute("aria-pressed", on ? "true" : "false"); });
+    if (as.who === "nastia") { $("asTotal").textContent = "—"; $("asNote").textContent = "Счета Насти пока не подключены"; return; }
+    if (as.who === "family") note.push("Без счетов Насти — пока не подключены");
+    if (!d) { $("asTotal").textContent = "—"; $("asNote").textContent = ""; note.forEach(function (t) { $("asNote").appendChild(node("span", "", t)); }); return; }
     $("asTotal").textContent = plain(Number(d.total_eur) || 0, "EUR");
     Object.keys(d.rates || {}).sort().forEach(function (c) { var r = d.rates[c]; note.push(c + " — по курсу ЕЦБ " + String(r.rate).replace(".", ",") + " на " + r.day.slice(8, 10) + "." + r.day.slice(5, 7)); });
     if ((d.no_rate || []).length) note.push("без " + d.no_rate.join(", ") + ": нет курса");
