@@ -64,6 +64,26 @@ body.locked .tabbar { display: none; }
 body.tab-other .app > :not(.top):not(#soon) { display: none !important; }
 body.tab-other #soon { display: flex; }
 body.tab-other .gear { visibility: hidden; }
+/* раздел Assets (его слово 19.11.2026): итог в EUR и счета — остаток и когда обновлен */
+#assetsPage { display: none; flex-direction: column; gap: 12px; }
+body.tab-assets .app > :not(.top):not(#assetsPage) { display: none !important; }
+body.tab-assets #assetsPage { display: flex; }
+body.tab-assets .gear { visibility: hidden; }
+.as-total { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; font-variant-numeric: tabular-nums; }
+.as-total .k { color: var(--muted); font-size: calc(13 * var(--u)); }
+.as-total b { font-size: calc(28 * var(--u)); font-weight: 700; letter-spacing: -.3px; line-height: 1.15; }
+.as-total small { color: var(--muted); font-size: calc(13 * var(--u)); line-height: 1.35; } .as-total small:empty { display: none; } .as-total small span { display: block; }
+.as-list { list-style: none; margin: 0; padding: 4px 0; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+.as-list:empty { display: none; }
+.as-list li { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 8px 16px; }
+.as-list li + li { border-top: 1px solid var(--line); }
+.as-list .em { flex: none; width: 36px; height: 36px; border-radius: 50%; background: var(--chip); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: calc(17 * var(--u)); }
+.as-list .nm { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.as-list .nm b { font-weight: 500; font-size: calc(15 * var(--u)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.as-list .em.code { font-size: calc(11 * var(--u)); letter-spacing: -.2px; }
+.as-list .nm small, .as-list .am small { color: var(--muted); font-size: calc(13 * var(--u)); font-variant-numeric: tabular-nums; }
+.as-list .am { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.as-list .am b { font-weight: 600; font-size: calc(15 * var(--u)); }
 /* раздел Bank: разметка категорий операций банка (его слово 02.11.2026) */
 #bankPage { display: none; flex-direction: column; gap: 12px; }
 body.tab-bank .app > :not(.top):not(#bankPage) { display: none !important; }
@@ -563,6 +583,12 @@ button.txd-row:active { background: var(--chip); }
 
   <section id="soon">Раздел в работе</section>
 
+  <section id="assetsPage" aria-label="Assets"> <!-- его счета: итог в EUR, остаток и дата обновления каждого (его слово 19.11.2026) -->
+    <div class="as-total"><span class="k">Всего на счетах</span><b id="asTotal">—</b><small id="asNote"></small></div>
+    <div class="status" id="asStatus"></div>
+    <ul class="as-list" id="asList"></ul>
+  </section>
+
   <section id="bankPage" aria-label="Банк"> <!-- сводка — сразу под названием (его слово 02.11.2026) -->
     <section class="card" id="bkMenu" hidden> <!-- меню «⋯» раздела, как в Cash (его слово 03.11.2026) -->
       <div class="line"><span>Связано</span><span class="bk-mstat"><b id="stSuggP">—</b> <span id="stPend"></span></span></div> <!-- сводка — в меню (его слово 13.11.2026) -->
@@ -690,7 +716,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "161"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "162"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -738,7 +764,7 @@ button.txd-row:active { background: var(--chip); }
   function token(v) {
     if (v === undefined) return ls("cash_token");
     ls("cash_token", v);
-    if (v === null) { ls("cash_recent", null); ls("cash_balance", null); ls("cash_months", null); state.recent = []; state.balance = {}; state.months = {}; ls("bank_cache", null); if (typeof bk !== "undefined" && bk) { bk.data = null; bk.loaded = false; } } // без кода — никаких чужих данных на экране и в памяти
+    if (v === null) { ls("cash_recent", null); ls("cash_balance", null); ls("cash_months", null); state.recent = []; state.balance = {}; state.months = {}; ls("bank_cache", null); ls("cash_assets", null); if (typeof as !== "undefined" && as) as.data = null; if (typeof bk !== "undefined" && bk) { bk.data = null; bk.loaded = false; } } // без кода — никаких чужих данных на экране и в памяти
   }
   (function fromLink() {
     var m = (location.hash || "").match(/^#t=([0-9a-f]{48})$/i);
@@ -2183,12 +2209,50 @@ button.txd-row:active { background: var(--chip); }
     var tabFor = MORE[t] ? "more" : t; // раздел из меню — подсвечен «More»
     Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (x) { var on = x.getAttribute("data-tab") === tabFor; x.classList.toggle("on", on); if (on) x.setAttribute("aria-current", "page"); else x.removeAttribute("aria-current"); });
     Array.prototype.forEach.call(moreList.querySelectorAll("button"), function (x) { x.classList.toggle("on", x.getAttribute("data-tab") === t); });
-    document.body.classList.toggle("tab-other", t === "dashboard" || !!MORE[t]);
+    document.body.classList.toggle("tab-other", t === "dashboard" || t === "debts");
     document.body.classList.toggle("tab-bank", t === "bank");
+    document.body.classList.toggle("tab-assets", t === "assets");
     bkUndoHide(); // ушел из раздела — решение остается и уйдет в базу
     $("section").textContent = SECTIONS[t];
     window.scrollTo(0, 0);
     if (t === "bank") bankOpen();
+    if (t === "assets") { asRender(); asLoad(); }
+  }
+  // раздел Assets (его слово 19.11.2026): счета банков и наличные — остаток и когда обновлен, итог в EUR; последнее показанное
+  // телефон помнит и рисует сразу, свежее — с сервера при входе в раздел и свайпом вниз
+  var as = { data: ls("cash_assets"), busy: null };
+  function asRender() {
+    var d = as.data, list = $("asList"), note = [];
+    list.textContent = "";
+    if (!d) { $("asTotal").textContent = "—"; $("asNote").textContent = ""; return; }
+    $("asTotal").textContent = plain(Number(d.total_eur) || 0, "EUR");
+    Object.keys(d.rates || {}).sort().forEach(function (c) { var r = d.rates[c]; note.push(c + " — по курсу ЕЦБ " + String(r.rate).replace(".", ",") + " на " + r.day.slice(8, 10) + "." + r.day.slice(5, 7)); });
+    if ((d.no_rate || []).length) note.push("без " + d.no_rate.join(", ") + ": нет курса");
+    $("asNote").textContent = ""; note.forEach(function (t) { $("asNote").appendChild(node("span", "", t)); });
+    (d.accounts || []).forEach(function (a) {
+      var li = document.createElement("li"), em = document.createElement("span"), nm = document.createElement("span"), nb = document.createElement("b"), ns = document.createElement("small"),
+        am = document.createElement("span"), ab = document.createElement("b"), known = a.balance !== null && a.balance !== undefined;
+      em.className = SYM[a.currency] ? "em" : "em code"; em.textContent = SYM[a.currency] || a.currency; nm.className = "nm"; am.className = "am";
+      nb.textContent = a.label; ns.textContent = a.at ? "обновлен " + dmhm(a.at).replace(" ", "\u00a0") : "дата неизвестна";
+      nm.appendChild(nb); nm.appendChild(ns);
+      ab.textContent = known ? plain(Number(a.balance), a.currency) : "—"; am.appendChild(ab);
+      if (known && a.currency !== "EUR" && Number(a.balance) !== 0) { var ae = document.createElement("small"); ae.textContent = a.eur === null || a.eur === undefined ? "нет курса" : "≈ " + plain(Number(a.eur), "EUR"); am.appendChild(ae); }
+      li.appendChild(em); li.appendChild(nm); li.appendChild(am); list.appendChild(li);
+    });
+    if (!(d.accounts || []).length) { var e = document.createElement("li"); e.textContent = "Счетов пока нет"; e.style.color = "var(--muted)"; list.appendChild(e); }
+  }
+  function asLoad() {
+    if (as.busy) return as.busy;
+    var st = $("asStatus");
+    if (!token()) { st.className = "status err"; st.textContent = explain({ code: "no_token" }); return Promise.resolve(false); }
+    if (!as.data) { st.className = "status"; st.textContent = "Загружаю…"; }
+    as.busy = api("assets").then(function (j) {
+      as.data = { accounts: j.accounts || [], total_eur: j.total_eur, no_rate: j.no_rate || [], rates: j.rates || {} }; ls("cash_assets", as.data);
+      st.className = "status"; st.textContent = ""; connected(true); asRender(); return true;
+    }, function (e) {
+      st.className = "status err"; st.textContent = explain(e) + (as.data ? " — показано сохраненное" : ""); if (e && e.code === "network") connected(false); return false;
+    }).then(function (ok) { as.busy = null; return ok; });
+    return as.busy;
   }
   Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (b) {
     b.addEventListener("click", function () {
@@ -2282,9 +2346,9 @@ button.txd-row:active { background: var(--chip); }
   }
   function ptrRefresh() {
     ptr.busy = true; ptr.ring.style.strokeDashoffset = ""; ptr.svg.style.transform = ""; el.ptr.classList.add("spin"); ptrDraw(56, true);
-    var inBank = document.body.classList.contains("tab-bank");
-    Promise.all([inBank ? bkLoad() : refreshInit(), swUpdate()]).then(function (r) {
-      if (inBank) { setTimeout(function () { ptrDraw(0, true); setTimeout(function () { el.ptr.classList.remove("spin"); ptr.busy = false; }, 350); }, 500); return; }
+    var inBank = document.body.classList.contains("tab-bank"), inAssets = document.body.classList.contains("tab-assets");
+    Promise.all([inBank ? bkLoad() : inAssets ? asLoad() : refreshInit(), swUpdate()]).then(function (r) {
+      if (inBank || inAssets) { setTimeout(function () { ptrDraw(0, true); setTimeout(function () { el.ptr.classList.remove("spin"); ptr.busy = false; }, 350); }, 500); return; }
       if (r[0] && state.queue.length) flushQueue();
       setTimeout(function () { ptrDraw(0, true); setTimeout(function () { el.ptr.classList.remove("spin"); ptr.busy = false; }, 350); }, 500);
     });
