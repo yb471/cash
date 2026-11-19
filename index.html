@@ -65,24 +65,23 @@ body.tab-other .app > :not(.top):not(#soon) { display: none !important; }
 body.tab-other #soon { display: flex; }
 body.tab-other .gear { visibility: hidden; }
 /* раздел Assets (его слово 19.11.2026): итог в EUR и счета — остаток и когда обновлен */
-#assetsPage { display: none; flex-direction: column; gap: 12px; }
+#assetsPage { display: none; flex-direction: column; gap: 8px; }
 body.tab-assets .app > :not(.top):not(#assetsPage) { display: none !important; }
 body.tab-assets #assetsPage { display: flex; }
 body.tab-assets .gear { visibility: hidden; }
 #assetsPage .seg { grid-template-columns: auto auto auto; gap: 2px; padding: 4px; border-radius: 12px; } #assetsPage .seg-btn { height: 36px; border-radius: 9px; font-size: calc(13 * var(--u)); padding: 0 4px; white-space: nowrap; letter-spacing: -.1px; }
-.as-total { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; font-variant-numeric: tabular-nums; }
-.as-total .k { color: var(--muted); font-size: calc(13 * var(--u)); }
-.as-total b { font-size: calc(28 * var(--u)); font-weight: 700; letter-spacing: -.3px; line-height: 1.15; }
+.as-total { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 8px 16px; display: flex; flex-direction: column; gap: 2px; font-variant-numeric: tabular-nums; }
+.as-total b { font-size: calc(24 * var(--u)); font-weight: 700; letter-spacing: -.3px; line-height: 1.15; }
 .as-total small { color: var(--muted); font-size: calc(13 * var(--u)); line-height: 1.35; } .as-total small:empty { display: none; } .as-total small span { display: block; }
-.as-list { list-style: none; margin: 0; padding: 4px 0; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+.as-list { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
 .as-list:empty { display: none; }
-.as-list li { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 8px 16px; }
+.as-list li { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 5px 16px; }
 .as-list li + li { border-top: 1px solid var(--line); }
-.as-list .em { flex: none; width: 36px; height: 36px; border-radius: 50%; background: var(--chip); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: calc(17 * var(--u)); }
-.as-list .nm { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.as-list .em { flex: none; width: 30px; height: 30px; border-radius: 50%; background: var(--chip); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: calc(15 * var(--u)); }
+.as-list .nm { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0; }
 .as-list .nm b { font-weight: 500; font-size: calc(15 * var(--u)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.as-list .em.code { font-size: calc(11 * var(--u)); letter-spacing: -.2px; }
-.as-list .nm small, .as-list .am small { color: var(--muted); font-size: calc(13 * var(--u)); font-variant-numeric: tabular-nums; }
+.as-list .em.code { font-size: calc(10 * var(--u)); letter-spacing: -.2px; }
+.as-list .nm small, .as-list .am small { color: var(--muted); font-size: calc(12 * var(--u)); font-variant-numeric: tabular-nums; }
 .as-list .am { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .as-list .am b { font-weight: 600; font-size: calc(15 * var(--u)); }
 /* раздел Bank: разметка категорий операций банка (его слово 02.11.2026) */
@@ -586,7 +585,7 @@ button.txd-row:active { background: var(--chip); }
 
   <section id="assetsPage" aria-label="Assets"> <!-- его счета: итог в EUR, остаток и дата обновления каждого (его слово 19.11.2026) -->
     <div class="seg" role="group" aria-label="Чей остаток"><button class="seg-btn neutral on" type="button" data-who="me">Yaroslav Burda</button><button class="seg-btn neutral" type="button" data-who="nastia">Anastasiia Burda</button><button class="seg-btn neutral" type="button" data-who="family">Burda Family</button></div> <!-- его слово 19.11.2026; счета Насти подключим позже -->
-    <div class="as-total"><span class="k" id="asLabel">Мой остаток</span><b id="asTotal">—</b><small id="asNote"></small></div>
+    <div class="as-total"><b id="asTotal">—</b><small id="asNote"></small></div>
     <div class="status" id="asStatus"></div>
     <ul class="as-list" id="asList"></ul>
   </section>
@@ -718,7 +717,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "164"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "165"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -2225,13 +2224,12 @@ button.txd-row:active { background: var(--chip); }
   // чей остаток (его слово 19.11.2026): мой, Настин, общий по семье; счета Насти пока не подключены («подключим позже») —
   // у нее пусто, семья — пока только его счета, и это написано
   var as = { data: ls("cash_assets"), busy: null, who: ({ nastia: 1, family: 1 })[ls("cash_assets_who")] ? ls("cash_assets_who") : "me" };
-  var AS_LABEL = { me: "Мой остаток", nastia: "Остаток Насти", family: "Всего по семье" };
   Array.prototype.forEach.call(document.querySelectorAll("#assetsPage .seg-btn"), function (b) {
     b.addEventListener("click", function () { as.who = b.getAttribute("data-who"); ls("cash_assets_who", as.who); asRender(); });
   });
   function asRender() {
     var d = as.data, list = $("asList"), note = [];
-    list.textContent = ""; $("asLabel").textContent = AS_LABEL[as.who];
+    list.textContent = "";
     Array.prototype.forEach.call(document.querySelectorAll("#assetsPage .seg-btn"), function (b) { var on = b.getAttribute("data-who") === as.who; b.classList.toggle("on", on); b.setAttribute("aria-pressed", on ? "true" : "false"); });
     if (as.who === "nastia") { $("asTotal").textContent = "—"; $("asNote").textContent = "Счета Насти пока не подключены"; return; }
     if (as.who === "family") note.push("Без счетов Насти — пока не подключены");
