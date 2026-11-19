@@ -70,19 +70,21 @@ body.tab-assets .app > :not(.top):not(#assetsPage) { display: none !important; }
 body.tab-assets #assetsPage { display: flex; }
 body.tab-assets .gear { visibility: hidden; }
 #assetsPage .seg { grid-template-columns: auto auto auto; gap: 2px; padding: 4px; border-radius: 12px; } #assetsPage .seg-btn { height: 36px; border-radius: 9px; font-size: calc(13 * var(--u)); padding: 0 4px; white-space: nowrap; letter-spacing: -.1px; }
-.as-total { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 8px 8px 8px 16px; display: flex; align-items: center; gap: 12px; font-variant-numeric: tabular-nums; }
-.as-sum { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+/* блок Liquidity (его слово 19.11.2026): деньги семьи, доступные сейчас, — счета и наличные; одна карточка «название — сумма», следующие блоки (инвестиции и др.) — такими же */
+.as-block { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.as-head { display: flex; align-items: center; gap: 10px; padding: 8px 16px; font-variant-numeric: tabular-nums; }
+.as-head .t { flex: 1; min-width: 0; font-weight: 600; font-size: calc(15 * var(--u)); }
+.as-head .s { font-weight: 700; font-size: calc(19 * var(--u)); letter-spacing: -.2px; white-space: nowrap; }
 #assetsPage .as-refresh { flex: none; width: 36px; height: 36px; border-radius: 10px; }
-.as-total b { font-size: calc(24 * var(--u)); font-weight: 700; letter-spacing: -.3px; line-height: 1.15; }
-.as-total small { color: var(--muted); font-size: calc(13 * var(--u)); line-height: 1.35; } .as-total small:empty { display: none; } .as-total small span { display: block; }
-.as-list { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+.as-note { display: block; color: var(--muted); font-size: calc(12 * var(--u)); line-height: 1.35; padding: 8px 16px 9px; border-top: 1px solid var(--line); } .as-note:empty { display: none; } .as-note span { display: block; }
+.as-list { list-style: none; margin: 0; padding: 0; }
 .as-list:empty { display: none; }
+.as-list li { border-top: 1px solid var(--line); }
+.as-list .em svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .as-list li { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 5px 16px; }
-.as-list li + li { border-top: 1px solid var(--line); }
 .as-list .em { flex: none; width: 30px; height: 30px; border-radius: 50%; background: var(--chip); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: calc(15 * var(--u)); }
 .as-list .nm { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0; }
 .as-list .nm b { font-weight: 500; font-size: calc(15 * var(--u)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.as-list .em.code { font-size: calc(10 * var(--u)); letter-spacing: -.2px; }
 .as-list .nm small, .as-list .am small { color: var(--muted); font-size: calc(12 * var(--u)); font-variant-numeric: tabular-nums; }
 .as-list .am { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .as-list .am b { font-weight: 600; font-size: calc(15 * var(--u)); }
@@ -587,9 +589,8 @@ button.txd-row:active { background: var(--chip); }
 
   <section id="assetsPage" aria-label="Assets"> <!-- его счета: итог в EUR, остаток и дата обновления каждого (его слово 19.11.2026) -->
     <div class="seg" role="group" aria-label="Чей остаток"><button class="seg-btn neutral on" type="button" data-who="family">Family Total</button><button class="seg-btn neutral" type="button" data-who="me">Yaroslav Burda</button><button class="seg-btn neutral" type="button" data-who="nastia">Anastasiia Burda</button></div> <!-- его слово 19.11.2026; счета Насти подключим позже -->
-    <div class="as-total"><div class="as-sum"><b id="asTotal">—</b><small id="asNote"></small></div><button class="bk-refresh as-refresh" id="asRefresh" type="button" aria-label="Обновить: выгрузить остатки из банка"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div> <!-- ↻ — его слово 19.11.2026: «Добавь вкладку обновить» -->
+    <div class="as-block"><div class="as-head"><span class="t">Liquidity</span><b class="s" id="asTotal">—</b><button class="bk-refresh as-refresh" id="asRefresh" type="button" aria-label="Обновить: выгрузить остатки из банка"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div><ul class="as-list" id="asList"></ul><small class="as-note" id="asNote"></small></div> <!-- ↻ — его слово 19.11.2026: «Добавь вкладку обновить» -->
     <div class="status" id="asStatus"></div>
-    <ul class="as-list" id="asList"></ul>
   </section>
 
   <section id="bankPage" aria-label="Банк"> <!-- сводка — сразу под названием (его слово 02.11.2026) -->
@@ -719,7 +720,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "167"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "168"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -2225,6 +2226,8 @@ button.txd-row:active { background: var(--chip); }
   // телефон помнит и рисует сразу, свежее — с сервера при входе в раздел и свайпом вниз
   // чей остаток (его слово 19.11.2026): мой, Настин, общий по семье; счета Насти пока не подключены («подключим позже») —
   // у нее пусто, семья — пока только его счета, и это написано
+  var AS_ICON = { cash: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>',
+    bank: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9.5 12 4l9 5.5"/><path d="M4 20h16"/><path d="M6 11v6M10 11v6M14 11v6M18 11v6"/></svg>' };
   var as = { data: ls("cash_assets"), busy: null, who: "family" }; // всегда открывается на Family Total (его слово 19.11.2026)
   ls("cash_assets_who", null); // выбор больше не запоминается
   Array.prototype.forEach.call(document.querySelectorAll("#assetsPage .seg-btn"), function (b) {
@@ -2234,8 +2237,8 @@ button.txd-row:active { background: var(--chip); }
     var d = as.data, list = $("asList"), note = [];
     list.textContent = "";
     Array.prototype.forEach.call(document.querySelectorAll("#assetsPage .seg-btn"), function (b) { var on = b.getAttribute("data-who") === as.who; b.classList.toggle("on", on); b.setAttribute("aria-pressed", on ? "true" : "false"); });
-    if (as.who === "nastia") { $("asTotal").textContent = "—"; $("asNote").textContent = "Счета Насти пока не подключены"; return; }
-    if (as.who === "family") note.push("Без счетов Насти — пока не подключены");
+    if (as.who === "nastia") { $("asTotal").textContent = "—"; $("asNote").textContent = "Счета пока не подключены"; return; }
+    if (as.who === "family") note.push("Без счетов Anastasiia Burda — пока не подключены");
     if (!d) { $("asTotal").textContent = "—"; $("asNote").textContent = ""; note.forEach(function (t) { $("asNote").appendChild(node("span", "", t)); }); return; }
     $("asTotal").textContent = plain(Number(d.total_eur) || 0, "EUR");
     Object.keys(d.rates || {}).sort().forEach(function (c) { var r = d.rates[c]; note.push(c + " — по курсу ЕЦБ " + String(r.rate).replace(".", ",") + " на " + r.day.slice(8, 10) + "." + r.day.slice(5, 7)); });
@@ -2244,7 +2247,7 @@ button.txd-row:active { background: var(--chip); }
     (d.accounts || []).forEach(function (a) {
       var li = document.createElement("li"), em = document.createElement("span"), nm = document.createElement("span"), nb = document.createElement("b"), ns = document.createElement("small"),
         am = document.createElement("span"), ab = document.createElement("b"), known = a.balance !== null && a.balance !== undefined;
-      em.className = SYM[a.currency] ? "em" : "em code"; em.textContent = SYM[a.currency] || a.currency; nm.className = "nm"; am.className = "am";
+      em.className = "em"; em.innerHTML = a.kind === "cash" ? AS_ICON.cash : AS_ICON.bank; nm.className = "nm"; am.className = "am";
       nb.textContent = a.label; ns.textContent = a.at ? "обновлен " + dmhm(a.at).replace(" ", "\u00a0") : "дата неизвестна";
       nm.appendChild(nb); nm.appendChild(ns);
       ab.textContent = known ? plain(Number(a.balance), a.currency) : "—"; am.appendChild(ab);
