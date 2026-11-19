@@ -70,7 +70,9 @@ body.tab-assets .app > :not(.top):not(#assetsPage) { display: none !important; }
 body.tab-assets #assetsPage { display: flex; }
 body.tab-assets .gear { visibility: hidden; }
 #assetsPage .seg { grid-template-columns: auto auto auto; gap: 2px; padding: 4px; border-radius: 12px; } #assetsPage .seg-btn { height: 36px; border-radius: 9px; font-size: calc(13 * var(--u)); padding: 0 4px; white-space: nowrap; letter-spacing: -.1px; }
-.as-total { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 8px 16px; display: flex; flex-direction: column; gap: 2px; font-variant-numeric: tabular-nums; }
+.as-total { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 8px 8px 8px 16px; display: flex; align-items: center; gap: 12px; font-variant-numeric: tabular-nums; }
+.as-sum { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+#assetsPage .as-refresh { flex: none; width: 36px; height: 36px; border-radius: 10px; }
 .as-total b { font-size: calc(24 * var(--u)); font-weight: 700; letter-spacing: -.3px; line-height: 1.15; }
 .as-total small { color: var(--muted); font-size: calc(13 * var(--u)); line-height: 1.35; } .as-total small:empty { display: none; } .as-total small span { display: block; }
 .as-list { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
@@ -585,7 +587,7 @@ button.txd-row:active { background: var(--chip); }
 
   <section id="assetsPage" aria-label="Assets"> <!-- его счета: итог в EUR, остаток и дата обновления каждого (его слово 19.11.2026) -->
     <div class="seg" role="group" aria-label="Чей остаток"><button class="seg-btn neutral on" type="button" data-who="family">Family Total</button><button class="seg-btn neutral" type="button" data-who="me">Yaroslav Burda</button><button class="seg-btn neutral" type="button" data-who="nastia">Anastasiia Burda</button></div> <!-- его слово 19.11.2026; счета Насти подключим позже -->
-    <div class="as-total"><b id="asTotal">—</b><small id="asNote"></small></div>
+    <div class="as-total"><div class="as-sum"><b id="asTotal">—</b><small id="asNote"></small></div><button class="bk-refresh as-refresh" id="asRefresh" type="button" aria-label="Обновить: выгрузить остатки из банка"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div> <!-- ↻ — его слово 19.11.2026: «Добавь вкладку обновить» -->
     <div class="status" id="asStatus"></div>
     <ul class="as-list" id="asList"></ul>
   </section>
@@ -717,7 +719,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "166"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "167"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -2264,6 +2266,23 @@ button.txd-row:active { background: var(--chip); }
     }).then(function (ok) { as.busy = null; return ok; });
     return as.busy;
   }
+  // ↻ в Assets (его слово 19.11.2026): выгрузить банк сейчас (то же действие, что ↻ в Bank: свежий снимок остатков), затем
+  // перечитать счета; банк не ответил или выгрузка была только что — показывается то, что есть в базе
+  $("asRefresh").addEventListener("click", function () {
+    var btn = $("asRefresh"), st = $("asStatus");
+    if (as.syncing || !token()) return;
+    as.syncing = true; btn.classList.add("run"); btn.disabled = true; st.className = "status"; st.textContent = ""; // идет выгрузка — крутится значок, список не прыгает
+    var msg = "", cls = "status";
+    api("bank_sync", {}, 130000).then(function (j) {
+      var x = j.sync || {};
+      if (x.error) { msg = "Банк не ответил — " + x.error; cls = "status err"; }
+      else if (x.errors && x.errors.length) { msg = "Выгрузка: " + x.errors.join("; "); cls = "status warn"; }
+      else if (x.skipped === "busy") { msg = "Банк сейчас занят ночной выгрузкой — показан последний остаток"; cls = "status warn"; }
+    }, function (e) { msg = explain(e); cls = "status err"; }).then(function () { return asLoad(); }).then(function (ok) {
+      as.syncing = false; btn.classList.remove("run"); btn.disabled = false;
+      if (ok || msg) { st.className = msg ? cls : "status"; st.textContent = msg; }
+    });
+  });
   Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (b) {
     b.addEventListener("click", function () {
       var t = b.getAttribute("data-tab");
