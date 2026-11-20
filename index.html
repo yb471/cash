@@ -91,12 +91,13 @@ body.tab-assets .gear { visibility: hidden; }
 .db-bud .h { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: calc(13 * var(--u)); color: var(--muted); }
 .db-bud .h b { color: var(--fg); font-weight: 600; } .db-bud .h span { white-space: nowrap; }
 .db-chip { flex: none; font-size: calc(12 * var(--u)); font-weight: 600; padding: 3px 9px; border-radius: 99px; background: color-mix(in srgb, var(--plus) 14%, var(--surface)); color: var(--plus); white-space: nowrap; }
+.db-chip.low { background: color-mix(in srgb, var(--warn) 16%, var(--surface)); color: var(--warn); }
 .db-chip.over { background: color-mix(in srgb, var(--minus) 14%, var(--surface)); color: var(--minus); }
 .db-bar { position: relative; height: 6px; border-radius: 3px; background: var(--chip); overflow: hidden; }
 .db-bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; background: var(--accent); }
 .db-bar.over i { background: var(--minus); }
 .db-bar.thin { height: 4px; }
-.db-bar em { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--fg); opacity: .55; } /* черта — доля периода к сегодня */
+.db-bar em { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--fg); opacity: .7; box-shadow: 0 0 0 1px var(--surface); } /* черта — доля периода к сегодня */
 .db-list { list-style: none; margin: 0; padding: 0; }
 .db-list li { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; column-gap: 10px; row-gap: 5px; align-items: center; padding: 8px 16px 9px; border-top: 1px solid var(--line); }
 .db-list .em { width: 30px; height: 30px; border-radius: 50%; background: var(--chip); display: flex; align-items: center; justify-content: center; font-size: calc(15 * var(--u)); overflow: hidden; }
@@ -106,10 +107,18 @@ body.tab-assets .gear { visibility: hidden; }
 .db-list .am { font-weight: 600; font-size: calc(15 * var(--u)); white-space: nowrap; text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
 .db-list .am small { color: var(--muted); font-size: calc(12 * var(--u)); font-weight: 400; }
 .db-list .am.plus { color: var(--plus); }
-.db-list .ft { grid-column: 2 / -1; display: flex; flex-direction: column; gap: 4px; }
-.db-list .ft .t { display: flex; flex-wrap: wrap; justify-content: space-between; column-gap: 10px; row-gap: 2px; color: var(--muted); font-size: calc(12 * var(--u)); }
-.db-list .ft .t span { white-space: nowrap; } .db-list .ft .t span:last-child { margin-left: auto; } .db-list .ft .t span.wrap { white-space: normal; }
-.db-list .ft .t b { font-weight: 500; color: var(--fg); } .db-list .ft .t .over { color: var(--minus); font-weight: 600; } .db-list .ft .t .ok { color: var(--plus); }
+/* строки категорий Expenses: две строки текста и шкала-линия под ними */
+.db-exp li { grid-template-columns: 30px minmax(0, 1fr) auto; column-gap: 12px; row-gap: 2px; padding: 9px 16px 10px; align-items: baseline; }
+.db-exp .em { grid-row: 1 / 3; align-self: center; }
+.db-exp .nm { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.db-exp .stt .sb { color: var(--muted); font-weight: 400; }
+.db-exp .am { display: block; font-weight: 600; letter-spacing: -.1px; }
+.db-exp .stt, .db-exp .of { font-size: calc(13 * var(--u)); color: var(--muted); white-space: nowrap; }
+.db-exp .stt { grid-column: 2; min-width: 0; overflow: hidden; text-overflow: ellipsis; } .db-exp .stt.wrap { white-space: normal; }
+.db-exp .stt.low { color: var(--warn); font-weight: 600; } .db-exp .stt.over { color: var(--minus); font-weight: 600; }
+.db-exp .of { grid-column: 3; text-align: right; }
+.db-exp .db-bar { grid-column: 2 / -1; height: 3px; margin-top: 5px; }
+.db-bar.low i { background: #E3A21A; }
 .db-note { display: block; color: var(--muted); font-size: calc(12 * var(--u)); line-height: 1.35; padding: 8px 16px 9px; border-top: 1px solid var(--line); } .db-note:empty { display: none; } .db-note span { display: block; } .db-note span + span { margin-top: 3px; }
 /* Plan: суммы бюджета на год — кнопка-сумма открывает лист ввода */
 .db-plan li { row-gap: 2px; } .db-plan .nm small span { display: inline-block; margin-right: 10px; } .db-plan li.par .am { padding-right: 10px; }
@@ -794,7 +803,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "176"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "177"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -2301,8 +2310,10 @@ button.txd-row:active { background: var(--chip); }
   // ↻ (Liquidity). Ниже одна карточка раздела: выбор владельца (Family Total / Yaroslav Burda / Anastasiia Burda), сумма,
   // строки (выбор владельца — над карточкой). Названия раздела в карточке нет — оно в выборе сверху (его слово 20.11.2026: «убрал задвоение»).
   // Expenses: расходы по категориям за месяц или год (бюджетный год — календарный); «Не разнесено» и «Всего ушло» строками;
-  // бюджет сразу за месяц и год (его слово 20.11.2026): черта на шкале — доля периода к сегодня, потрачено больше этой доли
-  // плана — «Перелимит», меньше — «В бюджете»; план месяца — годовая сумма / 12. Человек — его личная категория и
+  // бюджет сразу за месяц и год (его слово 20.11.2026): черта на шкале — доля периода к сегодня; состояние — dbState: «Перелимит»
+  // красным — потрачено больше плана периода, желтым — трат больше доли периода («Выше темпа») или осталось меньше 20 % плана,
+  // иначе «В бюджете» (его слова 20.11.2026 о строках категорий; до версии 177 «Перелимит» значил «быстрее темпа»);
+  // план месяца — годовая сумма / 12. Человек — его личная категория и
   // подкатегории с его именем. Plan: суммы на год по категориям и подкатегориям (me.budget_limits), рядом средний факт.
   // Liquidity: счета и наличные сейчас, итог в EUR по курсу ЕЦБ.
   var DB_ICON = { cash: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>',
@@ -2338,6 +2349,12 @@ button.txd-row:active { background: var(--chip); }
     i.style.width = Math.min(100, Math.max(0, plan > 0 ? spent / plan * 100 : 0)).toFixed(1) + "%"; bar.appendChild(i);
     if (pace > 0 && pace < 1) { var em = document.createElement("em"); em.style.left = (pace * 100).toFixed(1) + "%"; bar.appendChild(em); }
     return bar;
+  }
+  // состояние бюджета (его слова 20.11.2026): over — потрачено больше плана периода («перелимит», красным); fast — трат больше доли
+  // периода к сегодня («выше темпа», желтым); low — осталось меньше 20 % плана (желтым); ok — в бюджете
+  function dbState(spent, plan, pace) {
+    var left = plan - spent;
+    return left < -0.5 ? "over" : pace > 0 && pace < 1 && spent > plan * pace + 0.5 ? "fast" : left < plan * 0.2 - 0.004 ? "low" : "ok";
   }
   function dbLeft(span, n, plan) { // «осталось X из Y» или «сверх плана X из Y»
     span.appendChild(document.createTextNode(n < -0.5 ? "сверх плана " : "осталось ")); span.appendChild(node("b", "", dbEur0(Math.abs(n)))); span.appendChild(document.createTextNode(" из " + dbEur0(plan)));
@@ -2390,34 +2407,38 @@ button.txd-row:active { background: var(--chip); }
     [[d.m, 1 / 12, d.m_month ? MONTHS[d.m_month - 1] : ""], [d.y, 1, String(d.year)]].forEach(function (x) {
       if (!x[0]) return;
       var s = spSum(spRows(x[0], d.plan, x[1])); if (!s.has || !(s.plan > 0)) return;
-      var pace = x[0].pace, over = pace > 0 && s.spent > s.plan * pace + 0.5, row = node("div", "row"), h = node("div", "h"), lab = node("span"), h2 = node("div", "h");
+      var pace = x[0].pace, stt = dbState(s.spent, s.plan, pace), row = node("div", "row"), h = node("div", "h"), lab = node("span"), h2 = node("div", "h");
       lab.appendChild(node("b", "", x[2])); h.appendChild(lab);
-      if (pace > 0) h.appendChild(node("span", "db-chip" + (over ? " over" : ""), over ? (s.spent > s.plan ? "Перелимит" : "Перелимит " + dbEur0(s.spent - s.plan * pace)) : "В бюджете"));
+      if (pace > 0) h.appendChild(node("span", "db-chip" + (stt === "over" ? " over" : stt === "ok" ? "" : " low"), stt === "over" ? "Перелимит" : stt === "fast" ? "Выше темпа" : stt === "low" ? "Мало осталось" : "В бюджете"));
       h2.appendChild(dbLeft(node("span"), s.plan - s.spent, s.plan));
-      row.appendChild(h); row.appendChild(dbBar(s.spent, s.plan, pace, over, false)); row.appendChild(h2); bud.appendChild(row); any = true;
+      var sb = dbBar(s.spent, s.plan, pace, stt === "over", false); if (stt === "fast" || stt === "low") sb.className += " low"; row.appendChild(h); row.appendChild(sb); row.appendChild(h2); bud.appendChild(row); any = true;
     });
     if (any) card.appendChild(bud);
-    var list = node("ul", "db-list"), max = 1;
+    // строка категории (его слово 20.11.2026: «серьезно, как в банковском приложении»): название и факт; под ними слева состояние,
+    // справа «из <план>»; шкала линией под строкой. Состояние: «перелимит N» красным — потрачено больше плана периода;
+    // «осталось N» желтым — осталось меньше 20 % плана или трат больше доли периода к сегодня; иначе «осталось N» серым
+    var list = node("ul", "db-list db-exp"), max = 1;
     rows.forEach(function (r) { if (r.spent > max) max = r.spent; });
     rows.forEach(function (r) {
-      var li = node("li"), am = node("span", "am" + (r.spent < -0.004 ? " plus" : ""), dbSpent(r.spent)), ft = node("div", "ft"), t = node("div", "t"), a = node("span"), b = node("span");
-      li.appendChild(node("span", "em", dbEm(r.em))); li.appendChild(node("span", "nm", r.nm)); li.appendChild(am);
-      var subText = r.sub ? r.sub : r.subs.length ? r.subs.map(function (x) { return dbNb(x.name + " " + dbEur(x.spent)); }).join(" · ") : dbOps(r.n);
+      var li = node("li"), nm = node("span", "nm", r.nm), am = node("span", "am" + (r.spent < -0.004 ? " plus" : ""), dbSpent(r.spent)), stt = node("span", "stt"), of = node("span", "of"), bar;
       if (r.plan !== null) {
-        var over = part.pace > 0 && r.spent > r.plan * part.pace + 0.5;
-        ft.appendChild(dbBar(r.spent, r.plan, part.pace, over, true)); dbLeft(a, r.plan - r.spent, r.plan);
-        if (part.pace > 0) { b.className = over ? "over" : "ok"; b.textContent = over ? (r.spent > r.plan ? "перелимит" : "перелимит " + dbEur0(r.spent - r.plan * part.pace)) : "в бюджете"; }
-        if (r.sub) { var s2 = node("span", "", r.sub + " · "); s2.appendChild(a); a = s2; }
+        var left = r.plan - r.spent, rs = dbState(r.spent, r.plan, part.pace), over = rs === "over", low = rs === "fast" || rs === "low";
+        stt.className = "stt" + (over ? " over" : low ? " low" : ""); stt.textContent = r.spent < -0.004 ? "приход больше трат" : over ? "перелимит " + dbEur0(-left) : "осталось " + dbEur0(left);
+        if (r.sub) { var sb = node("span", "sb", r.sub + " · "); stt.insertBefore(sb, stt.firstChild); }
+        of.textContent = "из " + dbEur0(r.plan);
+        bar = dbBar(r.spent, r.plan, part.pace, false, true); if (over) bar.className += " over"; else if (low) bar.className += " low";
       } else {
-        ft.appendChild(dbBar(Math.max(0, r.spent), max, 0, false, true)); a.textContent = subText; if (r.subs.length) a.className = "wrap";
-        b.textContent = r.spent < -0.004 ? "приход больше трат" : tot.has ? "нет в плане" : tot.spent > 0.004 ? Math.round(Math.max(0, r.spent) / tot.spent * 100) + " %" : "";
+        stt.textContent = r.spent < -0.004 ? "приход больше трат" : r.subs.length ? r.subs.map(function (x) { return dbNb(x.name + " " + dbEur(x.spent)); }).join(" · ") : tot.has ? "нет в плане" : dbOps(r.n);
+        if (r.subs.length) stt.className = "stt wrap";
+        of.textContent = !tot.has && tot.spent > 0.004 && r.spent > 0.004 ? Math.round(r.spent / tot.spent * 100) + " %" : "";
+        bar = dbBar(Math.max(0, r.spent), max, 0, false, true);
       }
-      t.appendChild(a); t.appendChild(b); ft.appendChild(t); li.appendChild(ft); list.appendChild(li);
+      li.appendChild(node("span", "em", dbEm(r.em))); li.appendChild(nm); li.appendChild(am); li.appendChild(stt); li.appendChild(of); li.appendChild(bar); list.appendChild(li);
     });
     card.appendChild(list);
     var note = [];
     if (!rows.length) note.push("Расходов по категориям за период нет");
-    if (any) note.push("Перелимит — потрачено больше, чем доля периода к сегодняшнему дню (черта на шкале)");
+    if (tot.has) note.push("Желтым — траты идут быстрее периода (черта на шкале) или осталось меньше 20 % плана; перелимит — потрачено больше плана");
     note.push("Переводы между своими в расходы не входят");
     if (db.who !== "me") note.push("Счета Anastasiia Burda не подключены — только траты с подключенных счетов и наличные");
     if ((part.other || []).length) note.push("Без операций в " + part.other.join(", "));
