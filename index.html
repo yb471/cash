@@ -64,41 +64,65 @@ body.locked .tabbar { display: none; }
 body.tab-other .app > :not(.top):not(#soon) { display: none !important; }
 body.tab-other #soon { display: flex; }
 body.tab-other .gear { visibility: hidden; }
-/* блок Cash and Bank в Dashboard (до версии 169 — раздел Assets; его слово 19.11.2026): итог в EUR и счета — остаток и когда обновлен */
+/* Dashboard (его слова 19–20.11.2026): раздел и период сверху, карточка раздела — Expenses, Plan, Liquidity; id страницы и класс вкладки — прежние, от Assets */
 #assetsPage { display: none; flex-direction: column; gap: 8px; }
 body.tab-assets .app > :not(.top):not(#assetsPage) { display: none !important; }
 body.tab-assets #assetsPage { display: flex; }
 body.tab-assets .gear { visibility: hidden; }
-.as-who { padding: 0 16px 10px; }
-#assetsPage .seg.two { grid-template-columns: 1fr 1fr; }
-#assetsPage .as-block[hidden] { display: none; }
-/* Expenses (его слово 20.11.2026): расходы по категориям бюджета — те же карточка и строки, что у Liquidity; значок — эмодзи категории */
-.ex-list .em { font-size: calc(15 * var(--u)); font-weight: 400; overflow: hidden; }
-.as-list.ex-list .nm small { white-space: normal; } .as-list.ex-list .nm b { white-space: normal; line-height: 1.2; }
-.ex-list .nm small span { display: inline-block; margin-right: 10px; } #exTotal.plus { color: var(--plus); }
-.ex-list li.unc .em { background: color-mix(in srgb, var(--warn) 18%, var(--surface)); color: var(--warn); font-weight: 700; }
-.ex-list li.unc .am b { color: var(--warn); }
-.ex-list .am b.plus { color: var(--plus); }
-#assetsPage #asStatus { padding: 8px 16px 9px; border-top: 1px solid var(--line); } /* сбой — внутри своей карточки */
-#assetsPage .seg { grid-template-columns: auto auto auto; gap: 2px; padding: 3px; border-radius: 11px; } #assetsPage .seg-btn { height: 32px; border-radius: 8px; font-size: calc(13 * var(--u)); padding: 0 4px; white-space: nowrap; letter-spacing: -.1px; }
-/* блок Liquidity (в 169–170 — Cash and Bank; его слова 19.11.2026): деньги семьи, доступные сейчас, — счета и наличные; одна карточка «название — сумма», следующие блоки (инвестиции и др.) — такими же */
-.as-block { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
-.as-head { display: flex; align-items: center; gap: 10px; padding: 8px 16px 8px; font-variant-numeric: tabular-nums; }
-.as-head .t { flex: 1; min-width: 0; font-weight: 600; font-size: calc(15 * var(--u)); }
-.as-head .s { font-weight: 700; font-size: calc(19 * var(--u)); letter-spacing: -.2px; white-space: nowrap; }
-#assetsPage .as-refresh { flex: none; width: 36px; height: 36px; border-radius: 10px; }
-.as-note { display: block; color: var(--muted); font-size: calc(12 * var(--u)); line-height: 1.35; padding: 8px 16px 9px; border-top: 1px solid var(--line); } .as-note:empty { display: none; } .as-note span { display: block; }
-.as-list { list-style: none; margin: 0; padding: 0; }
-.as-list:empty { display: none; }
-.as-list li { border-top: 1px solid var(--line); }
-.as-list .em svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
-.as-list li { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 5px 16px; }
-.as-list .em { flex: none; width: 30px; height: 30px; border-radius: 50%; background: var(--chip); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: calc(15 * var(--u)); }
-.as-list .nm { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0; }
-.as-list .nm b { font-weight: 500; font-size: calc(15 * var(--u)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.as-list .nm small, .as-list .am small { color: var(--muted); font-size: calc(12 * var(--u)); font-variant-numeric: tabular-nums; }
-.as-list .am { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.as-list .am b { font-weight: 600; font-size: calc(15 * var(--u)); }
+.db-top { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+.db-top .bk-period { height: 50px; background: var(--surface); border: 1px solid var(--line); }
+.db-top [hidden] { display: none; }
+.db-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; font-variant-numeric: tabular-nums; }
+.db-card:empty { display: none; }
+.db-who { padding: 10px 16px 0; }
+.db-who .seg { grid-template-columns: auto auto auto; gap: 2px; padding: 3px; border-radius: 11px; }
+.db-who .seg-btn { height: 32px; border-radius: 8px; font-size: calc(13 * var(--u)); padding: 0 2px; white-space: nowrap; letter-spacing: -.1px; }
+.db-sum { padding: 12px 16px; display: flex; flex-direction: column; gap: 6px; }
+.db-sum .l1, .db-sum .l2 { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.db-sum .l1 span { color: var(--muted); font-size: calc(13 * var(--u)); }
+.db-sum .l1 b { font-size: calc(24 * var(--u)); font-weight: 700; letter-spacing: -.3px; white-space: nowrap; } .db-sum .l1 b.plus { color: var(--plus); }
+.db-sum .l2 { font-size: calc(13 * var(--u)); color: var(--muted); border: 0; background: transparent; padding: 0; width: 100%; font-family: inherit; text-align: left; }
+.db-sum .l2 b { font-weight: 600; color: var(--fg); white-space: nowrap; }
+.db-sum .l2.w, .db-sum .l2.w b { color: var(--warn); }
+.db-bud { padding: 10px 16px 12px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 12px; }
+.db-bud .row { display: flex; flex-direction: column; gap: 6px; }
+.db-bud .h { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: calc(13 * var(--u)); color: var(--muted); }
+.db-bud .h b { color: var(--fg); font-weight: 600; } .db-bud .h span { white-space: nowrap; }
+.db-chip { flex: none; font-size: calc(12 * var(--u)); font-weight: 600; padding: 3px 9px; border-radius: 99px; background: color-mix(in srgb, var(--plus) 14%, var(--surface)); color: var(--plus); white-space: nowrap; }
+.db-chip.over { background: color-mix(in srgb, var(--minus) 14%, var(--surface)); color: var(--minus); }
+.db-bar { position: relative; height: 6px; border-radius: 3px; background: var(--chip); overflow: hidden; }
+.db-bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; background: var(--accent); }
+.db-bar.over i { background: var(--minus); }
+.db-bar.thin { height: 4px; }
+.db-bar em { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--fg); opacity: .55; } /* черта — доля периода к сегодня */
+.db-list { list-style: none; margin: 0; padding: 0; }
+.db-list li { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; column-gap: 10px; row-gap: 5px; align-items: center; padding: 8px 16px 9px; border-top: 1px solid var(--line); }
+.db-list .em { width: 30px; height: 30px; border-radius: 50%; background: var(--chip); display: flex; align-items: center; justify-content: center; font-size: calc(15 * var(--u)); overflow: hidden; }
+.db-list .em svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.db-list .nm { min-width: 0; font-weight: 500; font-size: calc(15 * var(--u)); line-height: 1.2; }
+.db-list .nm small { display: block; color: var(--muted); font-size: calc(12 * var(--u)); font-weight: 400; margin-top: 2px; }
+.db-list .am { font-weight: 600; font-size: calc(15 * var(--u)); white-space: nowrap; text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.db-list .am small { color: var(--muted); font-size: calc(12 * var(--u)); font-weight: 400; }
+.db-list .am.plus { color: var(--plus); }
+.db-list .ft { grid-column: 2 / -1; display: flex; flex-direction: column; gap: 4px; }
+.db-list .ft .t { display: flex; flex-wrap: wrap; justify-content: space-between; column-gap: 10px; row-gap: 2px; color: var(--muted); font-size: calc(12 * var(--u)); }
+.db-list .ft .t span { white-space: nowrap; } .db-list .ft .t span:last-child { margin-left: auto; } .db-list .ft .t span.wrap { white-space: normal; }
+.db-list .ft .t b { font-weight: 500; color: var(--fg); } .db-list .ft .t .over { color: var(--minus); font-weight: 600; } .db-list .ft .t .ok { color: var(--plus); }
+.db-note { display: block; color: var(--muted); font-size: calc(12 * var(--u)); line-height: 1.35; padding: 8px 16px 9px; border-top: 1px solid var(--line); } .db-note:empty { display: none; } .db-note span { display: block; } .db-note span + span { margin-top: 3px; }
+/* Plan: суммы бюджета на год — кнопка-сумма открывает лист ввода */
+.db-plan li { row-gap: 2px; } .db-plan .nm small span { display: inline-block; margin-right: 10px; } .db-plan li.par .am { padding-right: 10px; }
+.db-plan .pill { min-width: 92px; height: 34px; padding: 0 10px; border: 0; border-radius: 10px; background: var(--chip); color: var(--fg); font: inherit; font-weight: 600; font-size: calc(15 * var(--u)); white-space: nowrap; text-align: right; }
+.db-plan .pill.empty { color: var(--muted); font-weight: 500; border: 1px dashed var(--line); background: transparent; }
+.db-plan li.sub { padding: 6px 16px 6px 56px; grid-template-columns: minmax(0, 1fr) auto; border-top: 0; }
+.db-plan li.sub .nm { font-size: calc(14 * var(--u)); font-weight: 400; } .db-plan li.sub .pill { height: 30px; font-size: calc(14 * var(--u)); }
+.db-plan li.par { padding-bottom: 4px; }
+.db-edit { padding: 4px 16px 20px; display: flex; flex-direction: column; gap: 12px; }
+.db-edit .seg { grid-template-columns: 1fr 1fr; } .db-edit .seg-btn { height: 36px; font-size: calc(15 * var(--u)); }
+.db-edit input { width: 100%; height: 60px; border: 2px solid var(--accent); border-radius: 14px; background: var(--surface); color: var(--fg); padding: 0 16px; font: inherit; font-size: calc(28 * var(--u)); font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
+.db-edit .ref { color: var(--muted); font-size: calc(13 * var(--u)); line-height: 1.4; } .db-edit .ref b { color: var(--fg); font-weight: 600; } .db-edit .ref span { display: block; }
+.db-edit .save { height: 50px; border: 0; border-radius: 14px; background: var(--accent); color: var(--accent-fg); font: inherit; font-weight: 700; font-size: calc(16 * var(--u)); }
+.db-edit .drop { height: 40px; border: 0; background: transparent; color: var(--minus); font: inherit; font-size: calc(15 * var(--u)); }
+.db-edit .drop[hidden] { display: none; } .db-edit .status:empty { display: none; }
 /* раздел Bank: разметка категорий операций банка (его слово 02.11.2026) */
 #bankPage { display: none; flex-direction: column; gap: 12px; }
 body.tab-bank .app > :not(.top):not(#bankPage) { display: none !important; }
@@ -598,10 +622,14 @@ button.txd-row:active { background: var(--chip); }
 
   <section id="soon">Раздел в работе</section>
 
-  <section id="assetsPage" aria-label="Dashboard"> <!-- его счета: итог в EUR, остаток и дата обновления каждого (его слово 19.11.2026) -->
-    <div class="catwrap"><button class="catsel set" id="dbSel" type="button" aria-haspopup="dialog">Expenses</button></div> <!-- раздел Dashboard — выпадающий список, как выбор банка (его слово 20.11.2026) -->
-    <div class="as-block" id="dbLiq" hidden><div class="as-head"><span class="t">Liquidity</span><b class="s" id="asTotal">—</b><button class="bk-refresh as-refresh" id="asRefresh" type="button" aria-label="Обновить: выгрузить остатки из банка"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div><div class="as-who"><div class="seg" role="group" aria-label="Чей остаток"><button class="seg-btn neutral on" type="button" data-who="family">Family Total</button><button class="seg-btn neutral" type="button" data-who="me">Yaroslav Burda</button><button class="seg-btn neutral" type="button" data-who="nastia">Anastasiia Burda</button></div></div><ul class="as-list" id="asList"></ul><small class="as-note" id="asNote"></small><div class="status" id="asStatus"></div></div> <!-- ↻ — его слово 19.11.2026: «Добавь вкладку обновить» -->
-    <div class="as-block" id="dbExp"><div class="as-head"><span class="t">Expenses</span><b class="s" id="exTotal">—</b></div><div class="as-who"><div class="seg" role="group" aria-label="Чьи расходы"><button class="seg-btn neutral on" type="button" data-ex-who="family">Family Total</button><button class="seg-btn neutral" type="button" data-ex-who="me">Yaroslav Burda</button><button class="seg-btn neutral" type="button" data-ex-who="nastia">Anastasiia Burda</button></div></div><div class="as-who"><div class="seg two" role="group" aria-label="Период"><button class="seg-btn neutral on" type="button" data-ex-per="month" id="exPerM">Месяц</button><button class="seg-btn neutral" type="button" data-ex-per="year" id="exPerY">Год</button></div></div><ul class="as-list ex-list" id="exList"></ul><small class="as-note" id="exNote"></small><div class="status" id="exStatus"></div></div>
+  <section id="assetsPage" aria-label="Dashboard"> <!-- Dashboard (его слова 19–20.11.2026): сверху раздел (Expenses, Plan, Liquidity) и период, ниже карточка раздела -->
+    <div class="db-top">
+      <div class="catwrap"><button class="catsel set bk-banksel" id="dbSel" type="button" aria-haspopup="dialog"><span class="nm" id="dbSelNm">Expenses</span><span class="st" id="dbSelSt"></span></button></div>
+      <button class="bk-period" id="dbPer" type="button" aria-haspopup="dialog"></button>
+      <button class="bk-refresh" id="asRefresh" type="button" aria-label="Обновить: выгрузить остатки из банка" hidden><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    </div>
+    <div class="db-card" id="dbCard"></div>
+    <div class="status" id="dbStatus"></div>
   </section>
 
   <section id="bankPage" aria-label="Банк"> <!-- сводка — сразу под названием (его слово 02.11.2026) -->
@@ -700,8 +728,30 @@ button.txd-row:active { background: var(--chip); }
     <div class="sheet-head"><span>Dashboard</span><button id="dbClose" type="button" aria-label="Закрыть">✕</button></div>
     <ul class="sheet-list more-list" id="dbList">
       <li><button type="button" data-db="exp"><span class="em"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span><span class="nm">Expenses</span></button></li>
+      <li><button type="button" data-db="plan"><span class="em"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></svg></span><span class="nm">Plan</span></button></li>
       <li><button type="button" data-db="liq"><span class="em"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg></span><span class="nm">Liquidity</span></button></li>
     </ul>
+  </div>
+</div>
+<div class="sheet" id="dbPerSheet" hidden> <!-- период Expenses и год Plan — как период в Bank -->
+  <div class="sheet-back" id="dbPerBack"></div>
+  <div class="sheet-body" role="dialog" aria-label="Период">
+    <div class="sheet-head"><span id="dbPerTitle">Период</span><button id="dbPerClose" type="button" aria-label="Закрыть">✕</button></div>
+    <div class="bk-per" id="dbPerBody"></div>
+  </div>
+</div>
+<div class="sheet" id="dbEditSheet" hidden> <!-- сумма бюджета категории на год (его «да» 20.11.2026) -->
+  <div class="sheet-back" id="dbEditBack"></div>
+  <div class="sheet-body" role="dialog" aria-label="Сумма бюджета">
+    <div class="sheet-head"><span id="dbEditTitle"></span><button id="dbEditClose" type="button" aria-label="Закрыть">✕</button></div>
+    <div class="db-edit">
+      <div class="seg" role="group" aria-label="Сумма на год или в месяц"><button class="seg-btn neutral on" type="button" id="dbEditY">На год</button><button class="seg-btn neutral" type="button" id="dbEditM">В месяц</button></div>
+      <input id="dbEditInp" type="text" inputmode="decimal" autocomplete="off" placeholder="0" aria-label="Сумма, €">
+      <div class="ref" id="dbEditRef"></div>
+      <div class="status" id="dbEditStatus"></div>
+      <button class="save" type="button" id="dbEditSave">Сохранить</button>
+      <button class="drop" type="button" id="dbEditDrop" hidden>Убрать сумму</button>
+    </div>
   </div>
 </div>
 <div class="sheet" id="moreSheet" hidden> <!-- «More» нижнего меню: остальные разделы (его слово 17.11.2026) -->
@@ -741,7 +791,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "173"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "174"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -789,7 +839,7 @@ button.txd-row:active { background: var(--chip); }
   function token(v) {
     if (v === undefined) return ls("cash_token");
     ls("cash_token", v);
-    if (v === null) { ls("cash_recent", null); ls("cash_balance", null); ls("cash_months", null); state.recent = []; state.balance = {}; state.months = {}; ls("bank_cache", null); ls("cash_assets", null); ls("cash_expenses", null); if (typeof ex !== "undefined" && ex) ex.data = null; if (typeof as !== "undefined" && as) as.data = null; if (typeof bk !== "undefined" && bk) { bk.data = null; bk.loaded = false; } } // без кода — никаких чужих данных на экране и в памяти
+    if (v === null) { ls("cash_recent", null); ls("cash_balance", null); ls("cash_months", null); state.recent = []; state.balance = {}; state.months = {}; ls("bank_cache", null); ls("cash_assets", null); ls("cash_spend", null); ls("cash_plan", null); if (typeof db !== "undefined" && db) { db.sp = null; db.pl = null; } if (typeof as !== "undefined" && as) as.data = null; if (typeof bk !== "undefined" && bk) { bk.data = null; bk.loaded = false; } } // без кода — никаких чужих данных на экране и в памяти
   }
   (function fromLink() {
     var m = (location.hash || "").match(/^#t=([0-9a-f]{48})$/i);
@@ -2243,141 +2293,284 @@ button.txd-row:active { background: var(--chip); }
     if (t === "bank") bankOpen();
     if (t === "dashboard") dbShow();
   }
-  // блок Cash and Bank в Dashboard (до версии 169 — раздел Assets; его слово 19.11.2026): счета банков и наличные — остаток и когда обновлен, итог в EUR; последнее показанное
-  // телефон помнит и рисует сразу, свежее — с сервера при входе в раздел и свайпом вниз
-  // чей остаток (его слово 19.11.2026): мой, Настин, общий по семье; счета Насти пока не подключены («подключим позже») —
-  // у нее пусто, семья — пока только его счета, и это написано
-  var AS_ICON = { cash: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>',
+  // ---------- Dashboard (его слова 19–20.11.2026) ----------
+  // Сверху — раздел (Expenses по умолчанию, Plan, Liquidity; выбор не запоминается) и справа период (Expenses), год (Plan) или
+  // ↻ (Liquidity). Ниже одна карточка раздела: выбор владельца (Family Total / Yaroslav Burda / Anastasiia Burda), сумма,
+  // строки. Названия раздела в карточке нет — оно в выборе сверху (его слово 20.11.2026: «убрал задвоение»).
+  // Expenses: расходы по категориям за месяц или год (бюджетный год — календарный); «Не разнесено» и «Всего ушло» строками;
+  // бюджет сразу за месяц и год (его слово 20.11.2026): черта на шкале — доля периода к сегодня, потрачено больше этой доли
+  // плана — «Перелимит», меньше — «В бюджете»; план месяца — годовая сумма / 12. Человек — его личная категория и
+  // подкатегории с его именем. Plan: суммы на год по категориям и подкатегориям (me.budget_limits), рядом средний факт.
+  // Liquidity: счета и наличные сейчас, итог в EUR по курсу ЕЦБ.
+  var DB_ICON = { cash: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>',
     bank: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9.5 12 4l9 5.5"/><path d="M4 20h16"/><path d="M6 11v6M10 11v6M14 11v6M18 11v6"/></svg>' };
-  var as = { data: ls("cash_assets"), busy: null, who: "family" }; // всегда открывается на Family Total (его слово 19.11.2026)
-  ls("cash_assets_who", null); // выбор больше не запоминается
-  Array.prototype.forEach.call(document.querySelectorAll("#assetsPage .seg-btn"), function (b) {
-    b.addEventListener("click", function () { as.who = b.getAttribute("data-who"); asRender(); });
-  });
+  var DB_NAME = { exp: "Expenses", plan: "Plan", liq: "Liquidity" }, DB_WHO = [["family", "Family Total"], ["me", "Yaroslav Burda"], ["nastia", "Anastasiia Burda"]];
+  var dbNow = new Date();
+  var db = { sec: "exp", who: "family", sheet: $("dbSheet"), perSheet: $("dbPerSheet"), editSheet: $("dbEditSheet"), card: $("dbCard"), st: $("dbStatus"),
+    per: { y: dbNow.getFullYear(), m: dbNow.getMonth() + 1 }, sp: ls("cash_spend"), spBusy: null, pl: ls("cash_plan"), plYear: null, plBusy: null, edit: null, stale: false };
+  var as = { data: ls("cash_assets"), busy: null, syncing: false };
+  ls("cash_dash", null); ls("cash_assets_who", null); ls("cash_expenses", null); // ключи прежних версий
+  var nf0 = new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 });
+  function dbNb(t) { return String(t).replace(/ /g, " "); } // сумма и подпись не рвутся посередине
+  function dbEur(n) { return dbNb((n < -0.004 ? "−" : "") + nf.format(Math.abs(n)) + " €"); }
+  function dbEur0(n) { return dbNb((n < -0.5 ? "−" : "") + nf0.format(Math.abs(Math.round(n))) + " €"); }
+  function dbSpent(n) { return n < -0.004 ? "+" + dbEur(-n) : dbEur(n); } // приход больше трат — плюсом
+  function dbOps(n) { var a = n % 10, b = n % 100; return n + " " + (a === 1 && b !== 11 ? "операция" : a >= 2 && a <= 4 && (b < 12 || b > 14) ? "операции" : "операций"); }
+  function dbDm(iso) { return iso.slice(8, 10) + "." + iso.slice(5, 7); }
+  function dbEm(t) { // в кружок — один эмодзи: у категории их бывает два
+    if (!t) return "";
+    try { var it = new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(t)[Symbol.iterator]().next(); return it.done ? t : it.value.segment; } catch (e) { return t; }
+  }
+  function dbLine(cls, left, right) { var d = node("div", cls); d.appendChild(node("span", "", left)); d.appendChild(node("b", "", right)); return d; }
+  function dbSeg() {
+    var wrap = node("div", "db-who"), seg = node("div", "seg"); seg.setAttribute("role", "group"); seg.setAttribute("aria-label", "Чьи данные");
+    DB_WHO.forEach(function (w) {
+      var b = node("button", "seg-btn neutral" + (w[0] === db.who ? " on" : ""), w[1]); b.type = "button"; b.setAttribute("aria-pressed", w[0] === db.who ? "true" : "false");
+      b.addEventListener("click", function () { db.who = w[0]; dbRender(); }); seg.appendChild(b);
+    });
+    wrap.appendChild(seg); return wrap;
+  }
+  function dbNotes(list) { var s = node("small", "db-note"); list.forEach(function (t) { s.appendChild(node("span", "", t)); }); return s; }
+  function dbBar(spent, plan, pace, over, thin) {
+    var bar = node("div", "db-bar" + (thin ? " thin" : "") + (over ? " over" : "")), i = document.createElement("i");
+    i.style.width = Math.min(100, Math.max(0, plan > 0 ? spent / plan * 100 : 0)).toFixed(1) + "%"; bar.appendChild(i);
+    if (pace > 0 && pace < 1) { var em = document.createElement("em"); em.style.left = (pace * 100).toFixed(1) + "%"; bar.appendChild(em); }
+    return bar;
+  }
+  function dbLeft(span, n, plan) { // «осталось X из Y» или «сверх плана X из Y»
+    span.appendChild(document.createTextNode(n < -0.5 ? "сверх плана " : "осталось ")); span.appendChild(node("b", "", dbEur0(Math.abs(n)))); span.appendChild(document.createTextNode(" из " + dbEur0(plan)));
+    return span;
+  }
+
+  // ---- Expenses ----
+  function spKey() { return db.per.y + "-" + (db.per.m || 0); }
+  function spData() { return db.sp && db.sp.key === spKey() ? db.sp.data : null; }
+  // строки периода для владельца: k — доля годовой суммы (год — 1, месяц — 1/12)
+  function spRows(part, plan, k) {
+    var lim = {}, rows = [];
+    ((plan && plan.categories) || []).forEach(function (c) { lim[c.name] = c; });
+    ((part && part.categories) || []).forEach(function (c) {
+      var p = lim[c.name], cs = catSplit(c.name);
+      if (db.who === "family" || c.owner === db.who) {
+        rows.push({ em: cs.em, nm: cs.nm, spent: c.spent, n: c.n, plan: p && p.limit !== null && p.limit !== undefined ? p.limit * k : null,
+          subs: db.who === "family" ? c.subs.filter(function (x) { return Math.abs(x.spent) > 0.004; }) : [] });
+        return;
+      }
+      c.subs.forEach(function (x) {
+        if (x.owner !== db.who) return;
+        var ps = p && (p.subs || []).filter(function (y) { return y.name === x.name; })[0];
+        rows.push({ em: cs.em, nm: cs.nm, sub: x.name, spent: x.spent, n: 0, plan: ps && ps.limit !== null && ps.limit !== undefined ? ps.limit * k : null, subs: [] });
+      });
+    });
+    return rows.filter(function (r) { return Math.abs(r.spent) > 0.004 || r.n || r.plan !== null; });
+  }
+  function spSum(rows) { var s = { spent: 0, plan: 0, has: false }; rows.forEach(function (r) { s.spent += r.spent; if (r.plan !== null) { s.plan += r.plan; s.has = true; } }); s.spent = Math.round(s.spent * 100) / 100; return s; }
+  function spRender() {
+    var d = spData(), card = db.card, isM = !!db.per.m;
+    $("dbPer").textContent = isM ? MONTHS[db.per.m - 1] + " " + db.per.y : String(db.per.y);
+    card.textContent = ""; card.appendChild(dbSeg());
+    if (!d) { $("dbSelSt").textContent = ""; card.appendChild(dbNotes([db.spBusy ? "Загружаю…" : "Нет данных — потяни экран вниз"])); return; }
+    var part = isM ? d.m : d.y, k = isM ? 1 / 12 : 1;
+    if (!part) { card.appendChild(dbNotes(["За этот период данных нет"])); return; }
+    var to = part.to < d.today ? part.to : d.today;
+    $("dbSelSt").textContent = part.from > d.today ? "период еще не начался" : (part.to > d.today ? "по " + dbDm(to) + " · " : "") + dbOps(part.n);
+    var rows = spRows(part, d.plan, k), tot = spSum(rows), sum = node("div", "db-sum"), l1 = dbLine("l1", db.who === "family" ? "Расходы по категориям" : "Расходы", dbSpent(tot.spent));
+    if (tot.spent < -0.004) l1.lastChild.className = "plus";
+    sum.appendChild(l1);
+    if (db.who === "family" && part.uncategorized.n) {
+      var u = document.createElement("button"); u.type = "button"; u.className = "l2 w"; u.appendChild(node("span", "", "Не разнесено · " + dbOps(part.uncategorized.n) + " ›")); u.appendChild(node("b", "", dbEur(part.uncategorized.out)));
+      u.addEventListener("click", function () { showTab("bank"); }); sum.appendChild(u); // разносить — в Bank
+      sum.appendChild(dbLine("l2", "Всего ушло со счетов", dbEur(tot.spent + part.uncategorized.out)));
+    }
+    card.appendChild(sum);
+    // бюджет: сразу месяц и год (его слово 20.11.2026)
+    var bud = node("div", "db-bud"), any = false;
+    [[d.m, 1 / 12, d.m_month ? MONTHS[d.m_month - 1] : ""], [d.y, 1, String(d.year)]].forEach(function (x) {
+      if (!x[0]) return;
+      var s = spSum(spRows(x[0], d.plan, x[1])); if (!s.has || !(s.plan > 0)) return;
+      var pace = x[0].pace, over = pace > 0 && s.spent > s.plan * pace + 0.5, row = node("div", "row"), h = node("div", "h"), lab = node("span"), h2 = node("div", "h");
+      lab.appendChild(node("b", "", x[2])); h.appendChild(lab);
+      if (pace > 0) h.appendChild(node("span", "db-chip" + (over ? " over" : ""), over ? (s.spent > s.plan ? "Перелимит" : "Перелимит " + dbEur0(s.spent - s.plan * pace)) : "В бюджете"));
+      h2.appendChild(dbLeft(node("span"), s.plan - s.spent, s.plan));
+      row.appendChild(h); row.appendChild(dbBar(s.spent, s.plan, pace, over, false)); row.appendChild(h2); bud.appendChild(row); any = true;
+    });
+    if (any) card.appendChild(bud);
+    var list = node("ul", "db-list"), max = 1;
+    rows.forEach(function (r) { if (r.spent > max) max = r.spent; });
+    rows.forEach(function (r) {
+      var li = node("li"), am = node("span", "am" + (r.spent < -0.004 ? " plus" : ""), dbSpent(r.spent)), ft = node("div", "ft"), t = node("div", "t"), a = node("span"), b = node("span");
+      li.appendChild(node("span", "em", dbEm(r.em))); li.appendChild(node("span", "nm", r.nm)); li.appendChild(am);
+      var subText = r.sub ? r.sub : r.subs.length ? r.subs.map(function (x) { return dbNb(x.name + " " + dbEur(x.spent)); }).join(" · ") : dbOps(r.n);
+      if (r.plan !== null) {
+        var over = part.pace > 0 && r.spent > r.plan * part.pace + 0.5;
+        ft.appendChild(dbBar(r.spent, r.plan, part.pace, over, true)); dbLeft(a, r.plan - r.spent, r.plan);
+        if (part.pace > 0) { b.className = over ? "over" : "ok"; b.textContent = over ? (r.spent > r.plan ? "перелимит" : "перелимит " + dbEur0(r.spent - r.plan * part.pace)) : "в бюджете"; }
+        if (r.sub) { var s2 = node("span", "", r.sub + " · "); s2.appendChild(a); a = s2; }
+      } else {
+        ft.appendChild(dbBar(Math.max(0, r.spent), max, 0, false, true)); a.textContent = subText; if (r.subs.length) a.className = "wrap";
+        b.textContent = r.spent < -0.004 ? "приход больше трат" : tot.has ? "нет в плане" : tot.spent > 0.004 ? Math.round(Math.max(0, r.spent) / tot.spent * 100) + " %" : "";
+      }
+      t.appendChild(a); t.appendChild(b); ft.appendChild(t); li.appendChild(ft); list.appendChild(li);
+    });
+    card.appendChild(list);
+    var note = [];
+    if (!rows.length) note.push("Расходов по категориям за период нет");
+    if (any) note.push("Перелимит — потрачено больше, чем доля периода к сегодняшнему дню (черта на шкале)");
+    note.push("Переводы между своими в расходы не входят");
+    if (db.who !== "me") note.push("Счета Anastasiia Burda не подключены — только траты с подключенных счетов и наличные");
+    if ((part.other || []).length) note.push("Без операций в " + part.other.join(", "));
+    card.appendChild(dbNotes(note));
+  }
+  function spLoad() {
+    if (db.spBusy) return db.spBusy;
+    if (!token()) { db.st.className = "status err"; db.st.textContent = explain({ code: "no_token" }); return Promise.resolve(false); }
+    var key = spKey(), per = { year: db.per.y, month: db.per.m || undefined };
+    db.spBusy = api("spend", per).then(function (j) {
+      db.sp = { key: key, data: j }; if (key === dbNow.getFullYear() + "-" + (dbNow.getMonth() + 1)) ls("cash_spend", db.sp); // телефон помнит текущий месяц
+      db.st.className = "status"; db.st.textContent = ""; connected(true); return true;
+    }, function (e) {
+      db.st.className = "status err"; db.st.textContent = explain(e) + (spData() ? " — показано сохраненное" : ""); if (e && e.code === "network") connected(false); return false;
+    }).then(function (ok) { db.spBusy = null; if (key !== spKey()) return spLoad(); if (db.sec === "exp") spRender(); if (!db.perSheet.hidden) perRender(); return ok; });
+    if (db.sec === "exp" && !spData()) spRender();
+    return db.spBusy;
+  }
+
+  // ---- Plan ----
+  function plData() { return db.pl && (!db.plYear || db.pl.year === db.plYear) ? db.pl : null; }
+  function plFact(d, name, sub) {
+    var c = ((d.fact && d.fact.categories) || []).filter(function (x) { return x.name === name; })[0]; if (!c) return 0;
+    var v = sub ? ((c.subs || []).filter(function (x) { return x.name === sub; })[0] || { spent: 0 }).spent : c.spent;
+    return v / Math.max(1, Number(d.fact.months) || 1);
+  }
+  function plRender() {
+    var d = plData(), card = db.card;
+    $("dbPer").textContent = String(db.plYear || (d && d.year) || dbNow.getFullYear()); $("dbSelSt").textContent = "бюджет на год по категориям";
+    card.textContent = "";
+    if (!d) { card.appendChild(dbNotes([db.plBusy ? "Загружаю…" : "Нет данных — потяни экран вниз"])); return; }
+    var sum = node("div", "db-sum"); sum.appendChild(dbLine("l1", "Бюджет " + d.year, dbEur0(d.plan.total))); sum.appendChild(dbLine("l2", "В месяц", dbEur0(d.plan.total / 12)));
+    if (d.plan.missing) sum.appendChild(dbLine("l2", "Без суммы · " + d.plan.missing, ""));
+    card.appendChild(sum);
+    var list = node("ul", "db-list db-plan");
+    var pill = function (c, parent) {
+      var b = node("button", "pill" + (c.limit === null ? " empty" : ""), c.limit === null ? "указать" : dbEur0(c.limit)); b.type = "button";
+      b.addEventListener("click", function () { plEdit(c, parent); }); return b;
+    };
+    var small = function (limit, fact) { var sm = node("small"); if (limit !== null) sm.appendChild(node("span", "", dbNb(dbEur0(limit / 12) + " в месяц"))); sm.appendChild(node("span", "", dbNb("факт " + dbEur0(fact)))); return sm; };
+    d.plan.categories.forEach(function (c) {
+      var cs = catSplit(c.name), li = node("li", c.subs.length ? "par" : ""), nm = node("span", "nm", cs.nm);
+      nm.appendChild(small(c.limit, plFact(d, c.name)));
+      li.appendChild(node("span", "em", dbEm(cs.em))); li.appendChild(nm);
+      li.appendChild(c.subs.length ? node("span", "am", c.limit === null ? "—" : dbEur0(c.limit)) : pill(c, null));
+      list.appendChild(li);
+      c.subs.forEach(function (x) {
+        var sl = node("li", "sub"), sn = node("span", "nm", x.name); sn.appendChild(small(x.limit, plFact(d, c.name, x.name)));
+        sl.appendChild(sn); sl.appendChild(pill(x, c)); list.appendChild(sl);
+      });
+    });
+    card.appendChild(list);
+    var f = d.fact || {};
+    card.appendChild(dbNotes(["Факт — средний расход в месяц по операциям с категорией" + (f.from ? " с " + dbDm(f.from) + "." + f.from.slice(0, 4) : ""), "Сумма категории с подкатегориями складывается из них", "Сумму можно ввести на год или в месяц"]));
+  }
+  function plLoad() {
+    if (db.plBusy) return db.plBusy;
+    if (!token()) { db.st.className = "status err"; db.st.textContent = explain({ code: "no_token" }); return Promise.resolve(false); }
+    var y = db.plYear;
+    db.plBusy = api("plan_get", y ? { year: y } : {}).then(function (j) {
+      db.pl = j; db.plYear = j.year; if (j.year === dbNow.getFullYear()) ls("cash_plan", j);
+      db.st.className = "status"; db.st.textContent = ""; connected(true); return true;
+    }, function (e) {
+      db.st.className = "status err"; db.st.textContent = explain(e) + (plData() ? " — показано сохраненное" : ""); if (e && e.code === "network") connected(false); return false;
+    }).then(function (ok) { db.plBusy = null; if (y && db.plYear !== y && db.plYear) return plLoad(); if (db.sec === "plan") plRender(); if (!db.perSheet.hidden) perRender(); return ok; });
+    if (db.sec === "plan" && !plData()) plRender();
+    return db.plBusy;
+  }
+  // лист суммы: на год или в месяц (второе считается само), рядом факт для ориентира
+  function plParse(s) { var t = String(s).replace(/[\s €]/g, "").replace(",", "."); return /^\d+(\.\d{1,2})?$/.test(t) ? Number(t) : null; }
+  function plFmt(v) { return new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 }).format(v); } // «42 000» — как в списке
+  function plEditRef() {
+    var e = db.edit, ref = $("dbEditRef"), v = plParse($("dbEditInp").value), a = node("span"), b = node("span");
+    ref.textContent = "";
+    if (v !== null) { a.appendChild(document.createTextNode(e.mode === "y" ? "В месяц: " : "На год: ")); a.appendChild(node("b", "", dbEur0(e.mode === "y" ? v / 12 : v * 12))); ref.appendChild(a); }
+    b.appendChild(document.createTextNode("Факт: в среднем ")); b.appendChild(node("b", "", dbEur0(e.fact))); b.appendChild(document.createTextNode(" в месяц")); ref.appendChild(b);
+    $("dbEditY").classList.toggle("on", e.mode === "y"); $("dbEditM").classList.toggle("on", e.mode === "m");
+  }
+  function plEdit(c, parent) {
+    var d = plData(); if (!d) return;
+    var cs = catSplit(parent ? parent.name : c.name);
+    db.edit = { id: c.id, year: d.year, mode: "y", fact: plFact(d, parent ? parent.name : c.name, parent ? c.name : null), busy: false };
+    $("dbEditTitle").textContent = (cs.em ? dbEm(cs.em) + " " : "") + cs.nm + (parent ? " · " + c.name : "") + " · " + d.year;
+    $("dbEditInp").value = c.limit === null ? "" : plFmt(c.limit);
+    $("dbEditDrop").hidden = c.limit === null; $("dbEditStatus").textContent = ""; $("dbEditSave").disabled = false;
+    plEditRef(); db.editSheet.hidden = false;
+  }
+  function plEditMode(m) {
+    var e = db.edit, v = plParse($("dbEditInp").value); if (!e || e.mode === m) return;
+    if (v !== null) $("dbEditInp").value = plFmt(Math.round((m === "m" ? v / 12 : v * 12) * 100) / 100);
+    e.mode = m; plEditRef();
+  }
+  function plSave(drop) {
+    var e = db.edit, st = $("dbEditStatus"); if (!e || e.busy) return;
+    var v = drop ? null : plParse($("dbEditInp").value);
+    if (!drop && (v === null || v * (e.mode === "m" ? 12 : 1) > 10000000)) { st.className = "status err"; st.textContent = "Сумма — число от 0 до 10 000 000"; return; }
+    var amount = drop ? null : Math.round(v * (e.mode === "m" ? 12 : 1) * 100) / 100;
+    e.busy = true; $("dbEditSave").disabled = true; st.className = "status"; st.textContent = "Сохраняю…";
+    api("plan_set", { year: e.year, items: [{ id: e.id, amount: amount }] }).then(function (j) {
+      db.pl = j; db.plYear = j.year; if (j.year === dbNow.getFullYear()) ls("cash_plan", j);
+      db.sp = null; ls("cash_spend", null); // бюджет в Expenses — заново
+      db.editSheet.hidden = true; db.edit = null; connected(true); if (db.sec === "plan") plRender();
+    }, function (err) { e.busy = false; $("dbEditSave").disabled = false; st.className = "status err"; st.textContent = explain(err) + (err && err.message ? " — " + err.message : ""); });
+  }
+  $("dbEditY").addEventListener("click", function () { plEditMode("y"); });
+  $("dbEditM").addEventListener("click", function () { plEditMode("m"); });
+  $("dbEditInp").addEventListener("input", function () { if (db.edit) plEditRef(); });
+  $("dbEditSave").addEventListener("click", function () { plSave(false); });
+  $("dbEditDrop").addEventListener("click", function () { plSave(true); });
+  $("dbEditClose").addEventListener("click", function () { db.editSheet.hidden = true; });
+  $("dbEditBack").addEventListener("click", function () { db.editSheet.hidden = true; });
+
+  // ---- Liquidity ----
   function asRender() {
-    var d = as.data, list = $("asList"), note = [];
-    list.textContent = "";
-    Array.prototype.forEach.call(document.querySelectorAll("#assetsPage .seg-btn"), function (b) { var on = b.getAttribute("data-who") === as.who; b.classList.toggle("on", on); b.setAttribute("aria-pressed", on ? "true" : "false"); });
-    if (as.who === "nastia") { $("asTotal").textContent = "—"; $("asNote").textContent = "Счета пока не подключены"; return; }
-    if (as.who === "family") note.push("Без счетов Anastasiia Burda — пока не подключены");
-    if (!d) { $("asTotal").textContent = "—"; $("asNote").textContent = ""; note.forEach(function (t) { $("asNote").appendChild(node("span", "", t)); }); return; }
-    $("asTotal").textContent = plain(Number(d.total_eur) || 0, "EUR");
-    Object.keys(d.rates || {}).sort().forEach(function (c) { var r = d.rates[c]; note.push(c + " — по курсу ЕЦБ " + String(r.rate).replace(".", ",") + " на " + r.day.slice(8, 10) + "." + r.day.slice(5, 7)); });
-    if ((d.no_rate || []).length) note.push("без " + d.no_rate.join(", ") + ": нет курса");
-    $("asNote").textContent = ""; note.forEach(function (t) { $("asNote").appendChild(node("span", "", t)); });
+    var d = as.data, card = db.card, note = [], last = "";
+    card.textContent = ""; card.appendChild(dbSeg());
+    var sum = node("div", "db-sum"); card.appendChild(sum);
+    if (db.who === "nastia") { sum.appendChild(dbLine("l1", "Доступно сейчас", "—")); card.appendChild(dbNotes(["Счета пока не подключены"])); $("dbSelSt").textContent = ""; return; }
+    if (!d) { sum.appendChild(dbLine("l1", "Доступно сейчас", "—")); card.appendChild(dbNotes([as.busy ? "Загружаю…" : "Нет данных — потяни экран вниз"])); $("dbSelSt").textContent = ""; return; }
+    sum.appendChild(dbLine("l1", "Доступно сейчас", dbEur(Number(d.total_eur) || 0)));
+    var list = node("ul", "db-list");
     (d.accounts || []).forEach(function (a) {
-      var li = document.createElement("li"), em = document.createElement("span"), nm = document.createElement("span"), nb = document.createElement("b"), ns = document.createElement("small"),
-        am = document.createElement("span"), ab = document.createElement("b"), known = a.balance !== null && a.balance !== undefined;
-      em.className = "em"; em.innerHTML = a.kind === "cash" ? AS_ICON.cash : AS_ICON.bank; nm.className = "nm"; am.className = "am";
-      nb.textContent = a.label; ns.textContent = a.at ? "обновлен " + dmhm(a.at).replace(" ", "\u00a0") : "дата неизвестна";
-      nm.appendChild(nb); nm.appendChild(ns);
-      ab.textContent = known ? plain(Number(a.balance), a.currency) : "—"; am.appendChild(ab);
-      if (known && a.currency !== "EUR" && Number(a.balance) !== 0) { var ae = document.createElement("small"); ae.textContent = a.eur === null || a.eur === undefined ? "нет курса" : "≈ " + plain(Number(a.eur), "EUR"); am.appendChild(ae); }
+      var li = node("li"), em = node("span", "em"), nm = node("span", "nm", a.label), am = node("span", "am"), known = a.balance !== null && a.balance !== undefined;
+      em.innerHTML = a.kind === "cash" ? DB_ICON.cash : DB_ICON.bank;
+      nm.appendChild(node("small", "", a.at ? "обновлен " + dbNb(dmhm(a.at)) : "дата неизвестна")); if (a.at && a.at > last) last = a.at;
+      am.appendChild(document.createTextNode(known ? dbNb(plain(Number(a.balance), a.currency)) : "—"));
+      if (known && a.currency !== "EUR" && Number(a.balance) !== 0) am.appendChild(node("small", "", a.eur === null || a.eur === undefined ? "нет курса" : "≈ " + dbEur(Number(a.eur))));
       li.appendChild(em); li.appendChild(nm); li.appendChild(am); list.appendChild(li);
     });
-    if (!(d.accounts || []).length) { var e = document.createElement("li"); e.textContent = "Счетов пока нет"; e.style.color = "var(--muted)"; list.appendChild(e); }
+    card.appendChild(list);
+    $("dbSelSt").textContent = last ? "обновлено " + dmhm(last) : "";
+    if (!(d.accounts || []).length) note.push("Счетов пока нет");
+    if (db.who === "family") note.push("Без счетов Anastasiia Burda — пока не подключены");
+    Object.keys(d.rates || {}).sort().forEach(function (c) { var r = d.rates[c]; note.push(c + " — по курсу ЕЦБ " + String(r.rate).replace(".", ",") + " на " + r.day.slice(8, 10) + "." + r.day.slice(5, 7)); });
+    if ((d.no_rate || []).length) note.push("без " + d.no_rate.join(", ") + ": нет курса");
+    card.appendChild(dbNotes(note));
   }
   function asLoad() {
     if (as.busy) return as.busy;
-    var st = $("asStatus");
-    if (!token()) { st.className = "status err"; st.textContent = explain({ code: "no_token" }); return Promise.resolve(false); }
-    if (!as.data) { st.className = "status"; st.textContent = "Загружаю…"; }
+    if (!token()) { db.st.className = "status err"; db.st.textContent = explain({ code: "no_token" }); return Promise.resolve(false); }
     as.busy = api("assets").then(function (j) {
       as.data = { accounts: j.accounts || [], total_eur: j.total_eur, no_rate: j.no_rate || [], rates: j.rates || {} }; ls("cash_assets", as.data);
-      st.className = "status"; st.textContent = ""; connected(true); asRender(); return true;
+      if (!as.syncing) { db.st.className = "status"; db.st.textContent = ""; } connected(true); return true;
     }, function (e) {
-      st.className = "status err"; st.textContent = explain(e) + (as.data ? " — показано сохраненное" : ""); if (e && e.code === "network") connected(false); return false;
-    }).then(function (ok) { as.busy = null; return ok; });
+      db.st.className = "status err"; db.st.textContent = explain(e) + (as.data ? " — показано сохраненное" : ""); if (e && e.code === "network") connected(false); return false;
+    }).then(function (ok) { as.busy = null; if (db.sec === "liq") asRender(); return ok; });
+    if (db.sec === "liq" && !as.data) asRender();
     return as.busy;
   }
-  // Expenses в Dashboard (его слово 20.11.2026): расходы по категориям бюджета — семья целиком или один человек (его личная
-  // категория и подкатегории с его именем), за месяц или с начала учета в году; операции без категории — отдельной строкой
-  // (в итог не входят: среди них могут быть переводы); остаток бюджета появится, когда будут суммы бюджета
-  var ex = { data: ls("cash_expenses"), busy: null, who: "family", per: "month" };
-  function exOps(n) { var a = n % 10, b = n % 100; return n + " " + (a === 1 && b !== 11 ? "операция" : a >= 2 && a <= 4 && (b < 12 || b > 14) ? "операции" : "операций"); }
-  function exNb(t) { return String(t).replace(/ /g, "\u00a0"); } // части подписи не рвутся посередине
-  function exEm(t) { // в кружок — один эмодзи: у категории их бывает два
-    if (!t || t === "?") return t || "";
-    try { var it = new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(t)[Symbol.iterator]().next(); return it.done ? t : it.value.segment; } catch (e) { return t; }
-  }
-  function exRow(list, cls, emText, name, sub, amount) {
-    var li = node("li", cls), nm = node("span", "nm"), am = node("span", "am");
-    li.appendChild(node("span", "em", exEm(emText))); nm.appendChild(node("b", "", name)); if (sub) { var sm = node("small"); (Array.isArray(sub) ? sub : [sub]).forEach(function (t) { sm.appendChild(node("span", "", t)); }); nm.appendChild(sm); }
-    am.appendChild(node("b", amount < -0.004 ? "plus" : "", amount < -0.004 ? "+" + plain(-amount, "EUR") : plain(amount, "EUR")));
-    li.appendChild(nm); li.appendChild(am); list.appendChild(li);
-  }
-  function exRender() {
-    var d = ex.data, list = $("exList"), note = [], total = 0, shown = 0;
-    list.textContent = ""; $("exNote").textContent = "";
-    Array.prototype.forEach.call(document.querySelectorAll("#dbExp [data-ex-who]"), function (b) { var on = b.getAttribute("data-ex-who") === ex.who; b.classList.toggle("on", on); b.setAttribute("aria-pressed", on ? "true" : "false"); });
-    Array.prototype.forEach.call(document.querySelectorAll("#dbExp [data-ex-per]"), function (b) { var on = b.getAttribute("data-ex-per") === ex.per; b.classList.toggle("on", on); b.setAttribute("aria-pressed", on ? "true" : "false"); });
-    if (!d) { $("exTotal").textContent = "—"; return; }
-    var dm = function (iso) { return iso.slice(8, 10) + "." + iso.slice(5, 7); };
-    $("exPerM").textContent = MONTHS[Number(d.month_from.slice(5, 7)) - 1];
-    $("exPerY").textContent = d.from.slice(5) === "01-01" ? d.from.slice(0, 4) : "С " + dm(d.from) + "." + d.from.slice(0, 4);
-    var p = d[ex.per] || { categories: [], uncategorized: { n: 0, out: 0, inc: 0 }, other: [] };
-    if (ex.who === "family" && p.uncategorized.n) {
-      var u = p.uncategorized;
-      exRow(list, "unc", "?", "Не разнесено", [exNb(exOps(u.n)), "не входит в итог"].concat(u.inc ? [exNb("приход " + plain(u.inc, "EUR"))] : []), u.out);
-    }
-    p.categories.forEach(function (c) {
-      var cs = catSplit(c.name), subs = c.subs.filter(function (x) { return Math.abs(x.spent) > 0.004; });
-      if (ex.who === "family") {
-        if (Math.abs(c.spent) < 0.005 && !c.n) return;
-        exRow(list, "", cs.em, cs.nm, subs.length ? subs.map(function (x) { return exNb(x.name + " " + plain(x.spent, "EUR")); }) : exOps(c.n), c.spent);
-        total += c.spent; shown++; return;
-      }
-      if (c.owner === ex.who) { if (Math.abs(c.spent) < 0.005 && !c.n) return; exRow(list, "", cs.em, cs.nm, exOps(c.n), c.spent); total += c.spent; shown++; return; }
-      c.subs.forEach(function (x) { if (x.owner !== ex.who || Math.abs(x.spent) < 0.005) return; exRow(list, "", cs.em, cs.nm, x.name, x.spent); total += x.spent; shown++; });
-    });
-    total = Math.round(total * 100) / 100;
-    $("exTotal").textContent = total < -0.004 ? "+" + plain(-total, "EUR") : plain(total, "EUR"); $("exTotal").classList.toggle("plus", total < -0.004);
-    note.push("Период: " + dm(ex.per === "month" ? d.month_from : d.from) + "–" + dm(d.to) + "." + d.to.slice(0, 4) + (shown ? "" : " — разнесенных расходов нет"));
-    if (ex.who !== "me") note.push("Счета Anastasiia Burda не подключены — только траты с подключенных счетов и наличные");
-    note.push("Переводы между своими в расходы не входят" + (total < -0.004 ? "; плюс — приход в категориях больше трат" : ""));
-    if ((p.other || []).length) note.push("Без операций в " + p.other.join(", "));
-    note.forEach(function (t) { $("exNote").appendChild(node("span", "", t)); });
-  }
-  function exLoad() {
-    if (ex.busy) return ex.busy;
-    var st = $("exStatus");
-    if (!token()) { st.className = "status err"; st.textContent = explain({ code: "no_token" }); return Promise.resolve(false); }
-    if (!ex.data) { st.className = "status"; st.textContent = "Загружаю…"; }
-    ex.busy = api("expenses").then(function (j) {
-      ex.data = { from: j.from, to: j.to, month_from: j.month_from, year: j.year, month: j.month }; ls("cash_expenses", ex.data);
-      st.className = "status"; st.textContent = ""; connected(true); exRender(); return true;
-    }, function (e) {
-      st.className = "status err"; st.textContent = explain(e) + (ex.data ? " — показано сохраненное" : ""); if (e && e.code === "network") connected(false); return false;
-    }).then(function (ok) { ex.busy = null; return ok; });
-    return ex.busy;
-  }
-  Array.prototype.forEach.call(document.querySelectorAll("#dbExp [data-ex-who]"), function (b) { b.addEventListener("click", function () { ex.who = b.getAttribute("data-ex-who"); exRender(); }); });
-  Array.prototype.forEach.call(document.querySelectorAll("#dbExp [data-ex-per]"), function (b) { b.addEventListener("click", function () { ex.per = b.getAttribute("data-ex-per"); exRender(); }); });
-  // раздел Dashboard — выпадающий список сверху, как выбор банка (его слово 20.11.2026); всегда открывается на Expenses
-  // (его слово 20.11.2026: «Экспенсис в дашборде по умолчанию»), выбор не запоминается
-  var db = { sec: "exp", sheet: $("dbSheet") };
-  ls("cash_dash", null);
-  var DB_NAME = { liq: "Liquidity", exp: "Expenses" };
-  function dbLoad() { return db.sec === "exp" ? exLoad() : asLoad(); }
-  function dbShow() {
-    $("dbSel").textContent = DB_NAME[db.sec]; $("dbLiq").hidden = db.sec !== "liq"; $("dbExp").hidden = db.sec !== "exp";
-    Array.prototype.forEach.call($("dbList").querySelectorAll("button"), function (x) { x.classList.toggle("on", x.getAttribute("data-db") === db.sec); });
-    if (db.sec === "exp") exRender(); else asRender();
-    dbLoad();
-  }
-  $("dbSel").addEventListener("click", function () { db.sheet.hidden = false; });
-  $("dbClose").addEventListener("click", function () { db.sheet.hidden = true; });
-  $("dbBack").addEventListener("click", function () { db.sheet.hidden = true; });
-  Array.prototype.forEach.call($("dbList").querySelectorAll("button"), function (b) {
-    b.addEventListener("click", function () { db.sheet.hidden = true; db.sec = b.getAttribute("data-db"); dbShow(); });
-  });
-  sheetSwipe(db.sheet, null, function () { db.sheet.hidden = true; });
-  // ↻ в блоке Liquidity (его слово 19.11.2026): выгрузить банк сейчас (то же действие, что ↻ в Bank: свежий снимок остатков), затем
-  // перечитать счета; банк не ответил или выгрузка была только что — показывается то, что есть в базе
+  // ↻ (его слово 19.11.2026): выгрузить банк сейчас (то же действие, что ↻ в Bank: свежий снимок остатков), затем перечитать
+  // счета; банк не ответил или выгрузка была только что — показывается то, что есть в базе
   $("asRefresh").addEventListener("click", function () {
-    var btn = $("asRefresh"), st = $("asStatus");
+    var btn = $("asRefresh"), st = db.st;
     if (as.syncing || !token()) return;
-    as.syncing = true; btn.classList.add("run"); btn.disabled = true; st.className = "status"; st.textContent = ""; // идет выгрузка — крутится значок, список не прыгает
+    as.syncing = true; btn.classList.add("run"); btn.disabled = true; st.className = "status"; st.textContent = "";
     var msg = "", cls = "status";
     api("bank_sync", {}, 130000).then(function (j) {
       var x = j.sync || {};
@@ -2389,6 +2582,54 @@ button.txd-row:active { background: var(--chip); }
       if (ok || msg) { st.className = msg ? cls : "status"; st.textContent = msg; }
     });
   });
+
+  // ---- раздел и период ----
+  function dbRender() { if (db.sec === "exp") spRender(); else if (db.sec === "plan") plRender(); else asRender(); }
+  function dbLoad() { return db.sec === "exp" ? spLoad() : db.sec === "plan" ? plLoad() : asLoad(); }
+  function dbShow() {
+    $("dbSelNm").textContent = DB_NAME[db.sec]; $("dbPer").hidden = db.sec === "liq"; $("asRefresh").hidden = db.sec !== "liq";
+    db.st.className = "status"; db.st.textContent = "";
+    Array.prototype.forEach.call($("dbList").querySelectorAll("button"), function (x) { x.classList.toggle("on", x.getAttribute("data-db") === db.sec); });
+    dbRender(); dbLoad();
+  }
+  // лист периода: Expenses — год, «Весь год», месяцы (месяц без операций неактивен); Plan — только год
+  function perRender() {
+    var box = $("dbPerBody"), isPlan = db.sec === "plan", d = isPlan ? plData() : spData(), cy = dbNow.getFullYear();
+    var years = (d && d.years) || [cy], curY = isPlan ? (db.plYear || (d && d.year) || cy) : db.per.y;
+    $("dbPerTitle").textContent = isPlan ? "Год бюджета" : "Период";
+    box.textContent = "";
+    var yrs = node("div", "yrs"); box.appendChild(yrs);
+    years.filter(function (y) { return isPlan || y <= cy; }).forEach(function (y) {
+      var b = node("button", y === curY ? "on" : "", String(y)); b.type = "button";
+      b.addEventListener("click", function () {
+        if (isPlan) { db.plYear = y; db.perSheet.hidden = true; plRender(); plLoad(); return; }
+        db.per = { y: y, m: null }; spRender(); spLoad(); perRender(); // год — сразу весь год, лист открыт: месяц по желанию
+      });
+      yrs.appendChild(b);
+    });
+    if (isPlan) return;
+    var mos = node("div", "mos"); box.appendChild(mos);
+    var whole = node("button", "whole" + (!db.per.m ? " on" : ""), "Весь " + curY + " год"); whole.type = "button";
+    whole.addEventListener("click", function () { db.per = { y: curY, m: null }; db.perSheet.hidden = true; spRender(); spLoad(); }); mos.appendChild(whole);
+    var have = d && d.year === curY ? (d.months || []) : null;
+    ["Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"].forEach(function (t, i) {
+      var b = node("button", db.per.m === i + 1 ? "on" : "", t); b.type = "button";
+      b.disabled = have ? have.indexOf(i + 1) < 0 && db.per.m !== i + 1 : !!db.spBusy;
+      b.addEventListener("click", function () { db.per = { y: curY, m: i + 1 }; db.perSheet.hidden = true; spRender(); spLoad(); }); mos.appendChild(b);
+    });
+  }
+  $("dbPer").addEventListener("click", function () { perRender(); db.perSheet.hidden = false; });
+  $("dbPerClose").addEventListener("click", function () { db.perSheet.hidden = true; });
+  $("dbPerBack").addEventListener("click", function () { db.perSheet.hidden = true; });
+  $("dbSel").addEventListener("click", function () { db.sheet.hidden = false; });
+  $("dbClose").addEventListener("click", function () { db.sheet.hidden = true; });
+  $("dbBack").addEventListener("click", function () { db.sheet.hidden = true; });
+  Array.prototype.forEach.call($("dbList").querySelectorAll("button"), function (b) {
+    b.addEventListener("click", function () { db.sheet.hidden = true; db.sec = b.getAttribute("data-db"); dbShow(); });
+  });
+  sheetSwipe(db.sheet, null, function () { db.sheet.hidden = true; });
+  sheetSwipe(db.perSheet, null, function () { db.perSheet.hidden = true; });
+  sheetSwipe(db.editSheet, null, function () { db.editSheet.hidden = true; });
   Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (b) {
     b.addEventListener("click", function () {
       var t = b.getAttribute("data-tab");
