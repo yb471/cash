@@ -70,6 +70,15 @@ body.tab-assets .app > :not(.top):not(#assetsPage) { display: none !important; }
 body.tab-assets #assetsPage { display: flex; }
 body.tab-assets .gear { visibility: hidden; }
 .as-who { padding: 0 16px 10px; }
+#assetsPage .seg.two { grid-template-columns: 1fr 1fr; }
+#assetsPage .as-block[hidden] { display: none; }
+/* Expenses (его слово 20.11.2026): расходы по категориям бюджета — те же карточка и строки, что у Liquidity; значок — эмодзи категории */
+.ex-list .em { font-size: calc(15 * var(--u)); font-weight: 400; overflow: hidden; }
+.as-list.ex-list .nm small { white-space: normal; } .as-list.ex-list .nm b { white-space: normal; line-height: 1.2; }
+.ex-list .nm small span { display: inline-block; margin-right: 10px; } #exTotal.plus { color: var(--plus); }
+.ex-list li.unc .em { background: color-mix(in srgb, var(--warn) 18%, var(--surface)); color: var(--warn); font-weight: 700; }
+.ex-list li.unc .am b { color: var(--warn); }
+.ex-list .am b.plus { color: var(--plus); }
 #assetsPage #asStatus { padding: 8px 16px 9px; border-top: 1px solid var(--line); } /* сбой — внутри своей карточки */
 #assetsPage .seg { grid-template-columns: auto auto auto; gap: 2px; padding: 3px; border-radius: 11px; } #assetsPage .seg-btn { height: 32px; border-radius: 8px; font-size: calc(13 * var(--u)); padding: 0 4px; white-space: nowrap; letter-spacing: -.1px; }
 /* блок Liquidity (в 169–170 — Cash and Bank; его слова 19.11.2026): деньги семьи, доступные сейчас, — счета и наличные; одна карточка «название — сумма», следующие блоки (инвестиции и др.) — такими же */
@@ -590,7 +599,9 @@ button.txd-row:active { background: var(--chip); }
   <section id="soon">Раздел в работе</section>
 
   <section id="assetsPage" aria-label="Dashboard"> <!-- его счета: итог в EUR, остаток и дата обновления каждого (его слово 19.11.2026) -->
-    <div class="as-block"><div class="as-head"><span class="t">Liquidity</span><b class="s" id="asTotal">—</b><button class="bk-refresh as-refresh" id="asRefresh" type="button" aria-label="Обновить: выгрузить остатки из банка"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div><div class="as-who"><div class="seg" role="group" aria-label="Чей остаток"><button class="seg-btn neutral on" type="button" data-who="family">Family Total</button><button class="seg-btn neutral" type="button" data-who="me">Yaroslav Burda</button><button class="seg-btn neutral" type="button" data-who="nastia">Anastasiia Burda</button></div></div><ul class="as-list" id="asList"></ul><small class="as-note" id="asNote"></small><div class="status" id="asStatus"></div></div> <!-- ↻ — его слово 19.11.2026: «Добавь вкладку обновить» -->
+    <div class="catwrap"><button class="catsel set" id="dbSel" type="button" aria-haspopup="dialog">Liquidity</button></div> <!-- раздел Dashboard — выпадающий список, как выбор банка (его слово 20.11.2026) -->
+    <div class="as-block" id="dbLiq"><div class="as-head"><span class="t">Liquidity</span><b class="s" id="asTotal">—</b><button class="bk-refresh as-refresh" id="asRefresh" type="button" aria-label="Обновить: выгрузить остатки из банка"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div><div class="as-who"><div class="seg" role="group" aria-label="Чей остаток"><button class="seg-btn neutral on" type="button" data-who="family">Family Total</button><button class="seg-btn neutral" type="button" data-who="me">Yaroslav Burda</button><button class="seg-btn neutral" type="button" data-who="nastia">Anastasiia Burda</button></div></div><ul class="as-list" id="asList"></ul><small class="as-note" id="asNote"></small><div class="status" id="asStatus"></div></div> <!-- ↻ — его слово 19.11.2026: «Добавь вкладку обновить» -->
+    <div class="as-block" id="dbExp" hidden><div class="as-head"><span class="t">Expenses</span><b class="s" id="exTotal">—</b></div><div class="as-who"><div class="seg" role="group" aria-label="Чьи расходы"><button class="seg-btn neutral on" type="button" data-ex-who="family">Family Total</button><button class="seg-btn neutral" type="button" data-ex-who="me">Yaroslav Burda</button><button class="seg-btn neutral" type="button" data-ex-who="nastia">Anastasiia Burda</button></div></div><div class="as-who"><div class="seg two" role="group" aria-label="Период"><button class="seg-btn neutral on" type="button" data-ex-per="month" id="exPerM">Месяц</button><button class="seg-btn neutral" type="button" data-ex-per="year" id="exPerY">Год</button></div></div><ul class="as-list ex-list" id="exList"></ul><small class="as-note" id="exNote"></small><div class="status" id="exStatus"></div></div>
   </section>
 
   <section id="bankPage" aria-label="Банк"> <!-- сводка — сразу под названием (его слово 02.11.2026) -->
@@ -683,6 +694,16 @@ button.txd-row:active { background: var(--chip); }
     <div class="bk-per" id="bkPerBody"></div>
   </div>
 </div>
+<div class="sheet" id="dbSheet" hidden> <!-- разделы Dashboard (его слово 20.11.2026) -->
+  <div class="sheet-back" id="dbBack"></div>
+  <div class="sheet-body" role="dialog" aria-label="Dashboard">
+    <div class="sheet-head"><span>Dashboard</span><button id="dbClose" type="button" aria-label="Закрыть">✕</button></div>
+    <ul class="sheet-list more-list" id="dbList">
+      <li><button type="button" data-db="liq"><span class="em"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg></span><span class="nm">Liquidity</span></button></li>
+      <li><button type="button" data-db="exp"><span class="em"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span><span class="nm">Expenses</span></button></li>
+    </ul>
+  </div>
+</div>
 <div class="sheet" id="moreSheet" hidden> <!-- «More» нижнего меню: остальные разделы (его слово 17.11.2026) -->
   <div class="sheet-back" id="moreBack"></div>
   <div class="sheet-body" role="dialog" aria-label="Разделы">
@@ -720,7 +741,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "171"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "172"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -768,7 +789,7 @@ button.txd-row:active { background: var(--chip); }
   function token(v) {
     if (v === undefined) return ls("cash_token");
     ls("cash_token", v);
-    if (v === null) { ls("cash_recent", null); ls("cash_balance", null); ls("cash_months", null); state.recent = []; state.balance = {}; state.months = {}; ls("bank_cache", null); ls("cash_assets", null); if (typeof as !== "undefined" && as) as.data = null; if (typeof bk !== "undefined" && bk) { bk.data = null; bk.loaded = false; } } // без кода — никаких чужих данных на экране и в памяти
+    if (v === null) { ls("cash_recent", null); ls("cash_balance", null); ls("cash_months", null); state.recent = []; state.balance = {}; state.months = {}; ls("bank_cache", null); ls("cash_assets", null); ls("cash_expenses", null); if (typeof ex !== "undefined" && ex) ex.data = null; if (typeof as !== "undefined" && as) as.data = null; if (typeof bk !== "undefined" && bk) { bk.data = null; bk.loaded = false; } } // без кода — никаких чужих данных на экране и в памяти
   }
   (function fromLink() {
     var m = (location.hash || "").match(/^#t=([0-9a-f]{48})$/i);
@@ -2220,7 +2241,7 @@ button.txd-row:active { background: var(--chip); }
     $("section").textContent = SECTIONS[t];
     window.scrollTo(0, 0);
     if (t === "bank") bankOpen();
-    if (t === "dashboard") { asRender(); asLoad(); }
+    if (t === "dashboard") dbShow();
   }
   // блок Cash and Bank в Dashboard (до версии 169 — раздел Assets; его слово 19.11.2026): счета банков и наличные — остаток и когда обновлен, итог в EUR; последнее показанное
   // телефон помнит и рисует сразу, свежее — с сервера при входе в раздел и свайпом вниз
@@ -2269,7 +2290,87 @@ button.txd-row:active { background: var(--chip); }
     }).then(function (ok) { as.busy = null; return ok; });
     return as.busy;
   }
-  // ↻ в блоке Cash and Bank (его слово 19.11.2026): выгрузить банк сейчас (то же действие, что ↻ в Bank: свежий снимок остатков), затем
+  // Expenses в Dashboard (его слово 20.11.2026): расходы по категориям бюджета — семья целиком или один человек (его личная
+  // категория и подкатегории с его именем), за месяц или с начала учета в году; операции без категории — отдельной строкой
+  // (в итог не входят: среди них могут быть переводы); остаток бюджета появится, когда будут суммы бюджета
+  var ex = { data: ls("cash_expenses"), busy: null, who: "family", per: "month" };
+  function exOps(n) { var a = n % 10, b = n % 100; return n + " " + (a === 1 && b !== 11 ? "операция" : a >= 2 && a <= 4 && (b < 12 || b > 14) ? "операции" : "операций"); }
+  function exNb(t) { return String(t).replace(/ /g, "\u00a0"); } // части подписи не рвутся посередине
+  function exEm(t) { // в кружок — один эмодзи: у категории их бывает два
+    if (!t || t === "?") return t || "";
+    try { var it = new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(t)[Symbol.iterator]().next(); return it.done ? t : it.value.segment; } catch (e) { return t; }
+  }
+  function exRow(list, cls, emText, name, sub, amount) {
+    var li = node("li", cls), nm = node("span", "nm"), am = node("span", "am");
+    li.appendChild(node("span", "em", exEm(emText))); nm.appendChild(node("b", "", name)); if (sub) { var sm = node("small"); (Array.isArray(sub) ? sub : [sub]).forEach(function (t) { sm.appendChild(node("span", "", t)); }); nm.appendChild(sm); }
+    am.appendChild(node("b", amount < -0.004 ? "plus" : "", amount < -0.004 ? "+" + plain(-amount, "EUR") : plain(amount, "EUR")));
+    li.appendChild(nm); li.appendChild(am); list.appendChild(li);
+  }
+  function exRender() {
+    var d = ex.data, list = $("exList"), note = [], total = 0, shown = 0;
+    list.textContent = ""; $("exNote").textContent = "";
+    Array.prototype.forEach.call(document.querySelectorAll("#dbExp [data-ex-who]"), function (b) { var on = b.getAttribute("data-ex-who") === ex.who; b.classList.toggle("on", on); b.setAttribute("aria-pressed", on ? "true" : "false"); });
+    Array.prototype.forEach.call(document.querySelectorAll("#dbExp [data-ex-per]"), function (b) { var on = b.getAttribute("data-ex-per") === ex.per; b.classList.toggle("on", on); b.setAttribute("aria-pressed", on ? "true" : "false"); });
+    if (!d) { $("exTotal").textContent = "—"; return; }
+    var dm = function (iso) { return iso.slice(8, 10) + "." + iso.slice(5, 7); };
+    $("exPerM").textContent = MONTHS[Number(d.month_from.slice(5, 7)) - 1];
+    $("exPerY").textContent = d.from.slice(5) === "01-01" ? d.from.slice(0, 4) : "С " + dm(d.from) + "." + d.from.slice(0, 4);
+    var p = d[ex.per] || { categories: [], uncategorized: { n: 0, out: 0, inc: 0 }, other: [] };
+    if (ex.who === "family" && p.uncategorized.n) {
+      var u = p.uncategorized;
+      exRow(list, "unc", "?", "Не разнесено", [exNb(exOps(u.n)), "не входит в итог"].concat(u.inc ? [exNb("приход " + plain(u.inc, "EUR"))] : []), u.out);
+    }
+    p.categories.forEach(function (c) {
+      var cs = catSplit(c.name), subs = c.subs.filter(function (x) { return Math.abs(x.spent) > 0.004; });
+      if (ex.who === "family") {
+        if (Math.abs(c.spent) < 0.005 && !c.n) return;
+        exRow(list, "", cs.em, cs.nm, subs.length ? subs.map(function (x) { return exNb(x.name + " " + plain(x.spent, "EUR")); }) : exOps(c.n), c.spent);
+        total += c.spent; shown++; return;
+      }
+      if (c.owner === ex.who) { if (Math.abs(c.spent) < 0.005 && !c.n) return; exRow(list, "", cs.em, cs.nm, exOps(c.n), c.spent); total += c.spent; shown++; return; }
+      c.subs.forEach(function (x) { if (x.owner !== ex.who || Math.abs(x.spent) < 0.005) return; exRow(list, "", cs.em, cs.nm, x.name, x.spent); total += x.spent; shown++; });
+    });
+    total = Math.round(total * 100) / 100;
+    $("exTotal").textContent = total < -0.004 ? "+" + plain(-total, "EUR") : plain(total, "EUR"); $("exTotal").classList.toggle("plus", total < -0.004);
+    note.push("Период: " + dm(ex.per === "month" ? d.month_from : d.from) + "–" + dm(d.to) + "." + d.to.slice(0, 4) + (shown ? "" : " — разнесенных расходов нет"));
+    if (ex.who !== "me") note.push("Счета Anastasiia Burda не подключены — только траты с подключенных счетов и наличные");
+    note.push("Переводы между своими в расходы не входят" + (total < -0.004 ? "; плюс — приход в категориях больше трат" : ""));
+    if ((p.other || []).length) note.push("Без операций в " + p.other.join(", "));
+    note.forEach(function (t) { $("exNote").appendChild(node("span", "", t)); });
+  }
+  function exLoad() {
+    if (ex.busy) return ex.busy;
+    var st = $("exStatus");
+    if (!token()) { st.className = "status err"; st.textContent = explain({ code: "no_token" }); return Promise.resolve(false); }
+    if (!ex.data) { st.className = "status"; st.textContent = "Загружаю…"; }
+    ex.busy = api("expenses").then(function (j) {
+      ex.data = { from: j.from, to: j.to, month_from: j.month_from, year: j.year, month: j.month }; ls("cash_expenses", ex.data);
+      st.className = "status"; st.textContent = ""; connected(true); exRender(); return true;
+    }, function (e) {
+      st.className = "status err"; st.textContent = explain(e) + (ex.data ? " — показано сохраненное" : ""); if (e && e.code === "network") connected(false); return false;
+    }).then(function (ok) { ex.busy = null; return ok; });
+    return ex.busy;
+  }
+  Array.prototype.forEach.call(document.querySelectorAll("#dbExp [data-ex-who]"), function (b) { b.addEventListener("click", function () { ex.who = b.getAttribute("data-ex-who"); exRender(); }); });
+  Array.prototype.forEach.call(document.querySelectorAll("#dbExp [data-ex-per]"), function (b) { b.addEventListener("click", function () { ex.per = b.getAttribute("data-ex-per"); exRender(); }); });
+  // раздел Dashboard — выпадающий список сверху, как выбор банка (его слово 20.11.2026); выбор помнит телефон
+  var db = { sec: ls("cash_dash") === "exp" ? "exp" : "liq", sheet: $("dbSheet") };
+  var DB_NAME = { liq: "Liquidity", exp: "Expenses" };
+  function dbLoad() { return db.sec === "exp" ? exLoad() : asLoad(); }
+  function dbShow() {
+    $("dbSel").textContent = DB_NAME[db.sec]; $("dbLiq").hidden = db.sec !== "liq"; $("dbExp").hidden = db.sec !== "exp";
+    Array.prototype.forEach.call($("dbList").querySelectorAll("button"), function (x) { x.classList.toggle("on", x.getAttribute("data-db") === db.sec); });
+    if (db.sec === "exp") exRender(); else asRender();
+    dbLoad();
+  }
+  $("dbSel").addEventListener("click", function () { db.sheet.hidden = false; });
+  $("dbClose").addEventListener("click", function () { db.sheet.hidden = true; });
+  $("dbBack").addEventListener("click", function () { db.sheet.hidden = true; });
+  Array.prototype.forEach.call($("dbList").querySelectorAll("button"), function (b) {
+    b.addEventListener("click", function () { db.sheet.hidden = true; db.sec = b.getAttribute("data-db"); ls("cash_dash", db.sec); dbShow(); });
+  });
+  sheetSwipe(db.sheet, null, function () { db.sheet.hidden = true; });
+  // ↻ в блоке Liquidity (его слово 19.11.2026): выгрузить банк сейчас (то же действие, что ↻ в Bank: свежий снимок остатков), затем
   // перечитать счета; банк не ответил или выгрузка была только что — показывается то, что есть в базе
   $("asRefresh").addEventListener("click", function () {
     var btn = $("asRefresh"), st = $("asStatus");
@@ -2379,7 +2480,7 @@ button.txd-row:active { background: var(--chip); }
   function ptrRefresh() {
     ptr.busy = true; ptr.ring.style.strokeDashoffset = ""; ptr.svg.style.transform = ""; el.ptr.classList.add("spin"); ptrDraw(56, true);
     var inBank = document.body.classList.contains("tab-bank"), inAssets = document.body.classList.contains("tab-assets");
-    Promise.all([inBank ? bkLoad() : inAssets ? asLoad() : refreshInit(), swUpdate()]).then(function (r) {
+    Promise.all([inBank ? bkLoad() : inAssets ? dbLoad() : refreshInit(), swUpdate()]).then(function (r) {
       if (inBank || inAssets) { setTimeout(function () { ptrDraw(0, true); setTimeout(function () { el.ptr.classList.remove("spin"); ptr.busy = false; }, 350); }, 500); return; }
       if (r[0] && state.queue.length) flushQueue();
       setTimeout(function () { ptrDraw(0, true); setTimeout(function () { el.ptr.classList.remove("spin"); ptr.busy = false; }, 350); }, 500);
