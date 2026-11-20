@@ -76,9 +76,9 @@ body.tab-assets .gear { visibility: hidden; }
 .db-card { background: var(--surface); border-radius: 22px; overflow: hidden; font-variant-numeric: tabular-nums;
   margin: 0 calc(-1 * max(16px, env(safe-area-inset-right, 0px))) 0 calc(-1 * max(16px, env(safe-area-inset-left, 0px))); }
 .db-card:empty { display: none; }
-.db-who { padding: 10px 16px 0; }
-.db-who .seg { grid-template-columns: auto auto auto; gap: 2px; padding: 3px; border-radius: 11px; }
-.db-who .seg-btn { height: 32px; border-radius: 8px; font-size: calc(13 * var(--u)); padding: 0 2px; white-space: nowrap; letter-spacing: -.1px; }
+/* чьи данные — над карточкой, как «К проверке / Все» в Bank (его слово 20.11.2026) */
+#dbWho { grid-template-columns: auto auto auto; gap: 2px; padding: 4px; border-radius: 12px; } #dbWho[hidden] { display: none; }
+#dbWho .seg-btn { height: 36px; border-radius: 9px; font-size: calc(13 * var(--u)); padding: 0 2px; white-space: nowrap; letter-spacing: -.1px; }
 .db-sum { padding: 12px 16px; display: flex; flex-direction: column; gap: 6px; }
 .db-sum .l1, .db-sum .l2 { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
 .db-sum .l1 span { color: var(--muted); font-size: calc(13 * var(--u)); }
@@ -630,6 +630,7 @@ button.txd-row:active { background: var(--chip); }
       <button class="bk-period" id="dbPer" type="button" aria-haspopup="dialog"></button>
       <button class="bk-refresh" id="asRefresh" type="button" aria-label="Обновить: выгрузить остатки из банка" hidden><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     </div>
+    <div class="seg" id="dbWho" role="group" aria-label="Чьи данные"></div>
     <div class="db-card" id="dbCard"></div>
     <div class="status" id="dbStatus"></div>
   </section>
@@ -793,7 +794,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "175"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "176"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -2298,7 +2299,7 @@ button.txd-row:active { background: var(--chip); }
   // ---------- Dashboard (его слова 19–20.11.2026) ----------
   // Сверху — раздел (Expenses по умолчанию, Plan, Liquidity; выбор не запоминается) и справа период (Expenses), год (Plan) или
   // ↻ (Liquidity). Ниже одна карточка раздела: выбор владельца (Family Total / Yaroslav Burda / Anastasiia Burda), сумма,
-  // строки. Названия раздела в карточке нет — оно в выборе сверху (его слово 20.11.2026: «убрал задвоение»).
+  // строки (выбор владельца — над карточкой). Названия раздела в карточке нет — оно в выборе сверху (его слово 20.11.2026: «убрал задвоение»).
   // Expenses: расходы по категориям за месяц или год (бюджетный год — календарный); «Не разнесено» и «Всего ушло» строками;
   // бюджет сразу за месяц и год (его слово 20.11.2026): черта на шкале — доля периода к сегодня, потрачено больше этой доли
   // плана — «Перелимит», меньше — «В бюджете»; план месяца — годовая сумма / 12. Человек — его личная категория и
@@ -2324,13 +2325,12 @@ button.txd-row:active { background: var(--chip); }
     try { var it = new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(t)[Symbol.iterator]().next(); return it.done ? t : it.value.segment; } catch (e) { return t; }
   }
   function dbLine(cls, left, right) { var d = node("div", cls); d.appendChild(node("span", "", left)); d.appendChild(node("b", "", right)); return d; }
-  function dbSeg() {
-    var wrap = node("div", "db-who"), seg = node("div", "seg"); seg.setAttribute("role", "group"); seg.setAttribute("aria-label", "Чьи данные");
+  function dbSeg(show) { // выбор владельца над карточкой; у Plan его нет
+    var seg = $("dbWho"); seg.hidden = !show; seg.textContent = ""; if (!show) return;
     DB_WHO.forEach(function (w) {
       var b = node("button", "seg-btn neutral" + (w[0] === db.who ? " on" : ""), w[1]); b.type = "button"; b.setAttribute("aria-pressed", w[0] === db.who ? "true" : "false");
       b.addEventListener("click", function () { db.who = w[0]; dbRender(); }); seg.appendChild(b);
     });
-    wrap.appendChild(seg); return wrap;
   }
   function dbNotes(list) { var s = node("small", "db-note"); list.forEach(function (t) { s.appendChild(node("span", "", t)); }); return s; }
   function dbBar(spent, plan, pace, over, thin) {
@@ -2370,7 +2370,7 @@ button.txd-row:active { background: var(--chip); }
   function spRender() {
     var d = spData(), card = db.card, isM = !!db.per.m;
     $("dbPer").textContent = isM ? MONTHS[db.per.m - 1] + " " + db.per.y : String(db.per.y);
-    card.textContent = ""; card.appendChild(dbSeg());
+    card.textContent = ""; dbSeg(true);
     if (!d) { $("dbSelSt").textContent = ""; card.appendChild(dbNotes([db.spBusy ? "Загружаю…" : "Нет данных — потяни экран вниз"])); return; }
     var part = isM ? d.m : d.y, k = isM ? 1 / 12 : 1;
     if (!part) { card.appendChild(dbNotes(["За этот период данных нет"])); return; }
@@ -2447,7 +2447,7 @@ button.txd-row:active { background: var(--chip); }
   function plRender() {
     var d = plData(), card = db.card;
     $("dbPer").textContent = String(db.plYear || (d && d.year) || dbNow.getFullYear()); $("dbSelSt").textContent = "бюджет на год по категориям";
-    card.textContent = "";
+    card.textContent = ""; dbSeg(false);
     if (!d) { card.appendChild(dbNotes([db.plBusy ? "Загружаю…" : "Нет данных — потяни экран вниз"])); return; }
     var sum = node("div", "db-sum"); sum.appendChild(dbLine("l1", "Бюджет " + d.year, dbEur0(d.plan.total))); sum.appendChild(dbLine("l2", "В месяц", dbEur0(d.plan.total / 12)));
     if (d.plan.missing) sum.appendChild(dbLine("l2", "Без суммы · " + d.plan.missing, ""));
@@ -2533,7 +2533,7 @@ button.txd-row:active { background: var(--chip); }
   // ---- Liquidity ----
   function asRender() {
     var d = as.data, card = db.card, note = [], last = "";
-    card.textContent = ""; card.appendChild(dbSeg());
+    card.textContent = ""; dbSeg(true);
     var sum = node("div", "db-sum"); card.appendChild(sum);
     if (db.who === "nastia") { sum.appendChild(dbLine("l1", "Доступно сейчас", "—")); card.appendChild(dbNotes(["Счета пока не подключены"])); $("dbSelSt").textContent = ""; return; }
     if (!d) { sum.appendChild(dbLine("l1", "Доступно сейчас", "—")); card.appendChild(dbNotes([as.busy ? "Загружаю…" : "Нет данных — потяни экран вниз"])); $("dbSelSt").textContent = ""; return; }
