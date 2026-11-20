@@ -72,7 +72,9 @@ body.tab-assets .gear { visibility: hidden; }
 .db-top { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; }
 .db-top .bk-period { height: 50px; background: var(--surface); border: 1px solid var(--line); }
 .db-top [hidden] { display: none; }
-.db-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; font-variant-numeric: tabular-nums; }
+/* карточка раздела — на всю ширину экрана, как список операций в Bank (его слово 20.11.2026): без боковых полей и рамки, скругление 22px */
+.db-card { background: var(--surface); border-radius: 22px; overflow: hidden; font-variant-numeric: tabular-nums;
+  margin: 0 calc(-1 * max(16px, env(safe-area-inset-right, 0px))) 0 calc(-1 * max(16px, env(safe-area-inset-left, 0px))); }
 .db-card:empty { display: none; }
 .db-who { padding: 10px 16px 0; }
 .db-who .seg { grid-template-columns: auto auto auto; gap: 2px; padding: 3px; border-radius: 11px; }
@@ -791,7 +793,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "174"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "175"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
