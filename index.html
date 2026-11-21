@@ -803,7 +803,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "178"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "179"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -2404,11 +2404,12 @@ button.txd-row:active { background: var(--chip); }
       u.addEventListener("click", function () { showTab("bank"); }); sum.appendChild(u); // разносить — в Bank
     }
     card.appendChild(sum);
-    // бюджет: сразу месяц и год (его слово 20.11.2026)
+    // бюджет: сразу месяц и год (его слово 20.11.2026); у семьи — по всему факту, вместе с не разнесенным (его слово 21.11.2026)
     var bud = node("div", "db-bud"), any = false;
     [[d.m, 1 / 12, d.m_month ? MONTHS[d.m_month - 1] : ""], [d.y, 1, String(d.year)]].forEach(function (x) {
       if (!x[0]) return;
       var s = spSum(spRows(x[0], d.plan, x[1])); if (!s.has || !(s.plan > 0)) return;
+      if (db.who === "family") s.spent = Math.round((s.spent + (x[0].uncategorized ? x[0].uncategorized.out : 0)) * 100) / 100; // общие цифры — по всему факту, с не разнесенным (его слово 21.11.2026)
       var pace = x[0].pace, stt = dbState(s.spent, s.plan, pace), row = node("div", "row"), h = node("div", "h"), lab = node("span"), h2 = node("div", "h");
       lab.appendChild(node("b", "", x[2])); h.appendChild(lab);
       if (pace > 0) h.appendChild(node("span", "db-chip" + (stt === "over" ? " over" : stt === "ok" ? "" : " low"), stt === "over" ? "Перелимит" : stt === "fast" ? "Выше темпа" : stt === "low" ? "Мало осталось" : "В бюджете"));
@@ -2441,7 +2442,7 @@ button.txd-row:active { background: var(--chip); }
     var note = [];
     if (!rows.length) note.push("Расходов по категориям за период нет");
     if (tot.has) note.push("Желтым — траты идут быстрее периода (черта на шкале) или осталось меньше 20 % плана; перелимит — потрачено больше плана");
-    if (any && unc) note.push("Бюджет считается по расходам с категорией — «Не разнесено» в него не входит");
+    if (any && db.who === "family") note.push("Месяц и год в целом — по всему потраченному, вместе с не разнесенным; категории — по своим расходам");
     note.push("Переводы между своими в расходы не входят");
     if (db.who !== "me") note.push("Счета Anastasiia Burda не подключены — только траты с подключенных счетов и наличные");
     if ((part.other || []).length) note.push("Без операций в " + part.other.join(", "));
