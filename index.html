@@ -117,7 +117,7 @@ body.tab-assets .gear { visibility: hidden; }
 .db-exp .am { display: block; font-weight: 600; letter-spacing: -.1px; }
 .db-exp .ln { grid-column: 2 / -1; display: flex; align-items: center; gap: 10px; min-width: 0; } /* полоса — до «из <план>»; колонка плана одной ширины, полосы ровные */
 .db-exp .ln .db-bar { flex: 1; }
-.db-exp .of { flex: none; min-width: 104px; text-align: right; font-size: calc(13 * var(--u)); color: var(--muted); white-space: nowrap; } .db-exp .of:empty { min-width: 0; } .db-exp .of.low { color: var(--warn); font-weight: 600; } .db-exp .of.over { color: var(--minus); font-weight: 600; }
+.db-exp .of { flex: none; min-width: 78px; text-align: right; font-size: calc(13 * var(--u)); color: var(--muted); white-space: nowrap; } .db-exp .of:empty { min-width: 0; }
 .db-bar.low i { background: #E3A21A; }
 .db-note { display: block; color: var(--muted); font-size: calc(12 * var(--u)); line-height: 1.35; padding: 8px 16px 9px; border-top: 1px solid var(--line); } .db-note:empty { display: none; } .db-note span { display: block; } .db-note span + span { margin-top: 3px; }
 /* Plan: суммы бюджета на год — кнопка-сумма открывает лист ввода */
@@ -803,7 +803,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "189"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "190"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -2420,9 +2420,10 @@ button.txd-row:active { background: var(--chip); }
       var li = node("li"), nm = node("span", "nm", r.nm), am = node("span", "am" + (r.spent < -0.004 ? " plus" : ""), dbSpent(r.spent)), stt = node("span", "stt"), of = node("span", "of"), bar;
       if (r.plan !== null) {
         var left = r.plan - r.spent, rs = dbState(r.spent, r.plan, part.pace), over = rs === "over", low = rs === "fast" || rs === "low";
-        // справа под фактом — остаток (желтым — мало или быстрее темпа; красным «перелимит N»); в полосе — бюджет периода и процент плана (его слова 21.11.2026)
-        stt.className = "stt" + (over ? " over" : low ? " low" : ""); stt.textContent = dbEur0(r.plan) + " · " + dbNb(Math.round(Math.max(0, r.spent) / r.plan * 100) + " %"); // бюджет и процент (его слово 21.11.2026)
-        of.className = "of" + (over ? " over" : low ? " low" : ""); of.textContent = r.spent < -0.004 ? "приход больше трат" : over ? "перелимит " + dbEur0(-left) : "остаток " + dbEur0(left);
+        // в полосе — «осталось N» / «перелимит N», справа под фактом — «из <план>» (его слово 21.11.2026: «Давай из как было. И остаток в
+        // состоянии как было»; в 188–189 справа был остаток, в полосе — бюджет и процент)
+        stt.className = "stt" + (over ? " over" : low ? " low" : ""); stt.textContent = r.spent < -0.004 ? "приход больше трат" : over ? "перелимит " + dbEur0(-left) : "осталось " + dbEur0(left);
+        of.textContent = "из " + dbEur0(r.plan);
         bar = dbBar(r.spent, r.plan, part.pace, false, false); bar.className += " x" + (over ? " over" : low ? " low" : "");
       } else {
         stt.textContent = r.spent < -0.004 ? "приход больше трат" : r.subs.length ? r.subs.map(function (x) { return dbNb(x.name + " " + dbEur(x.spent)); }).join(" · ") : tot.has ? "нет в плане" : dbOps(r.n);
