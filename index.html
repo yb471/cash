@@ -807,7 +807,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "180"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "181"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -2360,10 +2360,6 @@ button.txd-row:active { background: var(--chip); }
     var left = plan - spent;
     return left < -0.5 ? "over" : pace > 0 && pace < 1 && spent > plan * pace + 0.5 ? "fast" : left < plan * 0.2 - 0.004 ? "low" : "ok";
   }
-  function dbLeft(span, n, plan) { // «осталось X из Y» или «сверх плана X из Y»
-    span.appendChild(document.createTextNode(n < -0.5 ? "сверх плана " : "осталось ")); span.appendChild(node("b", "", dbEur0(Math.abs(n)))); span.appendChild(document.createTextNode(" из " + dbEur0(plan)));
-    return span;
-  }
 
   // ---- Expenses ----
   function spKey() { return db.per.y + "-" + (db.per.m || 0); }
@@ -2417,8 +2413,8 @@ button.txd-row:active { background: var(--chip); }
       var pace = x[0].pace, stt = dbState(s.spent, s.plan, pace), row = node("div", "row"), h = node("div", "h"), lab = node("span"), h2 = node("div", "h");
       lab.appendChild(node("b", "", x[2])); h.appendChild(lab);
       if (pace > 0) h.appendChild(node("span", "db-chip" + (stt === "over" ? " over" : stt === "ok" ? "" : " low"), stt === "over" ? "Перелимит" : stt === "fast" ? "Выше темпа" : stt === "low" ? "Мало осталось" : "В бюджете"));
-      var lf = s.plan - s.spent, l1 = node("span"); // остаток и «из плана» — двумя строками: месяц и год стоят рядом (его слово 21.11.2026)
-      l1.appendChild(document.createTextNode(lf < -0.5 ? "сверх плана " : "осталось ")); l1.appendChild(node("b", "", dbEur0(Math.abs(lf))));
+      var l1 = node("span"); // «потрачено X» и «из плана» двумя строками: месяц и год стоят рядом; показываем потраченное, не остаток (его слова 21.11.2026)
+      l1.appendChild(document.createTextNode("потрачено ")); l1.appendChild(node("b", "", s.spent < -0.5 ? "+" + dbEur0(-s.spent) : dbEur0(s.spent)));
       h2.className = "h two"; h2.appendChild(l1); h2.appendChild(node("span", "", "из " + dbEur0(s.plan)));
       var sb = dbBar(s.spent, s.plan, pace, stt === "over", false); if (stt === "fast" || stt === "low") sb.className += " low"; row.appendChild(h); row.appendChild(sb); row.appendChild(h2); bud.appendChild(row); any = true;
     });
