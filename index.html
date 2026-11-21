@@ -803,7 +803,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "186"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "187"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -2389,10 +2389,10 @@ button.txd-row:active { background: var(--chip); }
     if (!part) { card.appendChild(dbNotes(["За этот период данных нет"])); return; }
     var to = part.to < d.today ? part.to : d.today;
     $("dbSelSt").textContent = part.from > d.today ? "период еще не начался" : (part.to > d.today ? "по " + dbDm(to) + " · " : "") + dbOps(part.n);
-    // сверху «Потрачено» — факт, что ушло со счетов: расходы по категориям плюс не разнесенное (его слово 21.11.2026); у одного
+    // сверху сумма периода (подписана периодом, раньше — «Потрачено») — факт, что ушло со счетов: расходы по категориям плюс не разнесенное (его слово 21.11.2026); у одного
     // человека — только его расходы. Строки «Не разнесено» нет (его слово 21.11.2026: «Информацию по не разнесено убери»)
     var rows = spRows(part, d.plan, k), tot = spSum(rows), sum = node("div", "db-sum"), unc = db.who === "family" && part.uncategorized.n ? part.uncategorized : null;
-    var spentAll = Math.round((tot.spent + (unc ? unc.out : 0)) * 100) / 100, l1 = dbLine("l1", "Потрачено", dbSpent(spentAll));
+    var spentAll = Math.round((tot.spent + (unc ? unc.out : 0)) * 100) / 100, l1 = dbLine("l1", isM ? MONTHS[db.per.m - 1] + " " + db.per.y : String(db.per.y), dbSpent(spentAll)); // подпись — выбранный период (его слово 21.11.2026: «Потрачено замени на Ноябрь 2026»)
     if (spentAll < -0.004) l1.lastChild.className = "plus";
     sum.appendChild(l1);
     // под «Потрачено» — год целиком (его слово 21.11.2026: «За весь 2026 - 26% из 22% - сумма… визуализируй полосу»): сколько процентов
