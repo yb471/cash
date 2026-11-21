@@ -813,7 +813,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "182"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "183"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -2447,14 +2447,8 @@ button.txd-row:active { background: var(--chip); }
       var ln = node("div", "ln"); bar.appendChild(stt); ln.appendChild(bar); ln.appendChild(of); li.appendChild(node("span", "em", dbEm(r.em))); li.appendChild(nm); li.appendChild(am); li.appendChild(ln); list.appendChild(li);
     });
     card.appendChild(list);
-    var note = [];
+    var note = []; // подсказок и пояснений в карточках нет (его слово 21.11.2026: «не пиши подсказки») — только пустые состояния
     if (!rows.length) note.push("Расходов по категориям за период нет");
-    if (tot.has) note.push("Желтым — траты идут быстрее периода (черта на шкале) или осталось меньше 20 % плана; перелимит — потрачено больше плана");
-    if (any && db.who === "family") note.push("Месяц и год в целом — по всему потраченному, вместе с не разнесенным; категории — по своим расходам");
-    if (db.who !== "family") note.push("Показаны личная категория и личные части общих: здоровье, машина, родные");
-    note.push("Переводы между своими в расходы не входят");
-    if (db.who !== "me") note.push("Счета Anastasiia Burda не подключены — только траты с подключенных счетов и наличные");
-    if ((part.other || []).length) note.push("Без операций в " + part.other.join(", "));
     card.appendChild(dbNotes(note));
   }
   function spLoad() {
@@ -2504,8 +2498,6 @@ button.txd-row:active { background: var(--chip); }
       });
     });
     card.appendChild(list);
-    var f = d.fact || {};
-    card.appendChild(dbNotes(["Факт — средний расход в месяц по операциям с категорией" + (f.from ? " с " + dbDm(f.from) + "." + f.from.slice(0, 4) : ""), "Сумма категории с подкатегориями складывается из них", "Сумму можно ввести на год или в месяц"]));
   }
   function plLoad() {
     if (db.plBusy) return db.plBusy;
@@ -2584,9 +2576,6 @@ button.txd-row:active { background: var(--chip); }
     card.appendChild(list);
     $("dbSelSt").textContent = last ? "обновлено " + dmhm(last) : "";
     if (!(d.accounts || []).length) note.push("Счетов пока нет");
-    if (db.who === "family") note.push("Без счетов Anastasiia Burda — пока не подключены");
-    Object.keys(d.rates || {}).sort().forEach(function (c) { var r = d.rates[c]; note.push(c + " — по курсу ЕЦБ " + String(r.rate).replace(".", ",") + " на " + r.day.slice(8, 10) + "." + r.day.slice(5, 7)); });
-    if ((d.no_rate || []).length) note.push("без " + d.no_rate.join(", ") + ": нет курса");
     card.appendChild(dbNotes(note));
   }
   function asLoad() {
