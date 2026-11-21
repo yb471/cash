@@ -87,7 +87,6 @@ body.tab-assets .gear { visibility: hidden; }
 .db-sum .l3 > span { flex: none; white-space: nowrap; } .db-sum .l3 .db-bar { flex: 1; } .db-sum .l3 b { flex: none; margin-left: auto; font-weight: 600; color: var(--fg); white-space: nowrap; }
 .db-sum .l2 { font-size: calc(13 * var(--u)); color: var(--muted); border: 0; background: transparent; padding: 0; width: 100%; font-family: inherit; text-align: left; }
 .db-sum .l2 b { font-weight: 600; color: var(--fg); white-space: nowrap; }
-.db-sum .l2.w, .db-sum .l2.w b { color: var(--warn); }
 .db-bar { position: relative; height: 6px; border-radius: 3px; background: var(--chip); overflow: hidden; }
 .db-bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; background: var(--accent); }
 .db-bar.over i { background: var(--minus); }
@@ -804,7 +803,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "185"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "186"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -2310,7 +2309,7 @@ button.txd-row:active { background: var(--chip); }
   // Сверху — раздел (Expenses по умолчанию, Plan, Liquidity; выбор не запоминается) и справа период (Expenses), год (Plan) или
   // ↻ (Liquidity). Ниже одна карточка раздела: выбор владельца (Family Total / Yaroslav Burda / Anastasiia Burda), сумма,
   // строки (выбор владельца — над карточкой). Названия раздела в карточке нет — оно в выборе сверху (его слово 20.11.2026: «убрал задвоение»).
-  // Expenses: расходы по категориям за месяц или год (бюджетный год — календарный); сверху «Потрачено» и «Не разнесено»;
+  // Expenses: расходы по категориям за месяц или год (бюджетный год — календарный); сверху «Потрачено» и строка года;
   // бюджет сразу за месяц и год (его слово 20.11.2026): черта на шкале — доля периода к сегодня; состояние — dbState: «Перелимит»
   // красным — потрачено больше плана периода, желтым — трат больше доли периода («Выше темпа») или осталось меньше 20 % плана,
   // иначе «В бюджете» (его слова 20.11.2026 о строках категорий; до версии 177 «Перелимит» значил «быстрее темпа»);
@@ -2390,8 +2389,8 @@ button.txd-row:active { background: var(--chip); }
     if (!part) { card.appendChild(dbNotes(["За этот период данных нет"])); return; }
     var to = part.to < d.today ? part.to : d.today;
     $("dbSelSt").textContent = part.from > d.today ? "период еще не начался" : (part.to > d.today ? "по " + dbDm(to) + " · " : "") + dbOps(part.n);
-    // сверху два показателя (его слово 21.11.2026): «Потрачено» — факт, что ушло со счетов (расходы по категориям плюс не
-    // разнесенное), и «Не разнесено» — сумма операций без категории (касание — в Bank); у одного человека — только его расходы
+    // сверху «Потрачено» — факт, что ушло со счетов: расходы по категориям плюс не разнесенное (его слово 21.11.2026); у одного
+    // человека — только его расходы. Строки «Не разнесено» нет (его слово 21.11.2026: «Информацию по не разнесено убери»)
     var rows = spRows(part, d.plan, k), tot = spSum(rows), sum = node("div", "db-sum"), unc = db.who === "family" && part.uncategorized.n ? part.uncategorized : null;
     var spentAll = Math.round((tot.spent + (unc ? unc.out : 0)) * 100) / 100, l1 = dbLine("l1", "Потрачено", dbSpent(spentAll));
     if (spentAll < -0.004) l1.lastChild.className = "plus";
@@ -2410,10 +2409,6 @@ button.txd-row:active { background: var(--chip); }
       }
       yl.appendChild(node("b", "", ys.spent < -0.5 ? "+" + dbEur0(-ys.spent) : dbEur0(ys.spent)));
       sum.appendChild(yl);
-    }
-    if (unc) {
-      var u = document.createElement("button"); u.type = "button"; u.className = "l2 w"; u.appendChild(node("span", "", "Не разнесено · " + dbOps(unc.n) + " ›")); u.appendChild(node("b", "", dbEur(unc.out)));
-      u.addEventListener("click", function () { showTab("bank"); }); sum.appendChild(u); // разносить — в Bank
     }
     card.appendChild(sum);
     // строка категории (его слово 20.11.2026: «серьезно, как в банковском приложении»): название и факт; под ними слева состояние,
