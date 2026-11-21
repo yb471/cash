@@ -83,6 +83,8 @@ body.tab-assets .gear { visibility: hidden; }
 .db-sum .l1, .db-sum .l2 { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
 .db-sum .l1 span { color: var(--muted); font-size: calc(13 * var(--u)); }
 .db-sum .l1 b { font-size: calc(24 * var(--u)); font-weight: 700; letter-spacing: -.3px; white-space: nowrap; } .db-sum .l1 b.plus { color: var(--plus); }
+.db-sum .l3 { display: flex; align-items: center; gap: 10px; font-size: calc(13 * var(--u)); color: var(--muted); }
+.db-sum .l3 > span { flex: none; white-space: nowrap; } .db-sum .l3 .db-bar { flex: 1; } .db-sum .l3 b { flex: none; margin-left: auto; font-weight: 600; color: var(--fg); white-space: nowrap; }
 .db-sum .l2 { font-size: calc(13 * var(--u)); color: var(--muted); border: 0; background: transparent; padding: 0; width: 100%; font-family: inherit; text-align: left; }
 .db-sum .l2 b { font-weight: 600; color: var(--fg); white-space: nowrap; }
 .db-sum .l2.w, .db-sum .l2.w b { color: var(--warn); }
@@ -813,7 +815,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "183"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "184"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -2405,6 +2407,21 @@ button.txd-row:active { background: var(--chip); }
     var spentAll = Math.round((tot.spent + (unc ? unc.out : 0)) * 100) / 100, l1 = dbLine("l1", "Потрачено", dbSpent(spentAll));
     if (spentAll < -0.004) l1.lastChild.className = "plus";
     sum.appendChild(l1);
+    // под «Потрачено» — год целиком (его слово 21.11.2026: «За весь 2026 - 26% из 22% - сумма… визуализируй полосу»): сколько процентов
+    // годового плана потрачено «из» доли года, прошедшей к сегодня (она же черта на полосе), и сумма за год
+    if (d.y) {
+      var ys = spSum(spRows(d.y, d.plan, 1));
+      if (db.who === "family") ys.spent = Math.round((ys.spent + (d.y.uncategorized ? d.y.uncategorized.out : 0)) * 100) / 100;
+      var yl = node("div", "l3"); yl.appendChild(node("span", "", "За весь " + d.year));
+      if (ys.has && ys.plan > 0) {
+        var yst = dbState(ys.spent, ys.plan, d.y.pace), yb = dbBar(ys.spent, ys.plan, d.y.pace, yst === "over", false);
+        yb.className += " x" + (yst === "fast" || yst === "low" ? " low" : "");
+        yb.appendChild(node("span", "stt" + (yst === "over" ? " over" : yst === "ok" ? "" : " low"), dbNb(Math.round(Math.max(0, ys.spent) / ys.plan * 100) + " % из " + Math.round(d.y.pace * 100) + " %")));
+        yl.appendChild(yb);
+      }
+      yl.appendChild(node("b", "", ys.spent < -0.5 ? "+" + dbEur0(-ys.spent) : dbEur0(ys.spent)));
+      sum.appendChild(yl);
+    }
     if (unc) {
       var u = document.createElement("button"); u.type = "button"; u.className = "l2 w"; u.appendChild(node("span", "", "Не разнесено · " + dbOps(unc.n) + " ›")); u.appendChild(node("b", "", dbEur(unc.out)));
       u.addEventListener("click", function () { showTab("bank"); }); sum.appendChild(u); // разносить — в Bank
