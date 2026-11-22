@@ -70,7 +70,6 @@ body.tab-assets .app > :not(.top):not(#assetsPage) { display: none !important; }
 body.tab-assets #assetsPage { display: flex; }
 body.tab-assets .gear { visibility: hidden; }
 .db-top { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; }
-.db-top .bk-period { height: 50px; background: var(--surface); border: 1px solid var(--line); }
 .db-top [hidden] { display: none; }
 /* карточка раздела — на всю ширину экрана, как список операций в Bank (его слово 20.11.2026): без боковых полей и рамки, скругление 22px */
 .db-card { background: var(--surface); border-radius: 22px; overflow: hidden; font-variant-numeric: tabular-nums;
@@ -82,6 +81,7 @@ body.tab-assets .gear { visibility: hidden; }
 .db-sum { padding: 12px 16px; display: flex; flex-direction: column; gap: 6px; }
 .db-sum .l1, .db-sum .l2 { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
 .db-sum .l1 span { color: var(--muted); font-size: calc(13 * var(--u)); }
+.db-perbtn { align-self: center; height: 30px; padding: 0 10px; border: 0; border-radius: 9px; background: var(--chip); color: var(--fg); font: inherit; font-size: calc(14 * var(--u)); font-weight: 600; white-space: nowrap; } .db-perbtn::after { content: " ▾"; color: var(--muted); font-size: .8em; }
 .db-sum .l1 b { font-size: calc(24 * var(--u)); font-weight: 700; letter-spacing: -.3px; white-space: nowrap; } .db-sum .l1 b.plus { color: var(--plus); }
 .db-sum .l2 { font-size: calc(13 * var(--u)); color: var(--muted); border: 0; background: transparent; padding: 0; width: 100%; font-family: inherit; text-align: left; }
 .db-sum .l2 b { font-weight: 600; color: var(--fg); white-space: nowrap; }
@@ -635,8 +635,7 @@ button.txd-row:active { background: var(--chip); }
   <section id="assetsPage" aria-label="Dashboard"> <!-- Dashboard (его слова 19–20.11.2026): сверху раздел (Expenses, Plan, Liquidity) и период, ниже карточка раздела -->
     <div class="db-top">
       <div class="catwrap"><button class="catsel set bk-banksel" id="dbSel" type="button" aria-haspopup="dialog"><span class="nm" id="dbSelNm">Expenses</span><span class="st" id="dbSelSt"></span></button></div>
-      <button class="bk-period" id="dbPer" type="button" aria-haspopup="dialog"></button>
-      <button class="bk-refresh" id="asRefresh" type="button" aria-label="Обновить: выгрузить остатки из банка" hidden><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <button class="bk-refresh" id="asRefresh" type="button" aria-label="Обновить: выгрузить банк и перечитать данные"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     </div>
     <div class="seg" id="dbWho" role="group" aria-label="Чьи данные"></div>
     <div class="db-card" id="dbCard"></div>
@@ -802,7 +801,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "195"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "196"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -2344,6 +2343,13 @@ button.txd-row:active { background: var(--chip); }
       b.addEventListener("click", function () { db.who = w[0]; dbRender(); }); seg.appendChild(b);
     });
   }
+  // первая строка карточки: слева период кнопкой (год у Plan; год или месяц у Expenses) — открывает лист периода, справа сумма.
+  // Сверху справа — ↻ (его слово 22.11.2026: «где сейчас выбор года, сделай кнопку обновления, а сам год перенеси… чтобы не было сдвоения»)
+  function dbPerLine(label, value) {
+    var d = node("div", "l1"), b = node("button", "db-perbtn", label); b.type = "button"; b.setAttribute("aria-haspopup", "dialog");
+    b.addEventListener("click", function () { perRender(); db.perSheet.hidden = false; });
+    d.appendChild(b); d.appendChild(node("b", "", value)); return d;
+  }
   function dbNotes(list) { var s = node("small", "db-note"); list.forEach(function (t) { s.appendChild(node("span", "", t)); }); return s; }
   function dbBar(spent, plan, pace, over, thin) {
     var bar = node("div", "db-bar" + (thin ? " thin" : "") + (over ? " over" : "")), i = document.createElement("i");
@@ -2405,7 +2411,6 @@ button.txd-row:active { background: var(--chip); }
   }
   function exRender() {
     var d = exData(), card = db.card, isM = !!db.per.m;
-    $("dbPer").textContent = isM ? MONTHS[db.per.m - 1] + " " + db.per.y : String(db.per.y);
     card.textContent = ""; dbSeg(true);
     if (!d) { $("dbSelSt").textContent = ""; card.appendChild(dbNotes([db.spBusy ? "Загружаю…" : "Нет данных — потяни экран вниз"])); return; }
     var part = isM ? d.m : d.y;
@@ -2413,7 +2418,7 @@ button.txd-row:active { background: var(--chip); }
     var to = part.to < d.today ? part.to : d.today, mLeft = exMonthsLeft(d);
     $("dbSelSt").textContent = part.from > d.today ? "период еще не начался" : (part.to > d.today ? "по " + dbDm(to) + " · " : "") + dbOps(part.n);
     var rows = exRows(part, isM ? null : d.plan, 1), tot = exSum(rows), sum = node("div", "db-sum"), unc = db.who === "family" && part.uncategorized.n ? part.uncategorized : null;
-    var spentAll = Math.round((tot.spent + (unc ? unc.out : 0)) * 100) / 100, l1 = dbLine("l1", isM ? MONTHS[db.per.m - 1] + " " + db.per.y : String(db.per.y), dbSpent(spentAll));
+    var spentAll = Math.round((tot.spent + (unc ? unc.out : 0)) * 100) / 100, l1 = dbPerLine(isM ? MONTHS[db.per.m - 1] + " " + db.per.y : String(db.per.y), dbSpent(spentAll));
     if (spentAll < -0.004) l1.lastChild.className = "plus";
     sum.appendChild(l1);
     if (!isM && tot.has && tot.plan > 0) sum.appendChild(exBudget(spentAll, tot.plan, part.pace, mLeft)); // год целиком — как категория
@@ -2457,10 +2462,10 @@ button.txd-row:active { background: var(--chip); }
   }
   function plRender() {
     var d = plData(), card = db.card;
-    $("dbPer").textContent = String(db.plYear || (d && d.year) || dbNow.getFullYear()); $("dbSelSt").textContent = "бюджет на год по категориям";
+    $("dbSelSt").textContent = "бюджет на год по категориям";
     card.textContent = ""; dbSeg(false);
     if (!d) { card.appendChild(dbNotes([db.plBusy ? "Загружаю…" : "Нет данных — потяни экран вниз"])); return; }
-    var sum = node("div", "db-sum"); sum.appendChild(dbLine("l1", "Бюджет " + d.year, dbEur0(d.plan.total))); sum.appendChild(dbLine("l2", "В месяц", dbEur0(d.plan.total / 12)));
+    var sum = node("div", "db-sum"); sum.appendChild(dbPerLine("Бюджет " + d.year, dbEur0(d.plan.total))); sum.appendChild(dbLine("l2", "В месяц", dbEur0(d.plan.total / 12)));
     if (d.plan.missing) sum.appendChild(dbLine("l2", "Без суммы · " + d.plan.missing, ""));
     card.appendChild(sum);
     var list = node("ul", "db-list db-plan");
@@ -2573,19 +2578,19 @@ button.txd-row:active { background: var(--chip); }
     if (db.sec === "liq" && !as.data) asRender();
     return as.busy;
   }
-  // ↻ (его слово 19.11.2026): выгрузить банк сейчас (то же действие, что ↻ в Bank: свежий снимок остатков), затем перечитать
+  // ↻ — во всех разделах Dashboard (с версии 196; раньше только в Liquidity): выгрузить банк сейчас (то же действие, что ↻ в Bank), затем перечитать
   // счета; банк не ответил или выгрузка была только что — показывается то, что есть в базе
   $("asRefresh").addEventListener("click", function () {
-    var btn = $("asRefresh"), st = db.st;
+    var btn = $("asRefresh"), st = db.st, sec = db.sec;
     if (as.syncing || !token()) return;
     as.syncing = true; btn.classList.add("run"); btn.disabled = true; st.className = "status"; st.textContent = "";
     var msg = "", cls = "status";
-    api("bank_sync", {}, 130000).then(function (j) {
+    (sec === "plan" ? Promise.resolve() : api("bank_sync", {}, 130000).then(function (j) { // у Plan банк ни при чем — только перечитать
       var x = j.sync || {};
       if (x.error) { msg = "Банк не ответил — " + x.error; cls = "status err"; }
       else if (x.errors && x.errors.length) { msg = "Выгрузка: " + x.errors.join("; "); cls = "status warn"; }
-      else if (x.skipped === "busy") { msg = "Банк сейчас занят ночной выгрузкой — показан последний остаток"; cls = "status warn"; }
-    }, function (e) { msg = explain(e); cls = "status err"; }).then(function () { return asLoad(); }).then(function (ok) {
+      else if (x.skipped === "busy") { msg = "Банк сейчас занят ночной выгрузкой — показаны прежние данные"; cls = "status warn"; }
+    }, function (e) { msg = explain(e); cls = "status err"; })).then(function () { return dbLoad(); }).then(function (ok) {
       as.syncing = false; btn.classList.remove("run"); btn.disabled = false;
       if (ok || msg) { st.className = msg ? cls : "status"; st.textContent = msg; }
     });
@@ -2595,7 +2600,7 @@ button.txd-row:active { background: var(--chip); }
   function dbRender() { if (db.sec === "exp") exRender(); else if (db.sec === "plan") plRender(); else asRender(); }
   function dbLoad() { return db.sec === "exp" ? exLoad() : db.sec === "plan" ? plLoad() : asLoad(); }
   function dbShow() {
-    $("dbSelNm").textContent = DB_NAME[db.sec]; $("dbPer").hidden = db.sec === "liq"; $("asRefresh").hidden = db.sec !== "liq";
+    $("dbSelNm").textContent = DB_NAME[db.sec];
     db.st.className = "status"; db.st.textContent = "";
     Array.prototype.forEach.call($("dbList").querySelectorAll("button"), function (x) { x.classList.toggle("on", x.getAttribute("data-db") === db.sec); });
     dbRender(); dbLoad();
@@ -2626,7 +2631,6 @@ button.txd-row:active { background: var(--chip); }
       b.addEventListener("click", function () { db.per = { y: curY, m: i + 1 }; db.perSheet.hidden = true; exRender(); exLoad(); }); mos.appendChild(b);
     });
   }
-  $("dbPer").addEventListener("click", function () { perRender(); db.perSheet.hidden = false; });
   $("dbPerClose").addEventListener("click", function () { db.perSheet.hidden = true; });
   $("dbPerBack").addEventListener("click", function () { db.perSheet.hidden = true; });
   $("dbSel").addEventListener("click", function () { db.sheet.hidden = false; });
