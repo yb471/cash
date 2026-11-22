@@ -100,17 +100,25 @@ body.tab-assets .gear { visibility: hidden; }
 .db-list .am small { color: var(--muted); font-size: calc(12 * var(--u)); font-weight: 400; }
 .db-list .am.plus { color: var(--plus); }
 /* полоса состояния с текстом внутри (его слово 21.11.2026): заливка — приглушенный цвет состояния, текст читается и на ней, и на дорожке */
-.db-bar.x { height: 22px; border-radius: 7px; display: flex; align-items: center; min-width: 0; }
-.db-bar.x i { border-radius: 0; background: color-mix(in srgb, var(--accent) 24%, var(--chip)); }
-.db-bar.x.low i { background: color-mix(in srgb, #E3A21A 50%, var(--chip)); }
-.db-bar.x.over i { background: color-mix(in srgb, var(--minus) 32%, var(--chip)); }
-.db-bar.x em { opacity: .45; box-shadow: none; width: 1.5px; }
+.db-bar.x { height: 24px; border-radius: 8px; display: flex; align-items: center; min-width: 0; background: color-mix(in srgb, var(--chip) 60%, var(--surface)); }
+.db-bar.x i { border-radius: 0; box-sizing: border-box; background: color-mix(in srgb, var(--accent) 22%, var(--surface)); border-bottom: 3px solid var(--accent); } /* заливка приглушенная, цвет состояния — линией снизу */
+.db-bar.x.low i { background: color-mix(in srgb, #E3A21A 32%, var(--surface)); border-bottom-color: #E3A21A; }
+.db-bar.x.over i { background: color-mix(in srgb, var(--minus) 22%, var(--surface)); border-bottom-color: var(--minus); }
+.db-bar.x em { opacity: .14; box-shadow: none; width: 1px; } /* отсечка «где мы» — во всю высоту, тонкая и бледная (его слова 22.11.2026) */
 .db-bar.x .stt { position: relative; z-index: 1; min-width: 0; padding: 0 8px; font-size: calc(12 * var(--u)); font-weight: 500; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .db-bar.x .stt.low { color: var(--warn); font-weight: 600; } .db-bar.x .stt.over { color: var(--minus); font-weight: 600; }
 .db-bar.x .of { position: relative; z-index: 1; margin-left: auto; padding: 0 8px 0 4px; font-size: calc(12 * var(--u)); color: var(--muted); white-space: nowrap; }
 /* строки категорий Expenses: название и факт; под ними полоса состояния до «из <план>» */
-.db-exp li { grid-template-columns: 30px minmax(0, 1fr) auto; column-gap: 12px; row-gap: 5px; padding: 9px 16px 10px; align-items: center; }
-.db-exp .em { grid-row: 1 / 3; align-self: center; }
+.db-exp li { grid-template-columns: 36px minmax(0, 1fr) auto; column-gap: 12px; row-gap: 5px; padding: 10px 16px 11px; align-items: center; border-top: 0; position: relative; }
+.db-exp li + li::before { content: ""; position: absolute; left: 64px; right: 16px; top: 0; height: 1px; background: var(--line); } /* линия между строками — от текста */
+.db-exp .em { grid-row: 1 / 3; align-self: center; width: 36px; height: 36px; font-size: calc(18 * var(--u)); background: color-mix(in srgb, var(--accent) 9%, var(--surface)); }
+.db-exp li.zero .am { color: var(--muted); font-weight: 500; }
+.db-card .c, .db-sum .l1 b .c { font-size: .76em; color: inherit; } /* копейки мельче, тем же цветом */
+/* итог периода Expenses — плашка; при перелимите года красноватая (оформление по его «Делай» 22.11.2026, версия 198) */
+.db-sum.ex { margin: 10px 10px 4px; padding: 12px 12px 14px; border-radius: 16px; background: color-mix(in srgb, var(--accent) 8%, var(--surface)); gap: 10px; }
+.db-sum.ex.hot { background: color-mix(in srgb, var(--minus) 8%, var(--surface)); }
+.db-sum.ex .l1 b { font-size: calc(27 * var(--u)); }
+.db-sum.ex .db-bar.x { background: color-mix(in srgb, var(--surface) 70%, transparent); }
 .db-exp .nm { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .db-exp .am { display: block; font-weight: 600; letter-spacing: -.1px; }
 .db-exp .ln { grid-column: 2 / -1; display: flex; align-items: center; gap: 10px; min-width: 0; } /* полоса — до «из <план>»; колонка плана одной ширины, полосы ровные */
@@ -801,7 +809,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "197"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "198"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -2335,6 +2343,10 @@ button.txd-row:active { background: var(--chip); }
     if (!t) return "";
     try { var it = new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(t)[Symbol.iterator]().next(); return it.done ? t : it.value.segment; } catch (e) { return t; }
   }
+  function dbAmt(el) { // копейки мельче: «7 006», «,95» в .c, « €»
+    var m = /^(.*?)(,\d\d)(\s*€)$/.exec(el.textContent); if (!m) return el;
+    el.textContent = m[1]; el.appendChild(node("span", "c", m[2])); el.appendChild(document.createTextNode(m[3])); return el;
+  }
   function dbLine(cls, left, right) { var d = node("div", cls); d.appendChild(node("span", "", left)); d.appendChild(node("b", "", right)); return d; }
   function dbSeg(show) { // выбор владельца над карточкой; у Plan его нет
     var seg = $("dbWho"); seg.hidden = !show; seg.textContent = ""; if (!show) return;
@@ -2417,17 +2429,19 @@ button.txd-row:active { background: var(--chip); }
     if (!part) { card.appendChild(dbNotes(["За этот период данных нет"])); return; }
     var to = part.to < d.today ? part.to : d.today, mLeft = exMonthsLeft(d);
     $("dbSelSt").textContent = part.from > d.today ? "период еще не начался" : (part.to > d.today ? "по " + dbDm(to) + " · " : "") + dbOps(part.n);
-    var rows = exRows(part, isM ? null : d.plan, 1), tot = exSum(rows), sum = node("div", "db-sum"), unc = db.who === "family" && part.uncategorized.n ? part.uncategorized : null;
+    var rows = exRows(part, isM ? null : d.plan, 1), tot = exSum(rows), sum = node("div", "db-sum ex"), unc = db.who === "family" && part.uncategorized.n ? part.uncategorized : null;
     var spentAll = Math.round((tot.spent + (unc ? unc.out : 0)) * 100) / 100, l1 = dbPerLine(isM ? MONTHS[db.per.m - 1] + " " + db.per.y : String(db.per.y), dbSpent(spentAll));
     if (spentAll < -0.004) l1.lastChild.className = "plus";
-    sum.appendChild(l1);
-    if (!isM && tot.has && tot.plan > 0) sum.appendChild(exBudget(spentAll, tot.plan, part.pace, mLeft)); // год целиком — как категория
+    dbAmt(l1.lastChild); sum.appendChild(l1);
+    if (!isM && tot.has && tot.plan > 0) { // год целиком — как категория; перелимит — плашка красноватая
+      sum.appendChild(exBudget(spentAll, tot.plan, part.pace, mLeft)); if (dbState(spentAll, tot.plan, part.pace) === "over") sum.className += " hot";
+    }
     card.appendChild(sum);
     var list = node("ul", "db-list db-exp"), max = 1;
     rows.forEach(function (r) { if (r.spent > max) max = r.spent; });
     rows.forEach(function (r) {
-      var li = node("li"), ln;
-      li.appendChild(node("span", "em", dbEm(r.em))); li.appendChild(node("span", "nm", r.nm)); li.appendChild(node("span", "am" + (r.spent < -0.004 ? " plus" : ""), dbSpent(r.spent)));
+      var li = node("li", Math.abs(r.spent) < 0.005 ? "zero" : ""), ln;
+      li.appendChild(node("span", "em", dbEm(r.em))); li.appendChild(node("span", "nm", r.nm)); li.appendChild(dbAmt(node("span", "am" + (r.spent < -0.004 ? " plus" : ""), dbSpent(r.spent))));
       if (r.plan !== null) ln = exBudget(r.spent, r.plan, part.pace, mLeft);
       else { // без бюджета: месяц — доля в расходах; год — «нет в плане»
         var bar = dbBar(Math.max(0, r.spent), max, 0, false, false); bar.className += " x";
