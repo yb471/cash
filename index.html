@@ -81,7 +81,7 @@ body.tab-assets .gear { visibility: hidden; }
 .db-sum { padding: 12px 16px; display: flex; flex-direction: column; gap: 6px; }
 .db-sum .l1, .db-sum .l2 { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
 .db-sum .l1 span { color: var(--muted); font-size: calc(13 * var(--u)); }
-.db-perbtn { align-self: center; height: 30px; padding: 0 10px; border: 0; border-radius: 9px; background: var(--chip); color: var(--fg); font: inherit; font-size: calc(14 * var(--u)); font-weight: 600; white-space: nowrap; } .db-perbtn::after { content: " ▾"; color: var(--muted); font-size: .8em; }
+.db-perbtn { align-self: center; height: 30px; padding: 0 12px; border: 1px solid var(--line); border-radius: 99px; background: var(--surface); color: var(--fg); font: inherit; font-size: calc(14 * var(--u)); font-weight: 600; white-space: nowrap; } .db-perbtn::after { content: " ▾"; color: var(--muted); font-size: .8em; }
 .db-sum .l1 b { font-size: calc(24 * var(--u)); font-weight: 700; letter-spacing: -.3px; white-space: nowrap; } .db-sum .l1 b.plus { color: var(--plus); }
 .db-sum .l2 { font-size: calc(13 * var(--u)); color: var(--muted); border: 0; background: transparent; padding: 0; width: 100%; font-family: inherit; text-align: left; }
 .db-sum .l2 b { font-weight: 600; color: var(--fg); white-space: nowrap; }
@@ -801,7 +801,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "196"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "197"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
