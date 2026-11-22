@@ -116,7 +116,7 @@ body.tab-assets .gear { visibility: hidden; }
 .db-exp .ln { grid-column: 2 / -1; display: flex; align-items: center; gap: 10px; min-width: 0; } /* полоса — до «из <план>»; колонка плана одной ширины, полосы ровные */
 .db-exp .ln .db-bar { flex: 1; }
 .db-sum .ln { display: flex; align-items: center; gap: 10px; min-width: 0; } .db-sum .ln .db-bar { flex: 1; } .db-sum .ln .of { flex: none; min-width: 92px; text-align: right; font-size: calc(13 * var(--u)); color: var(--muted); white-space: nowrap; } .db-sum .ln .of:empty { min-width: 0; }
-.db-exp .of { flex: none; min-width: 92px; text-align: right; font-size: calc(13 * var(--u)); color: var(--muted); white-space: nowrap; } .db-exp .of:empty { min-width: 0; }
+.db-exp .of { flex: none; min-width: 92px; text-align: right; font-size: calc(13 * var(--u)); color: var(--muted); white-space: nowrap; } .db-exp .of:empty { min-width: 0; } .db-exp .of.over, .db-sum .ln .of.over { color: var(--minus); font-weight: 600; }
 .db-bar.low i { background: #E3A21A; }
 .db-note { display: block; color: var(--muted); font-size: calc(12 * var(--u)); line-height: 1.35; padding: 8px 16px 9px; border-top: 1px solid var(--line); } .db-note:empty { display: none; } .db-note span { display: block; } .db-note span + span { margin-top: 3px; }
 /* Plan: суммы бюджета на год — кнопка-сумма открывает лист ввода */
@@ -802,7 +802,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "193"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "194"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -2397,9 +2397,10 @@ button.txd-row:active { background: var(--chip); }
     var left = plan - spent, st = dbState(spent, plan, pace), over = st === "over", low = st === "fast" || st === "low";
     var bar = dbBar(spent, plan, pace, false, false), stt = node("span", "stt" + (over ? " over" : low ? " low" : ""));
     bar.className += " x" + (over ? " over" : low ? " low" : "");
-    stt.textContent = (over ? "перелимит " : "осталось ") + dbNb(nf0.format(Math.abs(Math.round(left)))) + " из " + dbEur0(plan);
+    stt.textContent = (over ? "перелимит" : "осталось " + dbNb(nf0.format(Math.round(left)))) + " из " + dbEur0(plan); // сумма перелимита — справа
     bar.appendChild(stt);
-    var ln = node("div", "ln"); ln.appendChild(bar); ln.appendChild(node("span", "of", left > 0.5 && mLeft > 0 ? dbEur0(left / mLeft) + "/мес" : ""));
+    // справа всегда есть число (его слово 22.11.2026): в бюджете — сколько можно в месяц до конца года, при перелимите — его сумма красным
+    var ln = node("div", "ln"); ln.appendChild(bar); ln.appendChild(node("span", "of" + (over ? " over" : ""), over ? "−" + dbEur0(-left) : mLeft > 0 ? dbEur0(Math.max(0, left) / mLeft) + "/мес" : dbEur0(Math.max(0, left))));
     return ln;
   }
   function exRender() {
