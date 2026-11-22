@@ -60,6 +60,9 @@ body::before { content: ""; position: fixed; top: 0; left: 0; right: 0; height: 
 .tab:active { transform: scale(.96); }
 body.kb .tabbar { display: none; } /* клавиатура открыта — меню не мешает полям */
 body.locked .tabbar { display: none; }
+/* код Насти — только наличные (его слово 22.11.2026): меню разделов и ссылки на таблицу нет */
+body.solo .tabbar, body.solo #sheetLine { display: none; }
+body.solo .app { padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)); }
 #soon { display: none; flex: 1; align-items: center; justify-content: center; color: var(--muted); font-size: calc(15 * var(--u)); min-height: 50vh; }
 body.tab-other .app > :not(.top):not(#soon) { display: none !important; }
 body.tab-other #soon { display: flex; }
@@ -580,7 +583,7 @@ button.txd-row:active { background: var(--chip); }
     <div class="line"><span>Связь с базой</span><span id="connState">—</span></div>
     <div class="line"><span>Не отправлено</span><span><span id="queueCount">0</span> <button id="btnFlush" type="button" hidden>Отправить</button></span></div>
     <div class="line"><span>Версия</span><span id="ver"></span></div>
-    <div class="line"><a href="https://docs.google.com/spreadsheets/d/1cKYM1-z92p6Q14BxznyrYuXFfWDnJfb1w0Dj51CcAhk/edit#gid=1765023070" target="_blank" rel="noopener">Открыть вкладку YB Cash</a></div>
+    <div class="line" id="sheetLine"><a href="https://docs.google.com/spreadsheets/d/1cKYM1-z92p6Q14BxznyrYuXFfWDnJfb1w0Dj51CcAhk/edit#gid=1765023070" target="_blank" rel="noopener">Открыть вкладку YB Cash</a></div>
   </section>
 
   <div class="editbar" id="editBar" hidden>
@@ -809,7 +812,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "201"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "202"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -856,13 +859,29 @@ button.txd-row:active { background: var(--chip); }
   // ---------- access code: once from the sign-in link (#t=…) or typed, then kept on this phone ----------
   function token(v) {
     if (v === undefined) return ls("cash_token");
+    if (v !== ls("cash_token")) { ls("cash_who", null); document.body.classList.remove("solo"); } // другой код — чей он, скажет init
+    if (v) { // на телефоне был другой код — неотправленное прежнего пользователя не уйдет на чужой счет
+      var tag = v.slice(0, 12), was = ls("cash_code");
+      if (was && was !== tag) { state.queue = []; ls("cash_queue", null); ls("bank_queue", null); if (typeof bk !== "undefined" && bk) bk.queue = []; }
+      ls("cash_code", tag);
+    }
     ls("cash_token", v);
     if (v === null) { ls("cash_recent", null); ls("cash_balance", null); ls("cash_months", null); state.recent = []; state.balance = {}; state.months = {}; ls("bank_cache", null); ls("cash_assets", null); ls("cash_spend", null); ls("cash_plan", null); if (typeof db !== "undefined" && db) { db.sp = null; db.pl = null; } if (typeof as !== "undefined" && as) as.data = null; if (typeof bk !== "undefined" && bk) { bk.data = null; bk.loaded = false; } } // без кода — никаких чужих данных на экране и в памяти
   }
   (function fromLink() {
+    var cur = ls("cash_token"); if (cur && !ls("cash_code")) ls("cash_code", cur.slice(0, 12)); // код, сохраненный прежней версией
     var m = (location.hash || "").match(/^#t=([0-9a-f]{48})$/i);
-    if (m) { token(m[1].toLowerCase()); try { history.replaceState(null, "", location.pathname + location.search); } catch (e) { location.hash = ""; } }
+    if (m) { var t = m[1].toLowerCase(); if (ls("cash_token") && ls("cash_token") !== t) token(null); token(t); try { history.replaceState(null, "", location.pathname + location.search); } catch (e) { location.hash = ""; } }
   })();
+  // чей код (init → who): у Насти только наличные — без меню разделов; до первого ответа init — как раньше
+  function soloMode() { return ls("cash_who") === "nastia"; }
+  function applyWho() {
+    var solo = soloMode(); document.body.classList.toggle("solo", solo);
+    SECTIONS.cash = solo ? "Cash Nastia" : "Cash YB";
+    if (solo && document.querySelector(".tab.on").getAttribute("data-tab") !== "cash") showTab("cash");
+    else if (document.querySelector(".tab.on").getAttribute("data-tab") === "cash") $("section").textContent = SECTIONS.cash;
+    renderTpl();
+  }
   function showSetup(msg) { document.body.classList.toggle("locked", !token()); el.setup.hidden = false; el.setupMsg.textContent = msg || ""; el.tokenInput.focus(); }
 
   // ---------- render ----------
@@ -1001,6 +1020,7 @@ button.txd-row:active { background: var(--chip); }
     var cur = el.comment.value.trim();
     el.btnClear.hidden = !el.comment.value;
     TEMPLATES.forEach(function (t) {
+      if (t === "Дал Насте" && soloMode()) return; // у Насти этого шаблона нет
       var b = document.createElement("button"); b.type = "button"; b.textContent = t; b.className = cur === t ? "on" : "";
       b.addEventListener("click", function () { el.comment.value = cur === t ? "" : t; cur = el.comment.value; renderTpl(); });
       el.tpl.appendChild(b);
@@ -1072,6 +1092,7 @@ button.txd-row:active { background: var(--chip); }
   function refreshInit() {
     if (!token()) { showSetup(""); renderCats(); return Promise.resolve(false); }
     return api("init").then(function (j) {
+      if (j.who) { ls("cash_who", j.who); applyWho(); }
       var names = (j.categories || []).filter(Boolean);
       if (j.subcategories) { state.subs = j.subcategories; ls("cash_subs", state.subs); }
       if (names.length) { state.cats = names; ls("cash_cats", names); if (state.cat && names.indexOf(state.cat) < 0) state.cat = ""; renderCats(); }
@@ -2563,11 +2584,13 @@ button.txd-row:active { background: var(--chip); }
     var d = as.data, card = db.card, note = [], last = "";
     card.textContent = ""; dbSeg(true);
     var sum = node("div", "db-sum"); card.appendChild(sum);
-    if (db.who === "nastia") { sum.appendChild(dbLine("l1", "Доступно сейчас", "—")); card.appendChild(dbNotes(["Счета пока не подключены"])); $("dbSelSt").textContent = ""; return; }
     if (!d) { sum.appendChild(dbLine("l1", "Доступно сейчас", "—")); card.appendChild(dbNotes([as.busy ? "Загружаю…" : "Нет данных — потяни экран вниз"])); $("dbSelSt").textContent = ""; return; }
-    sum.appendChild(dbLine("l1", "Доступно сейчас", dbEur(Number(d.total_eur) || 0)));
+    // счета владельца: у счета owner (me | nastia), без него — его; итог семьи — с сервера, человека — сумма его счетов в EUR
+    var accs = (d.accounts || []).filter(function (a) { return db.who === "family" || (a.owner || "me") === db.who; });
+    if (db.who === "nastia" && !accs.length) { sum.appendChild(dbLine("l1", "Доступно сейчас", "—")); card.appendChild(dbNotes(["Счета пока не подключены"])); $("dbSelSt").textContent = ""; return; }
+    sum.appendChild(dbLine("l1", "Доступно сейчас", dbEur(db.who === "family" ? Number(d.total_eur) || 0 : Math.round(accs.reduce(function (s, a) { return s + (Number(a.eur) || 0); }, 0) * 100) / 100)));
     var list = node("ul", "db-list");
-    (d.accounts || []).forEach(function (a) {
+    accs.forEach(function (a) {
       var li = node("li"), em = node("span", "em"), nm = node("span", "nm", a.label), am = node("span", "am"), known = a.balance !== null && a.balance !== undefined;
       em.innerHTML = a.kind === "cash" ? DB_ICON.cash : DB_ICON.bank;
       nm.appendChild(node("small", "", a.at ? "обновлен " + dbNb(dmhm(a.at)) : "дата неизвестна")); if (a.at && a.at > last) last = a.at;
@@ -2577,7 +2600,7 @@ button.txd-row:active { background: var(--chip); }
     });
     card.appendChild(list);
     $("dbSelSt").textContent = last ? "обновлено " + dmhm(last) : "";
-    if (!(d.accounts || []).length) note.push("Счетов пока нет");
+    if (!accs.length) note.push("Счетов пока нет");
     card.appendChild(dbNotes(note));
   }
   function asLoad() {
@@ -2768,6 +2791,7 @@ button.txd-row:active { background: var(--chip); }
   document.addEventListener("touchcancel", function () { if (ptr.y0 !== null) { ptr.y0 = null; ptrDraw(0, true); } });
 
   if (!token()) token(null); // старые записи без кода не показываем
+  applyWho();
   renderAll();
   if (token()) { el.amount.focus(); refreshInit().then(function () { flushQueue(); if (bk.queue.length) bkSend(); }); } else { showSetup(""); }
 
