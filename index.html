@@ -751,7 +751,7 @@ button.txd-row:active { background: var(--chip); }
     </ul>
   </div>
 </div>
-<div class="sheet" id="dbPerSheet" hidden> <!-- период Expenses и год Plan — как период в Bank -->
+<div class="sheet" id="dbPerSheet" hidden> <!-- год Expenses и год Plan -->
   <div class="sheet-back" id="dbPerBack"></div>
   <div class="sheet-body" role="dialog" aria-label="Период">
     <div class="sheet-head"><span id="dbPerTitle">Период</span><button id="dbPerClose" type="button" aria-label="Закрыть">✕</button></div>
@@ -809,7 +809,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "200"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "201"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -2329,7 +2329,7 @@ button.txd-row:active { background: var(--chip); }
   var DB_NAME = { exp: "Expenses", plan: "Plan", liq: "Liquidity" }, DB_WHO = [["family", "Family Total"], ["me", "Yaroslav Burda"], ["nastia", "Anastasiia Burda"]];
   var dbNow = new Date();
   var db = { sec: "exp", who: "family", sheet: $("dbSheet"), perSheet: $("dbPerSheet"), editSheet: $("dbEditSheet"), card: $("dbCard"), st: $("dbStatus"),
-    per: { y: dbNow.getFullYear(), m: null }, sp: ls("cash_spend"), spBusy: null, pl: ls("cash_plan"), plYear: null, plBusy: null, edit: null, stale: false };
+    per: { y: dbNow.getFullYear() }, sp: ls("cash_spend"), spBusy: null, pl: ls("cash_plan"), plYear: null, plBusy: null, edit: null, stale: false };
   var as = { data: ls("cash_assets"), busy: null, syncing: false };
   ls("cash_dash", null); ls("cash_assets_who", null); ls("cash_expenses", null); // ключи прежних версий
   var nf0 = new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 });
@@ -2355,7 +2355,7 @@ button.txd-row:active { background: var(--chip); }
       b.addEventListener("click", function () { db.who = w[0]; dbRender(); }); seg.appendChild(b);
     });
   }
-  // первая строка карточки: слева период кнопкой (год у Plan; год или месяц у Expenses) — открывает лист периода, справа сумма.
+  // первая строка карточки: слева год кнопкой — открывает лист года, справа сумма.
   // Сверху справа — ↻ (его слово 22.11.2026: «где сейчас выбор года, сделай кнопку обновления, а сам год перенеси… чтобы не было сдвоения»)
   function dbPerLine(label, value) {
     var d = node("div", "l1"), b = node("button", "db-perbtn", label); b.type = "button"; b.setAttribute("aria-haspopup", "dialog");
@@ -2377,7 +2377,7 @@ button.txd-row:active { background: var(--chip); }
   }
 
   // ---- Expenses ----
-  function exKey() { return db.per.y + "-" + (db.per.m || 0); }
+  function exKey() { return db.per.y + "-0"; } // период — только год (его слово 22.11.2026, версия 201)
   function exData() { return db.sp && db.sp.key === exKey() ? db.sp.data : null; }
   // строки периода для владельца: k — доля годовой суммы (год — 1, месяц — 1/12)
   function exRows(part, plan, k) {
@@ -2403,7 +2403,7 @@ button.txd-row:active { background: var(--chip); }
   // месяц по остатку до конца года», «мне нравится», «логику вывода данных по году сделать как в категориях», по макету — «вот так сделай»; версия 193). Год — вид по
   // умолчанию: сверху год целиком той же строкой, что категории: название и факт; полоса «осталось N из <план>» или «перелимит N
   // из <план>»; справа «N €/мес» — остаток, деленный на число месяцев до конца года. Цвет — dbState по доле прошедшего года.
-  // Месяц в выборе периода — только факт за месяц: суммы по категориям и доля каждой, без бюджета.
+  // Месяца в выборе нет с версии 201 (его слово 22.11.2026: «дай возможность выбирать только год»).
   // У семьи в сумму года и месяца входит и не разнесенное (его слово 21.11.2026); строки «Не разнесено» и подсказок нет.
   function exMonthsLeft(d) { // месяцев до конца года от сегодня: по дням, не меньше одного; прошлый год — 0, будущий — 12
     var y = Number(d.year), ty = Number(String(d.today).slice(0, 4));
@@ -2422,18 +2422,18 @@ button.txd-row:active { background: var(--chip); }
     return ln;
   }
   function exRender() {
-    var d = exData(), card = db.card, isM = !!db.per.m;
+    var d = exData(), card = db.card;
     card.textContent = ""; dbSeg(true);
     if (!d) { $("dbSelSt").textContent = ""; card.appendChild(dbNotes([db.spBusy ? "Загружаю…" : "Нет данных — потяни экран вниз"])); return; }
-    var part = isM ? d.m : d.y;
+    var part = d.y;
     if (!part) { card.appendChild(dbNotes(["За этот период данных нет"])); return; }
     var to = part.to < d.today ? part.to : d.today, mLeft = exMonthsLeft(d);
     $("dbSelSt").textContent = part.from > d.today ? "период еще не начался" : (part.to > d.today ? "по " + dbDm(to) + " · " : "") + dbOps(part.n);
-    var rows = exRows(part, isM ? null : d.plan, 1), tot = exSum(rows), sum = node("div", "db-sum ex"), unc = db.who === "family" && part.uncategorized.n ? part.uncategorized : null;
-    var spentAll = Math.round((tot.spent + (unc ? unc.out : 0)) * 100) / 100, l1 = dbPerLine(isM ? MONTHS[db.per.m - 1] + " " + db.per.y : String(db.per.y), dbSpent(spentAll));
+    var rows = exRows(part, d.plan, 1), tot = exSum(rows), sum = node("div", "db-sum ex"), unc = db.who === "family" && part.uncategorized.n ? part.uncategorized : null;
+    var spentAll = Math.round((tot.spent + (unc ? unc.out : 0)) * 100) / 100, l1 = dbPerLine(String(db.per.y), dbSpent(spentAll));
     if (spentAll < -0.004) l1.lastChild.className = "plus";
     dbAmt(l1.lastChild); sum.appendChild(l1);
-    if (!isM && tot.has && tot.plan > 0) { // год целиком — как категория; перелимит — плашка красноватая
+    if (tot.has && tot.plan > 0) { // год целиком — как категория; перелимит — плашка красноватая
       sum.appendChild(exBudget(spentAll, tot.plan, part.pace, mLeft)); if (dbState(spentAll, tot.plan, part.pace) === "over") sum.className += " hot";
     }
     card.appendChild(sum);
@@ -2443,9 +2443,9 @@ button.txd-row:active { background: var(--chip); }
       var li = node("li", Math.abs(r.spent) < 0.005 ? "zero" : ""), ln;
       li.appendChild(node("span", "em", dbEm(r.em))); li.appendChild(node("span", "nm", r.nm)); li.appendChild(dbAmt(node("span", "am" + (r.spent < -0.004 ? " plus" : ""), dbSpent(r.spent))));
       if (r.plan !== null) ln = exBudget(r.spent, r.plan, part.pace, mLeft);
-      else { // без бюджета: месяц — доля в расходах; год — «нет в плане»
+      else { // без суммы в плане — «нет в плане»; плана нет вообще — доля в расходах
         var bar = dbBar(Math.max(0, r.spent), max, 0, false, false); bar.className += " x";
-        bar.appendChild(node("span", "stt", r.spent < -0.004 ? "приход больше трат" : !isM && tot.has ? "нет в плане" : tot.spent > 0.004 && r.spent > 0.004 ? dbNb(Math.round(r.spent / tot.spent * 100) + " %") : dbOps(r.n)));
+        bar.appendChild(node("span", "stt", r.spent < -0.004 ? "приход больше трат" : tot.has ? "нет в плане" : tot.spent > 0.004 && r.spent > 0.004 ? dbNb(Math.round(r.spent / tot.spent * 100) + " %") : dbOps(r.n)));
         ln = node("div", "ln"); ln.appendChild(bar); ln.appendChild(node("span", "of", ""));
       }
       li.appendChild(ln); list.appendChild(li);
@@ -2456,7 +2456,7 @@ button.txd-row:active { background: var(--chip); }
   function exLoad() {
     if (db.spBusy) return db.spBusy;
     if (!token()) { db.st.className = "status err"; db.st.textContent = explain({ code: "no_token" }); return Promise.resolve(false); }
-    var key = exKey(), per = { year: db.per.y, month: db.per.m || undefined };
+    var key = exKey(), per = { year: db.per.y };
     db.spBusy = api("spend", per).then(function (j) {
       db.sp = { key: key, data: j }; if (key === dbNow.getFullYear() + "-0") ls("cash_spend", db.sp); // телефон помнит текущий год
       db.st.className = "status"; db.st.textContent = ""; connected(true); return true;
@@ -2620,29 +2620,22 @@ button.txd-row:active { background: var(--chip); }
     dbRender(); dbLoad();
   }
   // лист периода: Expenses — год, «Весь год», месяцы (месяц без операций неактивен); Plan — только год
+  // лист года: у Expenses и Plan — только годы (его слово 22.11.2026: «дай возможность выбирать только год», «выводи только те по
+  // которым есть данные»; версия 201): у Expenses — годы с операциями, то есть не позже текущего; у Plan — годы бюджета
   function perRender() {
     var box = $("dbPerBody"), isPlan = db.sec === "plan", d = isPlan ? plData() : exData(), cy = dbNow.getFullYear();
     var years = (d && d.years) || [cy], curY = isPlan ? (db.plYear || (d && d.year) || cy) : db.per.y;
-    $("dbPerTitle").textContent = isPlan ? "Год бюджета" : "Период";
+    $("dbPerTitle").textContent = isPlan ? "Год бюджета" : "Год";
     box.textContent = "";
     var yrs = node("div", "yrs"); box.appendChild(yrs);
     years.filter(function (y) { return isPlan || y <= cy; }).forEach(function (y) {
       var b = node("button", y === curY ? "on" : "", String(y)); b.type = "button";
       b.addEventListener("click", function () {
-        if (isPlan) { db.plYear = y; db.perSheet.hidden = true; plRender(); plLoad(); return; }
-        db.per = { y: y, m: null }; exRender(); exLoad(); perRender(); // год — сразу весь год, лист открыт: месяц по желанию
+        db.perSheet.hidden = true;
+        if (isPlan) { db.plYear = y; plRender(); plLoad(); return; }
+        db.per = { y: y }; exRender(); exLoad();
       });
       yrs.appendChild(b);
-    });
-    if (isPlan) return;
-    var mos = node("div", "mos"); box.appendChild(mos);
-    var whole = node("button", "whole" + (!db.per.m ? " on" : ""), "Весь " + curY + " год"); whole.type = "button";
-    whole.addEventListener("click", function () { db.per = { y: curY, m: null }; db.perSheet.hidden = true; exRender(); exLoad(); }); mos.appendChild(whole);
-    var have = d && d.year === curY ? (d.months || []) : null;
-    ["Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"].forEach(function (t, i) {
-      var b = node("button", db.per.m === i + 1 ? "on" : "", t); b.type = "button";
-      b.disabled = have ? have.indexOf(i + 1) < 0 && db.per.m !== i + 1 : !!db.spBusy;
-      b.addEventListener("click", function () { db.per = { y: curY, m: i + 1 }; db.perSheet.hidden = true; exRender(); exLoad(); }); mos.appendChild(b);
     });
   }
   $("dbPerClose").addEventListener("click", function () { db.perSheet.hidden = true; });
