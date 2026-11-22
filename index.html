@@ -119,11 +119,6 @@ body.tab-assets .gear { visibility: hidden; }
 .db-sum.ex.hot { background: color-mix(in srgb, var(--minus) 8%, var(--surface)); }
 .db-sum.ex .l1 b { font-size: calc(27 * var(--u)); }
 .db-sum.ex .db-bar.x { background: color-mix(in srgb, var(--surface) 70%, transparent); }
-/* подписи «потрачено» над суммой и «перелимит» перед его суммой — только в плашке итога (его слово 22.11.2026, версия 199) */
-.db-sum.ex .l1 { align-items: flex-end; } .db-sum.ex .db-perbtn { align-self: flex-end; margin-bottom: 2px; }
-.db-sum.ex .tt { display: flex; flex-direction: column; align-items: flex-end; min-width: 0; } .db-sum.ex .tt b { line-height: 1.15; }
-.db-sum.ex .tt small, .db-sum.ex .ln .of small { color: var(--muted); font-size: calc(11.5 * var(--u)); font-weight: 500; line-height: 1.2; }
-.db-sum.ex .ln .of small { color: inherit; margin-right: 5px; }
 .db-exp .nm { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .db-exp .am { display: block; font-weight: 600; letter-spacing: -.1px; }
 .db-exp .ln { grid-column: 2 / -1; display: flex; align-items: center; gap: 10px; min-width: 0; } /* полоса — до «из <план>»; колонка плана одной ширины, полосы ровные */
@@ -814,7 +809,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "199"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "200"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -2416,17 +2411,15 @@ button.txd-row:active { background: var(--chip); }
     if (y > ty) return 12;
     return Math.max(1, ((Date.UTC(y, 11, 31) - Date.parse(d.today + "T00:00:00Z")) / 86400000 + 1) / 30.4375);
   }
-  function exBudget(spent, plan, pace, mLeft, word) { // полоса и правая подпись строки с бюджетом; word — в плашке итога перед суммой перелимита слово «перелимит"
+  function exBudget(spent, plan, pace, mLeft) { // полоса и правая подпись строки с бюджетом
     var left = plan - spent, st = dbState(spent, plan, pace), over = st === "over", low = st === "fast" || st === "low";
     var bar = dbBar(spent, plan, pace, false, false), stt = node("span", "stt" + (over ? " over" : low ? " low" : ""));
     bar.className += " x" + (over ? " over" : low ? " low" : "");
     stt.textContent = "осталось " + dbNb(nf0.format(Math.max(0, Math.round(left)))) + " из " + dbEur0(plan); // при перелимите — «осталось 0 из …» (его слово 22.11.2026), сумма перелимита — справа
     bar.appendChild(stt);
     // справа всегда есть число (его слово 22.11.2026): в бюджете — сколько можно в месяц до конца года, при перелимите — его сумма красным
-    var ln = node("div", "ln"), of = node("span", "of" + (over ? " over" : ""));
-    if (over && word) of.appendChild(node("small", "", "перелимит"));
-    of.appendChild(document.createTextNode(over ? "−" + dbEur0(-left) : mLeft > 0 ? dbEur0(Math.max(0, left) / mLeft) + "/мес" : dbEur0(Math.max(0, left))));
-    ln.appendChild(bar); ln.appendChild(of); return ln;
+    var ln = node("div", "ln"); ln.appendChild(bar); ln.appendChild(node("span", "of" + (over ? " over" : ""), over ? "−" + dbEur0(-left) : mLeft > 0 ? dbEur0(Math.max(0, left) / mLeft) + "/мес" : dbEur0(Math.max(0, left))));
+    return ln;
   }
   function exRender() {
     var d = exData(), card = db.card, isM = !!db.per.m;
@@ -2438,11 +2431,10 @@ button.txd-row:active { background: var(--chip); }
     $("dbSelSt").textContent = part.from > d.today ? "период еще не начался" : (part.to > d.today ? "по " + dbDm(to) + " · " : "") + dbOps(part.n);
     var rows = exRows(part, isM ? null : d.plan, 1), tot = exSum(rows), sum = node("div", "db-sum ex"), unc = db.who === "family" && part.uncategorized.n ? part.uncategorized : null;
     var spentAll = Math.round((tot.spent + (unc ? unc.out : 0)) * 100) / 100, l1 = dbPerLine(isM ? MONTHS[db.per.m - 1] + " " + db.per.y : String(db.per.y), dbSpent(spentAll));
-    var tb = l1.lastChild, tt = node("div", "tt"); // над суммой — что это за число
-    if (spentAll < -0.004) tb.className = "plus";
-    tt.appendChild(node("small", "", spentAll < -0.004 ? "приход больше трат" : "потрачено")); tt.appendChild(dbAmt(tb)); l1.appendChild(tt); sum.appendChild(l1);
+    if (spentAll < -0.004) l1.lastChild.className = "plus";
+    dbAmt(l1.lastChild); sum.appendChild(l1);
     if (!isM && tot.has && tot.plan > 0) { // год целиком — как категория; перелимит — плашка красноватая
-      sum.appendChild(exBudget(spentAll, tot.plan, part.pace, mLeft, true)); if (dbState(spentAll, tot.plan, part.pace) === "over") sum.className += " hot";
+      sum.appendChild(exBudget(spentAll, tot.plan, part.pace, mLeft)); if (dbState(spentAll, tot.plan, part.pace) === "over") sum.className += " hot";
     }
     card.appendChild(sum);
     var list = node("ul", "db-list db-exp"), max = 1;
