@@ -802,7 +802,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "194"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "195"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -2397,7 +2397,7 @@ button.txd-row:active { background: var(--chip); }
     var left = plan - spent, st = dbState(spent, plan, pace), over = st === "over", low = st === "fast" || st === "low";
     var bar = dbBar(spent, plan, pace, false, false), stt = node("span", "stt" + (over ? " over" : low ? " low" : ""));
     bar.className += " x" + (over ? " over" : low ? " low" : "");
-    stt.textContent = (over ? "перелимит" : "осталось " + dbNb(nf0.format(Math.round(left)))) + " из " + dbEur0(plan); // сумма перелимита — справа
+    stt.textContent = "осталось " + dbNb(nf0.format(Math.max(0, Math.round(left)))) + " из " + dbEur0(plan); // при перелимите — «осталось 0 из …» (его слово 22.11.2026), сумма перелимита — справа
     bar.appendChild(stt);
     // справа всегда есть число (его слово 22.11.2026): в бюджете — сколько можно в месяц до конца года, при перелимите — его сумма красным
     var ln = node("div", "ln"); ln.appendChild(bar); ln.appendChild(node("span", "of" + (over ? " over" : ""), over ? "−" + dbEur0(-left) : mLeft > 0 ? dbEur0(Math.max(0, left) / mLeft) + "/мес" : dbEur0(Math.max(0, left))));
