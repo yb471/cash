@@ -123,7 +123,7 @@ body.tab-assets .gear { visibility: hidden; }
 .db-sum.ex .l1 b { font-size: calc(27 * var(--u)); }
 .db-sum.ex .db-bar.x { background: color-mix(in srgb, var(--surface) 70%, transparent); }
 /* Expenses «Факт / Прогноз» (его «Да» 23.11.2026 на макет, версия 203): переключатель над плашкой; под плашкой одна строка-кнопка
-   «Не разнесено» / «Без подсказки» — открывает лист с подробностями; в прогнозе под заливкой сплошная линия — факт, бледная — подсказки */
+   «Не разнесено» (только в «Факте») — открывает лист с подробностями; в прогнозе под заливкой сплошная линия — факт, бледная — подсказки */
 .db-mode { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; margin: 10px 10px 0; padding: 3px; border-radius: 12px; background: var(--chip); }
 .db-mode button { height: 32px; border: 0; border-radius: 9px; background: transparent; color: var(--muted); font: inherit; font-size: calc(14 * var(--u)); font-weight: 600; }
 .db-mode button.on { background: var(--surface); color: var(--fg); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
@@ -837,7 +837,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "203"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "204"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -2500,11 +2500,12 @@ button.txd-row:active { background: var(--chip); }
       l3.appendChild(a); l3.appendChild(b3); sum.appendChild(l3);
     }
     card.appendChild(sum);
-    // одна строка: что осталось вне цифр выше; нажатие — лист с подробностями
-    var rest = !pend ? null : fc ? pend.none : pend;
+    // одна строка в «Факте»: сколько не разнесено; нажатие — лист с подробностями. В «Прогнозе» строки нет (его слово 23.11.2026
+    // по снимку строки «Без подсказки»: «Вот это убери в прогнозе»; в версии 203 она там была)
+    var rest = fc ? null : pend;
     if (rest && rest.n) {
       var one = node("button", "db-one"); one.type = "button"; one.setAttribute("aria-haspopup", "dialog");
-      one.appendChild(node("b", "", fc ? "Без подсказки" : "Не разнесено")); one.appendChild(node("span", "", dbOps(rest.n)));
+      one.appendChild(node("b", "", "Не разнесено")); one.appendChild(node("span", "", dbOps(rest.n)));
       one.appendChild(node("i", "", rest.out > 0.004 ? dbEur(rest.out) : rest.inc > 0.004 ? "+" + dbEur(rest.inc) : "")); one.appendChild(node("em", "", "›"));
       one.addEventListener("click", uncOpen); card.appendChild(one);
     }
