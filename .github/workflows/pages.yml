@@ -10,12 +10,13 @@ permissions:
 concurrency:
   group: pages
   cancel-in-progress: true
+# Сборка и публикация — два задания, публикация повторяется один раз (23.11.2026). С 21.11.2026 deploy-pages сразу после
+# загрузки архива в том же задании падал примерно в каждом пятом запуске: «No artifacts named "github-pages" were found» /
+# «Fetching artifact metadata failed» (actions/deploy-pages, issue 451), хотя архив был загружен, а новый запуск проходил.
+# Повтор стоит в задании deploy, где архив не загружается заново: второй архив в том же запуске дает «Multiple artifacts».
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
@@ -24,5 +25,19 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: .
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.retry.outputs.page_url || steps.deployment.outputs.page_url }}
+    steps:
       - id: deployment
+        uses: actions/deploy-pages@v4
+        continue-on-error: true
+      - name: pause before the second attempt
+        if: steps.deployment.outcome == 'failure'
+        run: sleep 20
+      - id: retry
+        if: steps.deployment.outcome == 'failure'
         uses: actions/deploy-pages@v4
