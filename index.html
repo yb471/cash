@@ -134,6 +134,24 @@ body.tab-assets .gear { visibility: hidden; }
 .db-bar.x.fc.over i { border-bottom-color: color-mix(in srgb, var(--minus) 38%, var(--surface)); }
 .db-bar.x.fc .fa { position: absolute; left: 0; bottom: 0; height: 3px; background: var(--accent); }
 .db-bar.x.fc.low .fa { background: #E3A21A; } .db-bar.x.fc.over .fa { background: var(--minus); }
+/* окно категории (его «Да, делай» 23.11.2026 на макет; версия 209): шапка с полосой, столбики по месяцам с пунктиром месячного плана
+   (сплошное — факт, бледное — подсказки, месяц выше плана — красным), подкатегории, крупнейшие продавцы, переход в Bank */
+.db-exp li { cursor: pointer; -webkit-tap-highlight-color: transparent; } .db-exp li:active { background: color-mix(in srgb, var(--chip) 45%, var(--surface)); }
+.db-cat { padding: 0 16px calc(20px + env(safe-area-inset-bottom, 0px)); max-height: 76vh; overflow-y: auto; -webkit-overflow-scrolling: touch; font-variant-numeric: tabular-nums; }
+.db-cat .hd { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 2px 0 8px; } .db-cat .hd b { font-size: calc(27 * var(--u)); font-weight: 700; letter-spacing: -.3px; white-space: nowrap; } .db-cat .hd b.plus { color: var(--plus); }
+.db-cat .hd > span { color: var(--muted); font-size: calc(13 * var(--u)); white-space: nowrap; } .db-cat .hd b .c { font-size: .76em; color: inherit; }
+.db-cat .ln { display: flex; align-items: center; gap: 10px; min-width: 0; } .db-cat .ln .db-bar { flex: 1; } .db-cat .ln .of { flex: none; min-width: 92px; text-align: right; font-size: calc(13 * var(--u)); color: var(--muted); white-space: nowrap; } .db-cat .ln .of.over { color: var(--minus); font-weight: 600; }
+.db-cat h4 { margin: 20px 0 8px; font-size: calc(12.5 * var(--u)); font-weight: 600; color: var(--muted); display: flex; justify-content: space-between; gap: 10px; white-space: nowrap; } .db-cat h4 i { font-style: normal; font-weight: 500; }
+.db-cat .ch { position: relative; display: grid; grid-template-columns: repeat(12, 1fr); column-gap: 6px; align-items: end; height: 120px; }
+.db-cat .ch .col { display: flex; flex-direction: column; justify-content: flex-end; height: 100%; min-width: 0; }
+.db-cat .ch .col .a { background: color-mix(in srgb, var(--accent) 30%, var(--surface)); } .db-cat .ch .col .f { background: var(--accent); } .db-cat .ch .col > :first-child { border-radius: 4px 4px 0 0; }
+.db-cat .ch .col.hi .a { background: color-mix(in srgb, var(--minus) 30%, var(--surface)); } .db-cat .ch .col.hi .f { background: var(--minus); }
+.db-cat .ch .pl { position: absolute; left: 0; right: 0; height: 0; border-top: 1.5px dashed color-mix(in srgb, var(--fg) 35%, transparent); }
+.db-cat .ax { display: grid; grid-template-columns: repeat(12, 1fr); column-gap: 6px; margin-top: 5px; } .db-cat .ax span { text-align: center; font-size: calc(11 * var(--u)); color: var(--muted); }
+.db-cat .r { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 9px 0; border-top: 1px solid var(--line); font-size: calc(15 * var(--u)); } .db-cat h4 + .r { border-top: 0; padding-top: 2px; }
+.db-cat .r > span { display: flex; align-items: baseline; min-width: 0; } .db-cat .r > span .t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .db-cat .r > span small { flex: none; color: var(--muted); font-size: calc(12.5 * var(--u)); margin-left: 8px; } .db-cat .r b { font-weight: 600; white-space: nowrap; } .db-cat .r b small { color: var(--muted); font-weight: 400; font-size: calc(12.5 * var(--u)); margin-left: 6px; }
+.db-cat .db-one { width: 100%; margin: 14px 0 0; }
+.db-cat .go { margin-top: 16px; width: 100%; height: 46px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--fg); font: inherit; font-weight: 600; font-size: calc(15 * var(--u)); }
 .db-unc { padding: 2px 16px calc(18px + env(safe-area-inset-bottom, 0px)); max-height: 72vh; overflow-y: auto; -webkit-overflow-scrolling: touch; font-variant-numeric: tabular-nums; }
 .db-unc h4 { margin: 16px 0 4px; font-size: calc(12.5 * var(--u)); font-weight: 600; color: var(--muted); }
 .db-unc .r { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); font-size: calc(15 * var(--u)); } .db-unc h4 + .r { border-top: 0; }
@@ -778,6 +796,13 @@ button.txd-row:active { background: var(--chip); }
     <div class="bk-per" id="dbPerBody"></div>
   </div>
 </div>
+<div class="sheet" id="dbCatSheet" hidden> <!-- окно категории Expenses -->
+  <div class="sheet-back" id="dbCatBack"></div>
+  <div class="sheet-body" role="dialog" aria-label="Категория">
+    <div class="sheet-head"><span id="dbCatTitle">Категория</span><button id="dbCatClose" type="button" aria-label="Закрыть">✕</button></div>
+    <div class="db-cat" id="dbCatBody"></div>
+  </div>
+</div>
 <div class="sheet" id="dbUncSheet" hidden> <!-- не разнесенное года подробно -->
   <div class="sheet-back" id="dbUncBack"></div>
   <div class="sheet-body" role="dialog" aria-label="Не разнесено">
@@ -836,7 +861,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "208"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "209"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -1363,7 +1388,8 @@ button.txd-row:active { background: var(--chip); }
   function bkMatch(t, q) {
     if (!t._hay) {
       var a = Math.abs(Number(t.amount) || 0).toFixed(2), parts = Array.isArray(t.parts) ? t.parts.map(function (p) { return (p.category || "") + " " + (p.subcategory || ""); }).join(" ") : "";
-      t._hay = bkNorm([txName(t), t.counterparty, t.remittance, t.about, t.note, t.category, t.subcategory, parts, a, a.replace(".", ",")].join(" | "));
+      var sg = !t.category && t.sugg ? (t.sugg.category || "") + " " + (t.sugg.subcategory || "") : ""; // и по категории подсказки: «По подсказкам» из окна категории
+      t._hay = bkNorm([txName(t), t.counterparty, t.remittance, t.about, t.note, t.category, t.subcategory, parts, sg, a, a.replace(".", ",")].join(" | "));
     }
     for (var i = 0; i < q.length; i++) if (t._hay.indexOf(q[i]) < 0) return false;
     return true;
@@ -2375,7 +2401,7 @@ button.txd-row:active { background: var(--chip); }
   var dbNow = new Date();
   var db = { sec: "exp", who: "family", sheet: $("dbSheet"), perSheet: $("dbPerSheet"), editSheet: $("dbEditSheet"), card: $("dbCard"), st: $("dbStatus"),
     per: { y: dbNow.getFullYear() }, sp: ls("cash_spend"), spBusy: null, pl: ls("cash_plan"), plYear: null, plBusy: null, edit: null, stale: false };
-  db.mode = "fact"; db.uncSheet = $("dbUncSheet"); // Expenses: «Факт» при каждом запуске
+  db.mode = "fact"; db.uncSheet = $("dbUncSheet"); db.catSheet = $("dbCatSheet"); // Expenses: «Факт» при каждом запуске
   var as = { data: ls("cash_assets"), busy: null, syncing: false };
   ls("cash_dash", null); ls("cash_assets_who", null); ls("cash_expenses", null); // ключи прежних версий
   var nf0 = new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 });
@@ -2515,10 +2541,73 @@ button.txd-row:active { background: var(--chip); }
         bar.appendChild(node("span", "stt", r.spent < -0.004 ? "приход больше трат" : tot.has ? "нет в плане" : tot.spent > 0.004 && r.spent > 0.004 ? dbNb(Math.round(r.spent / tot.spent * 100) + " %") : dbOps(r.n)));
         ln = node("div", "ln"); ln.appendChild(bar); ln.appendChild(node("span", "of", ""));
       }
+      li.setAttribute("role", "button"); li.tabIndex = 0;
+      li.addEventListener("click", function () { catOpen(r, fc); });
       li.appendChild(ln); list.appendChild(li);
     });
     card.appendChild(list);
     if (!rows.length) card.appendChild(dbNotes(["Расходов по категориям за период нет"])); // подсказок в карточках нет (его слово 21.11.2026) — только пустые состояния
+  }
+  // окно категории: r — строка exRender (name, nm, em, spent, fact, plan), fc — открыто из «Прогноза»; данные — y.detail с сервера
+  function catOpen(r, fc) {
+    var d = exData(), part = d && d.y, box = $("dbCatBody"); if (!part) return;
+    var det = (part.detail || []).filter(function (x) { return x.name === r.name; })[0] || { months: [], subs: [], top: { fact: [], all: [] } };
+    var add = fc && part.pending ? part.pending.categories.filter(function (x) { return x.name === r.name; })[0] : null, neg = fc ? -0.5 : -0.004;
+    var row = function (l, s, v, v2) {
+      var x = node("div", "r"), a = node("span"), b = node("b", "", v);
+      a.appendChild(node("span", "t", l)); if (s) a.appendChild(node("small", "", s)); if (v2) b.appendChild(node("small", "", v2)); // длинное имя сжимается, число операций остается
+      x.appendChild(a); x.appendChild(b); return x;
+    };
+    var head = function (l, rt) { var h = node("h4"); h.appendChild(node("span", "", l)); if (rt) h.appendChild(node("i", "", rt)); return h; };
+    var amt = function (v) { return fc && Math.abs(v) < 0.5 ? dbEur0(0) : exAmt(v, fc); };
+    $("dbCatTitle").textContent = (r.em ? dbEm(r.em) + " " : "") + r.nm; box.textContent = "";
+    var hd = node("div", "hd"), big = node("b", r.spent < neg ? "plus" : "", exAmt(r.spent, fc));
+    hd.appendChild(node("span", "", d.year + (fc ? " · прогноз" : ""))); hd.appendChild(fc ? big : dbAmt(big)); box.appendChild(hd);
+    if (r.plan !== null) box.appendChild(exBudget(r.spent, r.plan, part.pace, exMonthsLeft(d), fc ? r.fact : undefined));
+    // по месяцам: сплошное — факт, бледное — подсказки; пунктир — месячный план; месяц выше плана — красным
+    var ms = [], mp = r.plan !== null ? r.plan / 12 : 0, mx = mp, i;
+    for (i = 0; i < 12; i++) ms.push({ f: 0, a: 0 });
+    det.months.forEach(function (x) { if (x.month >= 1 && x.month <= 12) { ms[x.month - 1].f = Math.max(0, x.fact); ms[x.month - 1].a = fc ? Math.max(0, x.fact + x.add) - Math.max(0, x.fact) : 0; } });
+    ms.forEach(function (x) { x.a = Math.max(0, x.a); if (x.f + x.a > mx) mx = x.f + x.a; });
+    if (mx > 0) {
+      mx *= 1.08;
+      var ch = node("div", "ch"), ax = node("div", "ax");
+      if (mp > 0) { var pl = node("div", "pl"); pl.style.bottom = (mp / mx * 100).toFixed(1) + "%"; ch.appendChild(pl); }
+      ms.forEach(function (x, k) {
+        var col = node("div", "col" + (mp > 0 && x.f + x.a > mp * 1.001 ? " hi" : ""));
+        if (x.a > 0) { var a = node("div", "a"); a.style.height = (x.a / mx * 100).toFixed(1) + "%"; col.appendChild(a); }
+        if (x.f > 0) { var f = node("div", "f"); f.style.height = (x.f / mx * 100).toFixed(1) + "%"; col.appendChild(f); }
+        ch.appendChild(col); ax.appendChild(node("span", "", MONTHS[k].charAt(0)));
+      });
+      box.appendChild(head("По месяцам", mp > 0 ? dbNb("план " + dbEur0(mp) + " в месяц") : "")); box.appendChild(ch); box.appendChild(ax);
+    }
+    if (add && add.n) { // сколько в прогнозе категории по подсказкам — открывает эти операции в Bank
+      var one = node("button", "db-one"); one.type = "button";
+      one.appendChild(node("b", "", "По подсказкам")); one.appendChild(node("span", "", dbOps(add.n)));
+      one.appendChild(node("i", "", add.add < -0.5 ? "+" + dbEur0(-add.add) : dbEur0(add.add))); one.appendChild(node("em", "", "›"));
+      one.addEventListener("click", function () { catBank(r.name, d.year, "review"); }); box.appendChild(one);
+    }
+    if (det.subs.length) {
+      var lim = {}; ((d.plan && d.plan.categories) || []).forEach(function (c) { if (c.name === r.name) (c.subs || []).forEach(function (x) { lim[x.name] = x.limit; }); });
+      box.appendChild(head("Подкатегории", ""));
+      det.subs.forEach(function (x) {
+        var v = x.fact + (fc ? x.add : 0), l = lim[x.name];
+        box.appendChild(row(x.name || "Не указано чье", "", amt(v), l !== null && l !== undefined ? dbNb("из " + dbEur0(l)) : ""));
+      });
+    }
+    var top = fc ? det.top.all : det.top.fact;
+    if (top.length) {
+      box.appendChild(head("Куда ушло", ""));
+      top.forEach(function (x) { box.appendChild(row(x.name || cleanName(x.text) || "Операция", String(x.n), x.sum < -0.5 ? "+" + dbEur0(-x.sum) : dbEur0(x.sum))); });
+    }
+    var go = node("button", "go", "Все операции категории ›"); go.type = "button";
+    go.addEventListener("click", function () { catBank(r.name, d.year, "all"); }); box.appendChild(go);
+    box.scrollTop = 0; db.catSheet.hidden = false;
+  }
+  // переход в Bank на категорию: поиск по ее названию (с эмодзи — так не цепляются имена людей в тексте банка), год, все счета
+  function catBank(name, year, filter) {
+    db.catSheet.hidden = true; bk.filter = filter; prefs.bkFilter = filter; bk.period = { y: year, m: null }; prefs.bkPeriod = bk.period; prefs.bkAcc = "";
+    bk.q = name; bel.search.value = name; bel.qx.hidden = false; ls("cash_prefs", prefs); showTab("bank");
   }
   // лист «Не разнесено»: всего, по счетам, по месяцам; кнопка открывает Bank на «К проверке» за этот год
   function uncOpen() {
@@ -2739,6 +2828,9 @@ button.txd-row:active { background: var(--chip); }
   sheetSwipe(db.sheet, null, function () { db.sheet.hidden = true; });
   sheetSwipe(db.perSheet, null, function () { db.perSheet.hidden = true; });
   sheetSwipe(db.uncSheet, ".db-unc", function () { db.uncSheet.hidden = true; });
+  sheetSwipe(db.catSheet, ".db-cat", function () { db.catSheet.hidden = true; });
+  $("dbCatClose").addEventListener("click", function () { db.catSheet.hidden = true; });
+  $("dbCatBack").addEventListener("click", function () { db.catSheet.hidden = true; });
   $("dbUncClose").addEventListener("click", function () { db.uncSheet.hidden = true; });
   $("dbUncBack").addEventListener("click", function () { db.uncSheet.hidden = true; });
   sheetSwipe(db.editSheet, null, function () { db.editSheet.hidden = true; });
