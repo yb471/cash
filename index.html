@@ -122,6 +122,24 @@ body.tab-assets .gear { visibility: hidden; }
 .db-sum.ex.hot { background: color-mix(in srgb, var(--minus) 8%, var(--surface)); }
 .db-sum.ex .l1 b { font-size: calc(27 * var(--u)); }
 .db-sum.ex .db-bar.x { background: color-mix(in srgb, var(--surface) 70%, transparent); }
+/* Expenses «Факт / Прогноз» (его «Да» 23.11.2026 на макет, версия 203): переключатель над плашкой; под плашкой одна строка-кнопка
+   «Не разнесено» / «Без подсказки» — открывает лист с подробностями; в прогнозе под заливкой сплошная линия — факт, бледная — подсказки */
+.db-mode { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; margin: 10px 10px 0; padding: 3px; border-radius: 12px; background: var(--chip); }
+.db-mode button { height: 32px; border: 0; border-radius: 9px; background: transparent; color: var(--muted); font: inherit; font-size: calc(14 * var(--u)); font-weight: 600; }
+.db-mode button.on { background: var(--surface); color: var(--fg); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+.db-sum.ex .l3 { display: flex; justify-content: space-between; gap: 10px; font-size: calc(12.5 * var(--u)); color: var(--muted); white-space: nowrap; } .db-sum.ex .l3 b { font-weight: 600; color: var(--fg); }
+.db-one { display: flex; align-items: center; gap: 8px; width: calc(100% - 20px); margin: 6px 10px 2px; height: 40px; padding: 0 10px 0 12px; border: 0; border-radius: 12px; background: color-mix(in srgb, var(--chip) 55%, var(--surface)); color: var(--fg); font: inherit; font-size: calc(14 * var(--u)); text-align: left; white-space: nowrap; }
+.db-one b { font-weight: 600; } .db-one span { color: var(--muted); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; } .db-one i { font-style: normal; font-weight: 600; } .db-one em { font-style: normal; color: var(--muted); font-size: 1.2em; line-height: 1; }
+.db-bar.x.fc i { border-bottom-color: color-mix(in srgb, var(--accent) 38%, var(--surface)); }
+.db-bar.x.fc.low i { border-bottom-color: color-mix(in srgb, #E3A21A 45%, var(--surface)); }
+.db-bar.x.fc.over i { border-bottom-color: color-mix(in srgb, var(--minus) 38%, var(--surface)); }
+.db-bar.x.fc .fa { position: absolute; left: 0; bottom: 0; height: 3px; background: var(--accent); }
+.db-bar.x.fc.low .fa { background: #E3A21A; } .db-bar.x.fc.over .fa { background: var(--minus); }
+.db-unc { padding: 2px 16px calc(18px + env(safe-area-inset-bottom, 0px)); max-height: 72vh; overflow-y: auto; -webkit-overflow-scrolling: touch; font-variant-numeric: tabular-nums; }
+.db-unc h4 { margin: 16px 0 4px; font-size: calc(12.5 * var(--u)); font-weight: 600; color: var(--muted); }
+.db-unc .r { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); font-size: calc(15 * var(--u)); } .db-unc h4 + .r { border-top: 0; }
+.db-unc .r > span { min-width: 0; } .db-unc .r > span small { color: var(--muted); font-size: calc(12.5 * var(--u)); margin-left: 8px; } .db-unc .r b { font-weight: 600; white-space: nowrap; text-align: right; } .db-unc .r b small { display: block; color: var(--muted); font-weight: 400; font-size: calc(12 * var(--u)); }
+.db-unc .go { margin-top: 16px; width: 100%; height: 48px; border: 0; border-radius: 14px; background: var(--accent); color: #fff; font: inherit; font-weight: 600; font-size: calc(16 * var(--u)); }
 .db-exp .nm { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .db-exp .am { display: block; font-weight: 600; letter-spacing: -.1px; }
 .db-exp .ln { grid-column: 2 / -1; display: flex; align-items: center; gap: 10px; min-width: 0; } /* полоса — до «из <план>»; колонка плана одной ширины, полосы ровные */
@@ -761,6 +779,13 @@ button.txd-row:active { background: var(--chip); }
     <div class="bk-per" id="dbPerBody"></div>
   </div>
 </div>
+<div class="sheet" id="dbUncSheet" hidden> <!-- не разнесенное года подробно -->
+  <div class="sheet-back" id="dbUncBack"></div>
+  <div class="sheet-body" role="dialog" aria-label="Не разнесено">
+    <div class="sheet-head"><span id="dbUncTitle">Не разнесено</span><button id="dbUncClose" type="button" aria-label="Закрыть">✕</button></div>
+    <div class="db-unc" id="dbUncBody"></div>
+  </div>
+</div>
 <div class="sheet" id="dbEditSheet" hidden> <!-- сумма бюджета категории на год (его «да» 20.11.2026) -->
   <div class="sheet-back" id="dbEditBack"></div>
   <div class="sheet-body" role="dialog" aria-label="Сумма бюджета">
@@ -812,7 +837,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "202"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "203"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -2351,6 +2376,7 @@ button.txd-row:active { background: var(--chip); }
   var dbNow = new Date();
   var db = { sec: "exp", who: "family", sheet: $("dbSheet"), perSheet: $("dbPerSheet"), editSheet: $("dbEditSheet"), card: $("dbCard"), st: $("dbStatus"),
     per: { y: dbNow.getFullYear() }, sp: ls("cash_spend"), spBusy: null, pl: ls("cash_plan"), plYear: null, plBusy: null, edit: null, stale: false };
+  db.mode = "fact"; db.uncSheet = $("dbUncSheet"); // Expenses: «Факт» при каждом запуске
   var as = { data: ls("cash_assets"), busy: null, syncing: false };
   ls("cash_dash", null); ls("cash_assets_who", null); ls("cash_expenses", null); // ключи прежних версий
   var nf0 = new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 });
@@ -2401,23 +2427,15 @@ button.txd-row:active { background: var(--chip); }
   function exKey() { return db.per.y + "-0"; } // период — только год (его слово 22.11.2026, версия 201)
   function exData() { return db.sp && db.sp.key === exKey() ? db.sp.data : null; }
   // строки периода для владельца: k — доля годовой суммы (год — 1, месяц — 1/12)
-  function exRows(part, plan, k) {
-    var lim = {}, rows = [];
+  // строки года: категория, факт и план. Вкладок владельца в Expenses нет (его слово 23.11.2026: «в этом разделе не нужно деление
+  // на мое настино и общее по вкладкам — убери, тут смотрим общее»); в Liquidity они остаются
+  function exRows(part, plan) {
+    var lim = {};
     ((plan && plan.categories) || []).forEach(function (c) { lim[c.name] = c; });
-    ((part && part.categories) || []).forEach(function (c) {
+    return ((part && part.categories) || []).map(function (c) {
       var p = lim[c.name], cs = catSplit(c.name);
-      if (db.who === "family" || c.owner === db.who) {
-        rows.push({ em: cs.em, nm: cs.nm, spent: c.spent, n: c.n, plan: p && p.limit !== null && p.limit !== undefined ? p.limit * k : null,
-          subs: db.who === "family" ? c.subs.filter(function (x) { return Math.abs(x.spent) > 0.004; }) : [] });
-        return;
-      }
-      c.subs.forEach(function (x) {
-        if (x.owner !== db.who) return;
-        var ps = p && (p.subs || []).filter(function (y) { return y.name === x.name; })[0];
-        rows.push({ em: cs.em, nm: cs.nm, sub: x.name, spent: x.spent, n: 0, plan: ps && ps.limit !== null && ps.limit !== undefined ? ps.limit * k : null, subs: [] });
-      });
+      return { name: c.name, em: cs.em, nm: cs.nm, spent: c.spent, n: c.n, plan: p && p.limit !== null && p.limit !== undefined ? p.limit : null };
     });
-    return rows.filter(function (r) { return Math.abs(r.spent) > 0.004 || r.n || r.plan !== null; });
   }
   function exSum(rows) { var s = { spent: 0, plan: 0, has: false }; rows.forEach(function (r) { s.spent += r.spent; if (r.plan !== null) { s.plan += r.plan; s.has = true; } }); s.spent = Math.round(s.spent * 100) / 100; return s; }
   // Expenses в рамках года (его слова 22.11.2026: «выводить информацию в рамках года и показывать сумму доступную до траты еще и в
@@ -2425,45 +2443,77 @@ button.txd-row:active { background: var(--chip); }
   // умолчанию: сверху год целиком той же строкой, что категории: название и факт; полоса «осталось N из <план>» или «перелимит N
   // из <план>»; справа «N €/мес» — остаток, деленный на число месяцев до конца года. Цвет — dbState по доле прошедшего года.
   // Месяца в выборе нет с версии 201 (его слово 22.11.2026: «дай возможность выбирать только год»).
-  // У семьи в сумму года и месяца входит и не разнесенное (его слово 21.11.2026); строки «Не разнесено» и подсказок нет.
+  // С версии 203 не разнесенное в итог года не входит (его «Да» 23.11.2026 на макет «Факт / Прогноз»; до того входило — его слово 21.11.2026).
   function exMonthsLeft(d) { // месяцев до конца года от сегодня: по дням, не меньше одного; прошлый год — 0, будущий — 12
     var y = Number(d.year), ty = Number(String(d.today).slice(0, 4));
     if (y < ty) return 0;
     if (y > ty) return 12;
     return Math.max(1, ((Date.UTC(y, 11, 31) - Date.parse(d.today + "T00:00:00Z")) / 86400000 + 1) / 30.4375);
   }
-  function exBudget(spent, plan, pace, mLeft) { // полоса и правая подпись строки с бюджетом
+  // полоса и правая подпись строки с бюджетом; fact задан — прогноз: под заливкой сплошная линия длиной в факт, остальное бледное
+  function exBudget(spent, plan, pace, mLeft, fact) {
     var left = plan - spent, st = dbState(spent, plan, pace), over = st === "over", low = st === "fast" || st === "low";
     var bar = dbBar(spent, plan, pace, false, false), stt = node("span", "stt" + (over ? " over" : low ? " low" : ""));
     bar.className += " x" + (over ? " over" : low ? " low" : "");
+    if (fact !== undefined) { var fa = node("span", "fa"); fa.style.width = Math.min(100, Math.max(0, plan > 0 ? Math.min(fact, spent) / plan * 100 : 0)).toFixed(1) + "%"; bar.className += " fc"; bar.appendChild(fa); }
     stt.textContent = "осталось " + dbNb(nf0.format(Math.max(0, Math.round(left)))) + " из " + dbEur0(plan); // при перелимите — «осталось 0 из …» (его слово 22.11.2026), сумма перелимита — справа
     bar.appendChild(stt);
     // справа всегда есть число (его слово 22.11.2026): в бюджете — сколько можно в месяц до конца года, при перелимите — его сумма красным
     var ln = node("div", "ln"); ln.appendChild(bar); ln.appendChild(node("span", "of" + (over ? " over" : ""), over ? "−" + dbEur0(-left) : mLeft > 0 ? dbEur0(Math.max(0, left) / mLeft) + "/мес" : dbEur0(Math.max(0, left))));
     return ln;
   }
+  function exAmt(n, fc) { return fc ? "≈ " + (n < -0.5 ? "+" + dbEur0(-n) : dbEur0(n)) : dbSpent(n); } // прогноз — оценка: «≈», без копеек
+  // Expenses «Факт / Прогноз» (его слова 23.11.2026: «1 факт по разнесенным, но тут нужно видеть на каких счетах что еще не разнесено;
+  // 2 данные по твоим предположениям как будет разнесено», «в факте должно быть видно сколько не разнесено транзакций на какую
+  // сумму», «максимум в одну строку, а при нажатии окно где подробно описано что не разнесено», на макет — «Да»; версия 203).
+  // Факт — только разнесенное (не разнесенное в итог не входит); Прогноз — факт плюс подсказки (y.pending с сервера).
   function exRender() {
     var d = exData(), card = db.card;
-    card.textContent = ""; dbSeg(true);
+    card.textContent = ""; dbSeg(false);
     if (!d) { $("dbSelSt").textContent = ""; card.appendChild(dbNotes([db.spBusy ? "Загружаю…" : "Нет данных — потяни экран вниз"])); return; }
     var part = d.y;
     if (!part) { card.appendChild(dbNotes(["За этот период данных нет"])); return; }
-    var to = part.to < d.today ? part.to : d.today, mLeft = exMonthsLeft(d);
+    var to = part.to < d.today ? part.to : d.today, mLeft = exMonthsLeft(d), pend = part.pending || null, fc = db.mode === "fc" && !!pend;
     $("dbSelSt").textContent = part.from > d.today ? "период еще не начался" : (part.to > d.today ? "по " + dbDm(to) + " · " : "") + dbOps(part.n);
-    var rows = exRows(part, d.plan, 1), tot = exSum(rows), sum = node("div", "db-sum ex"), unc = db.who === "family" && part.uncategorized.n ? part.uncategorized : null;
-    var spentAll = Math.round((tot.spent + (unc ? unc.out : 0)) * 100) / 100, l1 = dbPerLine(String(db.per.y), dbSpent(spentAll));
-    if (spentAll < -0.004) l1.lastChild.className = "plus";
-    dbAmt(l1.lastChild); sum.appendChild(l1);
+    var seg = node("div", "db-mode");
+    [["fact", "Факт"], ["fc", "Прогноз"]].forEach(function (m) {
+      var on = m[0] === (fc ? "fc" : "fact"); // данных для прогноза нет (сохраненный ответ прежней версии) — показан и подсвечен факт
+      var b = node("button", on ? "on" : "", m[1]); b.type = "button"; b.setAttribute("aria-pressed", on ? "true" : "false");
+      b.addEventListener("click", function () { db.mode = m[0]; exRender(); }); seg.appendChild(b);
+    });
+    card.appendChild(seg);
+    var add = {}, factAll = 0;
+    if (fc) pend.categories.forEach(function (c) { add[c.name] = c.add; });
+    var rows = exRows(part, d.plan).map(function (r) { r.fact = r.spent; r.spent = Math.round((r.fact + (add[r.name] || 0)) * 100) / 100; return r; })
+      .filter(function (r) { return Math.abs(r.spent) > 0.004 || Math.abs(r.fact) > 0.004 || r.n || r.plan !== null; });
+    rows.forEach(function (r) { factAll += r.fact; });
+    var tot = exSum(rows), sum = node("div", "db-sum ex"), l1 = dbPerLine(String(db.per.y), exAmt(tot.spent, fc)), neg = fc ? -0.5 : -0.004; // «плюс» — по тому же порогу, что текст
+    if (tot.spent < neg) l1.lastChild.className = "plus";
+    if (!fc) dbAmt(l1.lastChild);
+    sum.appendChild(l1);
     if (tot.has && tot.plan > 0) { // год целиком — как категория; перелимит — плашка красноватая
-      sum.appendChild(exBudget(spentAll, tot.plan, part.pace, mLeft)); if (dbState(spentAll, tot.plan, part.pace) === "over") sum.className += " hot";
+      sum.appendChild(exBudget(tot.spent, tot.plan, part.pace, mLeft, fc ? factAll : undefined)); if (dbState(tot.spent, tot.plan, part.pace) === "over") sum.className += " hot";
+    }
+    if (fc) { // сколько в прогнозе факта и сколько по подсказкам
+      var l3 = node("div", "l3"), a = node("span", "", "факт "), b3 = node("span", "", "по подсказкам ");
+      a.appendChild(node("b", "", factAll < -0.5 ? "+" + dbEur0(-factAll) : dbEur0(factAll))); b3.appendChild(node("b", "", pend.add < -0.5 ? "+" + dbEur0(-pend.add) : dbEur0(pend.add)));
+      l3.appendChild(a); l3.appendChild(b3); sum.appendChild(l3);
     }
     card.appendChild(sum);
+    // одна строка: что осталось вне цифр выше; нажатие — лист с подробностями
+    var rest = !pend ? null : fc ? pend.none : pend;
+    if (rest && rest.n) {
+      var one = node("button", "db-one"); one.type = "button"; one.setAttribute("aria-haspopup", "dialog");
+      one.appendChild(node("b", "", fc ? "Без подсказки" : "Не разнесено")); one.appendChild(node("span", "", dbOps(rest.n)));
+      one.appendChild(node("i", "", rest.out > 0.004 ? dbEur(rest.out) : rest.inc > 0.004 ? "+" + dbEur(rest.inc) : "")); one.appendChild(node("em", "", "›"));
+      one.addEventListener("click", uncOpen); card.appendChild(one);
+    }
     var list = node("ul", "db-list db-exp"), max = 1;
     rows.forEach(function (r) { if (r.spent > max) max = r.spent; });
     rows.forEach(function (r) {
-      var li = node("li", Math.abs(r.spent) < 0.005 ? "zero" : ""), ln;
-      li.appendChild(node("span", "em", dbEm(r.em))); li.appendChild(node("span", "nm", r.nm)); li.appendChild(dbAmt(node("span", "am" + (r.spent < -0.004 ? " plus" : ""), dbSpent(r.spent))));
-      if (r.plan !== null) ln = exBudget(r.spent, r.plan, part.pace, mLeft);
+      var li = node("li", Math.abs(r.spent) < (fc ? 0.5 : 0.005) ? "zero" : ""), ln, am = node("span", "am" + (r.spent < neg ? " plus" : ""), exAmt(r.spent, fc));
+      li.appendChild(node("span", "em", dbEm(r.em))); li.appendChild(node("span", "nm", r.nm)); li.appendChild(fc ? am : dbAmt(am));
+      if (r.plan !== null) ln = exBudget(r.spent, r.plan, part.pace, mLeft, fc ? r.fact : undefined);
       else { // без суммы в плане — «нет в плане»; плана нет вообще — доля в расходах
         var bar = dbBar(Math.max(0, r.spent), max, 0, false, false); bar.className += " x";
         bar.appendChild(node("span", "stt", r.spent < -0.004 ? "приход больше трат" : tot.has ? "нет в плане" : tot.spent > 0.004 && r.spent > 0.004 ? dbNb(Math.round(r.spent / tot.spent * 100) + " %") : dbOps(r.n)));
@@ -2473,6 +2523,30 @@ button.txd-row:active { background: var(--chip); }
     });
     card.appendChild(list);
     if (!rows.length) card.appendChild(dbNotes(["Расходов по категориям за период нет"])); // подсказок в карточках нет (его слово 21.11.2026) — только пустые состояния
+  }
+  // лист «Не разнесено»: всего, по счетам, подсказки, по месяцам; кнопка открывает Bank на «К проверке» за этот год
+  function uncOpen() {
+    var d = exData(), p = d && d.y && d.y.pending, box = $("dbUncBody"); if (!p) return;
+    var row = function (l, s, v, v2) {
+      var r = node("div", "r"), a = node("span", "", l), b = node("b", "", v);
+      if (s) a.appendChild(node("small", "", s)); if (v2) b.appendChild(node("small", "", v2));
+      r.appendChild(a); r.appendChild(b); return r;
+    };
+    $("dbUncTitle").textContent = "Не разнесено · " + d.year; box.textContent = "";
+    box.appendChild(node("h4", "", "Всего")); box.appendChild(row(dbOps(p.n), "", dbEur(p.out), p.inc > 0.004 ? dbNb("приход " + dbEur(p.inc)) : ""));
+    box.appendChild(node("h4", "", "По счетам")); p.accounts.forEach(function (x) { box.appendChild(row(x.label, String(x.n), dbEur(x.out))); });
+    box.appendChild(node("h4", "", "Подсказки Claude"));
+    box.appendChild(row("С подсказкой", String(p.hinted.n), dbEur(p.hinted.out)));
+    if (p.guess) box.appendChild(row("из них предположения", String(p.guess), ""));
+    box.appendChild(row("Без подсказки", String(p.none.n), dbEur(p.none.out)));
+    box.appendChild(node("h4", "", "По месяцам")); p.months.forEach(function (x) { box.appendChild(row(MONTHS[x.month - 1], String(x.n), dbEur0(x.out))); });
+    var go = node("button", "go", "Разнести в Bank"); go.type = "button";
+    go.addEventListener("click", function () {
+      // «К проверке» за этот год по всем счетам, без поиска — иначе в Bank окажется меньше операций, чем здесь
+      db.uncSheet.hidden = true; bk.filter = "review"; prefs.bkFilter = "review"; bk.period = { y: d.year, m: null }; prefs.bkPeriod = bk.period; prefs.bkAcc = "";
+      bk.q = ""; bel.search.value = ""; bel.qx.hidden = true; ls("cash_prefs", prefs); showTab("bank");
+    });
+    box.appendChild(go); box.scrollTop = 0; db.uncSheet.hidden = false;
   }
   function exLoad() {
     if (db.spBusy) return db.spBusy;
@@ -2671,6 +2745,9 @@ button.txd-row:active { background: var(--chip); }
   });
   sheetSwipe(db.sheet, null, function () { db.sheet.hidden = true; });
   sheetSwipe(db.perSheet, null, function () { db.perSheet.hidden = true; });
+  sheetSwipe(db.uncSheet, ".db-unc", function () { db.uncSheet.hidden = true; });
+  $("dbUncClose").addEventListener("click", function () { db.uncSheet.hidden = true; });
+  $("dbUncBack").addEventListener("click", function () { db.uncSheet.hidden = true; });
   sheetSwipe(db.editSheet, null, function () { db.editSheet.hidden = true; });
   Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (b) {
     b.addEventListener("click", function () {
