@@ -836,7 +836,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "205"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "206"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -2520,7 +2520,7 @@ button.txd-row:active { background: var(--chip); }
     card.appendChild(list);
     if (!rows.length) card.appendChild(dbNotes(["Расходов по категориям за период нет"])); // подсказок в карточках нет (его слово 21.11.2026) — только пустые состояния
   }
-  // лист «Не разнесено»: всего, по счетам, подсказки, по месяцам; кнопка открывает Bank на «К проверке» за этот год
+  // лист «Не разнесено»: всего, по счетам, по подсказкам (траты и переводы), по месяцам; кнопка открывает Bank на «К проверке» за этот год
   function uncOpen() {
     var d = exData(), p = d && d.y && d.y.pending, box = $("dbUncBody"); if (!p) return;
     var row = function (l, s, v, v2) {
@@ -2531,10 +2531,14 @@ button.txd-row:active { background: var(--chip); }
     $("dbUncTitle").textContent = "Не разнесено · " + d.year; box.textContent = "";
     box.appendChild(node("h4", "", "Всего")); box.appendChild(row(dbOps(p.n), "", dbEur(p.out), p.inc > 0.004 ? dbNb("приход " + dbEur(p.inc)) : ""));
     box.appendChild(node("h4", "", "По счетам")); p.accounts.forEach(function (x) { box.appendChild(row(x.label, String(x.n), dbEur(x.out))); });
-    box.appendChild(node("h4", "", "Подсказки Claude"));
-    box.appendChild(row("С подсказкой", String(p.hinted.n), dbEur(p.hinted.out)));
-    if (p.guess) box.appendChild(row("из них предположения", String(p.guess), ""));
-    box.appendChild(row("Без подсказки", String(p.none.n), dbEur(p.none.out)));
+    // подсказка есть у каждой операции (cash v61), поэтому раздел — не «есть или нет», а что это по подсказкам: траты и переводы
+    // между своими счетами (его слово 23.11.2026 по снимку листа: «Тут пересмотри логику, подсказки теперь все есть»; версия 206)
+    var inc = function (v) { return v > 0.004 ? dbNb("приход " + dbEur(v)) : ""; }, r2 = function (v) { return Math.round(v * 100) / 100; };
+    box.appendChild(node("h4", "", "По подсказкам"));
+    box.appendChild(row("Траты", String(p.hinted.n - p.transfers.n), dbEur(r2(p.hinted.out - p.transfers.out)), inc(r2(p.hinted.inc - p.transfers.inc))));
+    if (p.transfers.n) box.appendChild(row("Свои переводы", String(p.transfers.n), dbEur(p.transfers.out), inc(p.transfers.inc)));
+    if (p.none.n) box.appendChild(row("Без подсказки", String(p.none.n), dbEur(p.none.out), inc(p.none.inc)));
+    if (p.guess) box.appendChild(row("Предположения", String(p.guess), ""));
     box.appendChild(node("h4", "", "По месяцам")); p.months.forEach(function (x) { box.appendChild(row(MONTHS[x.month - 1], String(x.n), dbEur0(x.out))); });
     var go = node("button", "go", "Разнести в Bank"); go.type = "button";
     go.addEventListener("click", function () {
