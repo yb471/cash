@@ -127,7 +127,6 @@ body.tab-assets .gear { visibility: hidden; }
 .db-mode { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; margin: 10px 10px 0; padding: 3px; border-radius: 12px; background: var(--chip); }
 .db-mode button { height: 32px; border: 0; border-radius: 9px; background: transparent; color: var(--muted); font: inherit; font-size: calc(14 * var(--u)); font-weight: 600; }
 .db-mode button.on { background: var(--surface); color: var(--fg); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
-.db-sum.ex .l3 { display: flex; justify-content: space-between; gap: 10px; font-size: calc(12.5 * var(--u)); color: var(--muted); white-space: nowrap; } .db-sum.ex .l3 b { font-weight: 600; color: var(--fg); }
 .db-one { display: flex; align-items: center; gap: 8px; width: calc(100% - 20px); margin: 6px 10px 2px; height: 40px; padding: 0 10px 0 12px; border: 0; border-radius: 12px; background: color-mix(in srgb, var(--chip) 55%, var(--surface)); color: var(--fg); font: inherit; font-size: calc(14 * var(--u)); text-align: left; white-space: nowrap; }
 .db-one b { font-weight: 600; } .db-one span { color: var(--muted); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; } .db-one i { font-style: normal; font-weight: 600; } .db-one em { font-style: normal; color: var(--muted); font-size: 1.2em; line-height: 1; }
 .db-bar.x.fc i { border-bottom-color: color-mix(in srgb, var(--accent) 38%, var(--surface)); }
@@ -837,7 +836,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "204"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "205"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -2494,11 +2493,7 @@ button.txd-row:active { background: var(--chip); }
     if (tot.has && tot.plan > 0) { // год целиком — как категория; перелимит — плашка красноватая
       sum.appendChild(exBudget(tot.spent, tot.plan, part.pace, mLeft, fc ? factAll : undefined)); if (dbState(tot.spent, tot.plan, part.pace) === "over") sum.className += " hot";
     }
-    if (fc) { // сколько в прогнозе факта и сколько по подсказкам
-      var l3 = node("div", "l3"), a = node("span", "", "факт "), b3 = node("span", "", "по подсказкам ");
-      a.appendChild(node("b", "", factAll < -0.5 ? "+" + dbEur0(-factAll) : dbEur0(factAll))); b3.appendChild(node("b", "", pend.add < -0.5 ? "+" + dbEur0(-pend.add) : dbEur0(pend.add)));
-      l3.appendChild(a); l3.appendChild(b3); sum.appendChild(l3);
-    }
+    // строки «факт N · по подсказкам N» в плашке прогноза нет (его слово 23.11.2026 по ее снимку: «Это тоже убери»; в 203–204 была)
     card.appendChild(sum);
     // одна строка в «Факте»: сколько не разнесено; нажатие — лист с подробностями. В «Прогнозе» строки нет (его слово 23.11.2026
     // по снимку строки «Без подсказки»: «Вот это убери в прогнозе»; в версии 203 она там была)
