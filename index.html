@@ -861,7 +861,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "209"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "210"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -2543,6 +2543,7 @@ button.txd-row:active { background: var(--chip); }
       }
       li.setAttribute("role", "button"); li.tabIndex = 0;
       li.addEventListener("click", function () { catOpen(r, fc); });
+      li.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); catOpen(r, fc); } });
       li.appendChild(ln); list.appendChild(li);
     });
     card.appendChild(list);
@@ -2551,7 +2552,7 @@ button.txd-row:active { background: var(--chip); }
   // окно категории: r — строка exRender (name, nm, em, spent, fact, plan), fc — открыто из «Прогноза»; данные — y.detail с сервера
   function catOpen(r, fc) {
     var d = exData(), part = d && d.y, box = $("dbCatBody"); if (!part) return;
-    var det = (part.detail || []).filter(function (x) { return x.name === r.name; })[0] || { months: [], subs: [], top: { fact: [], all: [] } };
+    var has = !!part.detail, det = (part.detail || []).filter(function (x) { return x.name === r.name; })[0] || { months: [], subs: [], top: { fact: [], all: [] } }; // has — нет: сохраненный ответ прежней версии, графика не рисуем
     var add = fc && part.pending ? part.pending.categories.filter(function (x) { return x.name === r.name; })[0] : null, neg = fc ? -0.5 : -0.004;
     var row = function (l, s, v, v2) {
       var x = node("div", "r"), a = node("span"), b = node("b", "", v);
@@ -2569,7 +2570,7 @@ button.txd-row:active { background: var(--chip); }
     for (i = 0; i < 12; i++) ms.push({ f: 0, a: 0 });
     det.months.forEach(function (x) { if (x.month >= 1 && x.month <= 12) { ms[x.month - 1].f = Math.max(0, x.fact); ms[x.month - 1].a = fc ? Math.max(0, x.fact + x.add) - Math.max(0, x.fact) : 0; } });
     ms.forEach(function (x) { x.a = Math.max(0, x.a); if (x.f + x.a > mx) mx = x.f + x.a; });
-    if (mx > 0) {
+    if (has && mx > 0) {
       mx *= 1.08;
       var ch = node("div", "ch"), ax = node("div", "ax");
       if (mp > 0) { var pl = node("div", "pl"); pl.style.bottom = (mp / mx * 100).toFixed(1) + "%"; ch.appendChild(pl); }
@@ -2592,6 +2593,7 @@ button.txd-row:active { background: var(--chip); }
       box.appendChild(head("Подкатегории", ""));
       det.subs.forEach(function (x) {
         var v = x.fact + (fc ? x.add : 0), l = lim[x.name];
+        if (!x.name && Math.abs(v) < (fc ? 0.5 : 0.005)) return; // «Не указано чье» с нулем — не показываем
         box.appendChild(row(x.name || "Не указано чье", "", amt(v), l !== null && l !== undefined ? dbNb("из " + dbEur0(l)) : ""));
       });
     }
