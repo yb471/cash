@@ -398,7 +398,17 @@ body.locked .bk-undo { display: none; }
 .ic .o:active { background: color-mix(in srgb, var(--fg) 6%, var(--surface)); }
 .ic .o.off { border-color: transparent; background: var(--chip); color: var(--muted); } /* ссылки еще нет — серая, как неготовая кнопка листа; после сбоя нажатие — новый запрос */
 .ic .o.wait::before { content: ""; flex: none; width: 13px; height: 13px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: ptrspin .8s linear infinite; }
-@media (prefers-reduced-motion: reduce) { .ic .o.wait::before { animation: none; } }
+.ic button.o { font-family: inherit; line-height: 1.3; }
+/* письмо «как пришло» (file: 'html'): лист на всю высоту, письмо — в рамке-песочнице на белом, ширина — по экрану */
+.sheet-body.ml-body { display: flex; flex-direction: column; overflow: hidden; padding: 10px 0 0; height: calc(100% - env(safe-area-inset-top, 0px) - 6px); max-height: none; border-radius: 28px 28px 0 0; }
+.ml-body .sheet-head { position: static; flex: none; padding: 8px 12px 8px 18px; }
+.ml-body .sheet-head > span:first-child { display: block; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+.ml-view { position: relative; flex: 1; min-height: 0; margin-top: 6px; background: var(--surface); }
+.ml-view.on { background: #fff; padding-bottom: env(safe-area-inset-bottom, 0px); }
+.ml-view iframe { display: block; width: 100%; height: 100%; border: 0; background: #fff; color-scheme: light; }
+.ml-view.wait::before { content: ""; position: absolute; top: 72px; left: 50%; width: 26px; height: 26px; margin-left: -13px; border: 2.5px solid var(--accent); border-right-color: transparent; border-radius: 50%; animation: ptrspin .8s linear infinite; }
+.ml-view .re { position: absolute; top: 56px; left: 50%; width: 56px; height: 56px; margin-left: -28px; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 50%; background: var(--chip); color: var(--muted); } /* сбой — круглая кнопка повтора, без слов */
+@media (prefers-reduced-motion: reduce) { .ic .o.wait::before, .ml-view.wait::before { animation: none; } }
 @keyframes subsin { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 .tx-sub { position: relative; display: flex; align-items: center; min-height: 44px; padding: 6px 40px 6px 14px; border: 0; border-radius: 12px; background: var(--surface); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--muted) 60%, var(--surface)), 0 1px 2px rgba(0,0,0,.06); color: var(--fg); font: inherit; font-size: calc(15 * var(--u)); font-weight: 500; line-height: 1.2; text-align: left; -webkit-tap-highlight-color: transparent; transition: background-color .12s, transform .12s; }
 .tx-sub::after { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 15px; font-weight: 700; }
@@ -788,6 +798,13 @@ button.txd-row:active { background: var(--chip); }
     </div>
   </div>
 </div>
+<div class="sheet" id="mlSheet" hidden>
+  <div class="sheet-back" id="mlBack"></div>
+  <div class="sheet-body ml-body" role="dialog" aria-labelledby="mlTitle">
+    <div class="sheet-head"><span id="mlTitle"></span><button id="mlClose" type="button" aria-label="Закрыть">✕</button></div>
+    <div class="ml-view" id="mlView"></div>
+  </div>
+</div>
 <div class="sheet" id="cmSheet" hidden>
   <div class="sheet-back" id="cmBack"></div>
   <div class="sheet-body cm-body" role="dialog" aria-label="Комментарии для Claude">
@@ -895,7 +912,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "213"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "214"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -1949,7 +1966,7 @@ button.txd-row:active { background: var(--chip); }
   var INV_W = { invoice: ["Счет", "Открыть счет"], order: ["Заказ", "Открыть заказ"], receipt: ["Чек", "Открыть чек"], refund: ["Возврат", "Открыть документ"] };
   // u — ссылка, exp — до какого момента ей верить (таймеры на iPhone в фоне стоят), tm — таймер обновления/повтора, fl — запрос в пути,
   // dead — два сбоя подряд (кнопка серая, нажатие — новый запрос), dl — отложенный запрос после открытия (быстрое пролистывание)
-  var INV_TTL = 240000, INV_RETRY = 5000, INV_DELAY = 400, inv = { u: {}, exp: {}, tm: {}, fl: {}, dead: {}, dl: null, gen: 0 };
+  var INV_TTL = 240000, INV_RETRY = 5000, INV_DELAY = 400, inv = { u: {}, exp: {}, tm: {}, fl: {}, dead: {}, html: {}, dl: null, gen: 0 }; // html — загруженные письма, пока открыт лист операции
   function invList(t) { return t && Array.isArray(t.docs) ? t.docs.filter(function (d) { return d && typeof d === "object" && d.id !== undefined && d.id !== null; }) : []; }
   function invNum(n) { return typeof n === "number" && isFinite(n); }
   function invOk(k) { return !!inv.u[k] && inv.exp[k] > Date.now(); } // ссылка есть и еще не протухла
@@ -1968,13 +1985,20 @@ button.txd-row:active { background: var(--chip); }
       });
       if (invNum(d.more) && d.more > 0) { var m = el1("div", "l more"); m.appendChild(el1("span", "", "еще " + d.more)); k.appendChild(m); }
       if (invNum(d.total)) { var s = el1("div", "t"); s.appendChild(el1("span", "", "Итого " + plain(d.total, cur))); if (d.same === true) s.appendChild(el1("b", "", "совпадает с операцией")); k.appendChild(s); }
-      var a = el1("a", "o", w[1]); a.target = "_blank"; a.rel = "noopener"; a.setAttribute("data-inv", String(d.id)); a.addEventListener("click", invClick); k.appendChild(a);
+      var a;
+      if (d.file === "html") { a = el1("button", "o", w[1]); a.type = "button"; a.addEventListener("click", function () { mlOpen(t, d, w[0]); }); } // письмо — в своем просмотре
+      else { a = el1("a", "o", w[1]); a.target = "_blank"; a.rel = "noopener"; a.addEventListener("click", invClick); }
+      a.setAttribute("data-inv", String(d.id)); k.appendChild(a);
       c.appendChild(k);
     });
     invPaint();
     clearTimeout(inv.dl); inv.dl = setTimeout(function () { inv.dl = null; if (bk.cur === t.id) invSync(bkFind(t.id)); }, INV_DELAY); // как карточка (bk.txTimer): пролистывание не шлет запросы
   }
   function invPaint() { // свежая ссылка и сеть — кнопка открывает файл; иначе серая: ждет ссылку — с кружком, после двух сбоев — без
+    bel.docs.querySelectorAll("button.o").forEach(function (a) { // письмо: без сети — только уже загруженное
+      var off = navigator.onLine === false && !inv.html[a.getAttribute("data-inv")];
+      a.disabled = off; a.className = "o" + (off ? " off" : "");
+    });
     bel.docs.querySelectorAll("a.o").forEach(function (a) {
       var k = a.getAttribute("data-inv"), net = navigator.onLine !== false, on = invOk(k) && net, wait = !on && net && !inv.dead[k];
       if (on) { a.href = inv.u[k]; a.removeAttribute("aria-disabled"); a.removeAttribute("tabindex"); }
@@ -2000,7 +2024,7 @@ button.txd-row:active { background: var(--chip); }
   }
   function invSync(t) { // запросить ссылки, которых нет и которые не в пути (открытая операция, есть сеть)
     if (!t || bk.cur !== t.id || navigator.onLine === false) return;
-    invList(t).forEach(function (d) { var k = String(d.id); if (!invOk(k) && !inv.fl[k] && !inv.tm[k] && !inv.dead[k]) invGet(d.id, false); });
+    invList(t).forEach(function (d) { var k = String(d.id); if (d.file !== "html" && !invOk(k) && !inv.fl[k] && !inv.tm[k] && !inv.dead[k]) invGet(d.id, false); }); // письму ссылка не нужна
   }
   function invGet(id, again) { // again — тихий повтор через 5 с после сбоя; второй сбой — кнопка серая, нажатие — новый запрос
     var k = String(id), g = inv.gen;
@@ -2020,7 +2044,50 @@ button.txd-row:active { background: var(--chip); }
       inv.tm[k] = setTimeout(function () { delete inv.tm[k]; invGet(id, false); }, INV_TTL);
     }, fail);
   }
-  function invStop() { inv.gen++; clearTimeout(inv.dl); for (var k in inv.tm) clearTimeout(inv.tm[k]); inv.u = {}; inv.exp = {}; inv.tm = {}; inv.fl = {}; inv.dead = {}; inv.dl = null; } // лист закрыт или другая операция
+  function invStop() { inv.gen++; clearTimeout(inv.dl); for (var k in inv.tm) clearTimeout(inv.tm[k]); inv.u = {}; inv.exp = {}; inv.tm = {}; inv.fl = {}; inv.dead = {}; inv.html = {}; inv.dl = null; mlClose(); } // лист закрыт или другая операция
+  // просмотр письма «как пришло» (его слово 24.11.2026): чужой HTML — только в <iframe sandbox srcdoc> без скриптов, форм и выхода
+  // наверх, с запретом сети, кроме картинок, стилей и шрифтов по https; в документ приложения письмо не попадает. Ширина — по экрану,
+  // письмо подгоняется стилем (картинки и таблицы не шире рамки): адаптивные письма верстаются как в почте, таблицы на 600 px читаются
+  // без прокрутки вбок (уменьшение рамки 600 px до экрана дает текст 8–9 px — сравнение 24.11.2026)
+  var ML_CSP = "default-src 'none'; img-src https: data:; style-src 'unsafe-inline' https:; font-src https: data:";
+  var ML_CSS = ":root{color-scheme:light}html{background:#fff;-webkit-text-size-adjust:100%}body{margin:0;padding:12px;color:#111;font:15px/1.45 -apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;overflow-wrap:break-word}td,th{word-break:break-word}" +
+    "img{max-width:100%!important;height:auto!important}table{max-width:100%!important}table[width]:not([width$='%']){width:100%!important}[style*='width']{max-width:100%!important}pre{white-space:pre-wrap}";
+  var ML_RE = '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var ml = { sheet: B("mlSheet"), back: B("mlBack"), close: B("mlClose"), title: B("mlTitle"), view: B("mlView"), k: null, d: null, gen: 0 };
+  function mlDoc(h) { // наше — первым: CSP и <base> действуют на все письмо; автопереход письма (meta refresh) — вон
+    return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="' + ML_CSP + '"><base target="_blank">' +
+      '<meta name="viewport" content="width=device-width,initial-scale=1"><style>' + ML_CSS + "</style></head>" + String(h).replace(/<meta\b[^>]*http-equiv\s*=\s*["']?\s*refresh[^>]*>/gi, "");
+  }
+  function mlOpen(t, d, kind) {
+    ml.k = String(d.id); ml.d = d; ml.gen++;
+    ml.title.textContent = kind + (d.vendor ? " · " + String(d.vendor) : "");
+    ml.sheet.hidden = false;
+    if (inv.html[ml.k] !== undefined) mlShow(inv.html[ml.k]); else mlLoad();
+  }
+  function mlLoad() {
+    var k = ml.k, g = ml.gen, ig = inv.gen;
+    ml.view.textContent = ""; ml.view.className = "ml-view wait"; ml.view.setAttribute("aria-busy", "true");
+    api("invoice_html", { id: ml.d.id }).then(function (j) {
+      if (ig !== inv.gen) return;
+      if (!j || typeof j.html !== "string") throw { code: "server" };
+      inv.html[k] = j.html; invPaint();
+      if (g === ml.gen && !ml.sheet.hidden) mlShow(j.html);
+    }).catch(function () { // тихо: кружок сменяет круглая кнопка повтора
+      if (g !== ml.gen || ml.sheet.hidden || ig !== inv.gen) return;
+      ml.view.className = "ml-view"; ml.view.setAttribute("aria-busy", "false");
+      var r = document.createElement("button"); r.type = "button"; r.className = "re"; r.setAttribute("aria-label", "Повторить"); r.innerHTML = ML_RE;
+      r.addEventListener("click", mlLoad); ml.view.appendChild(r);
+    });
+  }
+  function mlShow(h) {
+    var f = document.createElement("iframe");
+    f.setAttribute("sandbox", "allow-popups allow-popups-to-escape-sandbox"); f.setAttribute("referrerpolicy", "no-referrer");
+    f.setAttribute("title", ml.title.textContent);
+    f.srcdoc = mlDoc(h); // свойство, не разметка: письмо не разбирается документом приложения
+    ml.view.textContent = ""; ml.view.className = "ml-view on"; ml.view.setAttribute("aria-busy", "false"); ml.view.appendChild(f);
+  }
+  function mlClose() { if (!ml || ml.sheet.hidden) return; ml.sheet.hidden = true; ml.gen++; ml.k = ml.d = null; ml.view.textContent = ""; ml.view.className = "ml-view"; } // лист операции под ним — как был
+  ml.close.addEventListener("click", mlClose); ml.back.addEventListener("click", mlClose);
   window.addEventListener("online", function () { invPaint(); if (bk.cur) invSync(bkFind(bk.cur)); });
   window.addEventListener("offline", invPaint);
   document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible") invFresh(); });
@@ -3041,11 +3108,12 @@ button.txd-row:active { background: var(--chip); }
   sheetSwipe(el.countSheet, null, countClose);
   sheetSwipe(bel.sheet, ".tx-scroll", txClose);
   sheetSwipe(cm.sheet, null, cmClose);
+  sheetSwipe(ml.sheet, ".ml-view", mlClose);
   sheetSwipe(bel.bankSheet, null, function () { bel.bankSheet.hidden = true; });
   sheetSwipe(bel.perSheet, null, function () { bel.perSheet.hidden = true; });
   sheetSwipe($("bkCatSheet"), ".bk-cats", function () { $("bkCatSheet").hidden = true; });
   sheetSwipe(moreSheet, null, function () { moreSheet.hidden = true; });
-  document.addEventListener("keydown", function (e) { if (e.key === "Escape") { if (!cm.sheet.hidden) { cmClose(); return; } if (!el.sheet.hidden) sheetClose(); if (!el.countSheet.hidden) countClose(); if (!bel.sheet.hidden) txClose(); if (!bel.bankSheet.hidden) bel.bankSheet.hidden = true; } });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") { if (!ml.sheet.hidden) { mlClose(); return; } if (!cm.sheet.hidden) { cmClose(); return; } if (!el.sheet.hidden) sheetClose(); if (!el.countSheet.hidden) countClose(); if (!bel.sheet.hidden) txClose(); if (!bel.bankSheet.hidden) bel.bankSheet.hidden = true; } });
   el.comment.addEventListener("input", renderTpl);
   el.btnClear.addEventListener("pointerdown", function (e) { e.preventDefault(); }); // не ронять клавиатуру, если она открыта
   el.btnClear.addEventListener("click", function () { el.comment.value = ""; renderTpl(); if (document.activeElement === el.comment) el.comment.focus(); });
