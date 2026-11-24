@@ -396,7 +396,7 @@ body.locked .bk-undo { display: none; }
 .ic .t { display: flex; justify-content: space-between; gap: 12px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); font-size: calc(13 * var(--u)); color: var(--muted); } .ic .t span { white-space: nowrap; } .ic .t b { min-width: 0; color: var(--plus); font-weight: 600; text-align: right; }
 .ic .o { margin-top: 10px; width: 100%; min-height: 40px; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 11px; background: var(--surface); color: var(--fg); font-weight: 600; font-size: calc(14.5 * var(--u)); text-align: center; text-decoration: none; -webkit-tap-highlight-color: transparent; }
 .ic .o:active { background: color-mix(in srgb, var(--fg) 6%, var(--surface)); }
-.ic .o.off { border-color: transparent; background: var(--chip); color: var(--muted); } /* ссылки еще нет — серая, как неготовая кнопка листа; после сбоя нажатие — новый запрос */
+.ic .o.off { border-color: transparent; background: var(--chip); color: var(--muted); } /* серая — только без сети или после двух сбоев (нажатие — новый запрос); пока ссылка в пути, кнопка обычная */
 .ic .o.wait::before { content: ""; flex: none; width: 13px; height: 13px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: ptrspin .8s linear infinite; }
 .ic button.o { font-family: inherit; line-height: 1.3; }
 /* письмо «как пришло» (file: 'html'): лист на всю высоту, письмо — в рамке-песочнице на белом, ширина — по экрану */
@@ -912,7 +912,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "214"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "215"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -1961,12 +1961,16 @@ button.txd-row:active { background: var(--chip); }
   }
   // счета и заказы из почты (t.docs, данные сервера): строки из писем — чужой текст, только через textContent.
   // Файл открывается ссылкой на 300 с (invoice_url): standalone на iPhone не дает window.open после await, поэтому
-  // ссылка запрашивается при открытии листа и кнопка — настоящая <a>; пока лист открыт — новая ссылка каждые 240 с
+  // ссылка запрашивается при открытии листа и кнопка — настоящая <a>; пока лист открыт — новая ссылка каждые 240 с.
+  // Загрузку ссылки не показываем (его слово 24.11.2026: «Не хочу видеть загрузку»): кнопка сразу обычная, ссылка приходит
+  // молча; кружок — только если нажали раньше, чем она пришла
   var INV_SVG = '<svg viewBox="0 0 24 24"><path d="M7 3h7l4 4v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></svg>';
   var INV_W = { invoice: ["Счет", "Открыть счет"], order: ["Заказ", "Открыть заказ"], receipt: ["Чек", "Открыть чек"], refund: ["Возврат", "Открыть документ"] };
   // u — ссылка, exp — до какого момента ей верить (таймеры на iPhone в фоне стоят), tm — таймер обновления/повтора, fl — запрос в пути,
-  // dead — два сбоя подряд (кнопка серая, нажатие — новый запрос), dl — отложенный запрос после открытия (быстрое пролистывание)
-  var INV_TTL = 240000, INV_RETRY = 5000, INV_DELAY = 400, inv = { u: {}, exp: {}, tm: {}, fl: {}, dead: {}, html: {}, dl: null, gen: 0 }; // html — загруженные письма, пока открыт лист операции
+  // dead — два сбоя подряд (кнопка серая, нажатие — новый запрос), dl — отложенный запрос после открытия (быстрое пролистывание),
+  // tap — нажали до прихода ссылки (кружок на кнопке), last — когда открывали прошлую операцию.
+  // INV_LIVE — сколько верить ссылке (сервер дает 300 с); обновление через INV_TTL, старая ссылка работает, пока идет новая
+  var INV_TTL = 240000, INV_LIVE = 285000, INV_RETRY = 5000, INV_DELAY = 400, inv = { u: {}, exp: {}, tm: {}, fl: {}, dead: {}, tap: {}, html: {}, dl: null, last: 0, lastId: null, gen: 0 }; // html — загруженные письма, пока открыт лист операции
   function invList(t) { return t && Array.isArray(t.docs) ? t.docs.filter(function (d) { return d && typeof d === "object" && d.id !== undefined && d.id !== null; }) : []; }
   function invNum(n) { return typeof n === "number" && isFinite(n); }
   function invOk(k) { return !!inv.u[k] && inv.exp[k] > Date.now(); } // ссылка есть и еще не протухла
@@ -1992,30 +1996,32 @@ button.txd-row:active { background: var(--chip); }
       c.appendChild(k);
     });
     invPaint();
-    clearTimeout(inv.dl); inv.dl = setTimeout(function () { inv.dl = null; if (bk.cur === t.id) invSync(bkFind(t.id)); }, INV_DELAY); // как карточка (bk.txTimer): пролистывание не шлет запросы
+    var now = Date.now(), same = inv.lastId === t.id, dl = !same && now - inv.last < 1500 ? INV_DELAY : 0; // первая открытая — сразу; пролистывание подряд — с паузой, как карточка (bk.txTimer)
+    if (!same) { inv.last = now; inv.lastId = t.id; } // перерисовка той же операции паузу не добавляет
+    clearTimeout(inv.dl); inv.dl = setTimeout(function () { inv.dl = null; if (bk.cur === t.id) invSync(bkFind(t.id)); }, dl);
   }
-  function invPaint() { // свежая ссылка и сеть — кнопка открывает файл; иначе серая: ждет ссылку — с кружком, после двух сбоев — без
+  function invPaint() { // кнопка обычная и пока ссылка в пути; серая — без сети или после двух сбоев; кружок — нажали раньше ссылки
     bel.docs.querySelectorAll("button.o").forEach(function (a) { // письмо: без сети — только уже загруженное
       var off = navigator.onLine === false && !inv.html[a.getAttribute("data-inv")];
       a.disabled = off; a.className = "o" + (off ? " off" : "");
     });
     bel.docs.querySelectorAll("a.o").forEach(function (a) {
-      var k = a.getAttribute("data-inv"), net = navigator.onLine !== false, on = invOk(k) && net, wait = !on && net && !inv.dead[k];
-      if (on) { a.href = inv.u[k]; a.removeAttribute("aria-disabled"); a.removeAttribute("tabindex"); }
-      else if (inv.dead[k] && net) { a.removeAttribute("href"); a.removeAttribute("aria-disabled"); a.setAttribute("role", "button"); a.tabIndex = 0; } // нажатие — новый запрос
-      else { a.removeAttribute("href"); a.setAttribute("aria-disabled", "true"); a.tabIndex = -1; }
-      if (on || !inv.dead[k]) a.removeAttribute("role");
-      a.className = "o" + (on ? "" : " off") + (wait ? " wait" : "");
-      a.setAttribute("aria-busy", wait ? "true" : "false");
+      var k = a.getAttribute("data-inv"), net = navigator.onLine !== false, on = invOk(k) && net, off = !net || (!on && !!inv.dead[k]), wait = !on && !off && !!inv.tap[k];
+      if (on) { a.href = inv.u[k]; a.removeAttribute("aria-disabled"); a.removeAttribute("tabindex"); a.removeAttribute("role"); }
+      else if (net) { a.removeAttribute("href"); a.removeAttribute("aria-disabled"); a.setAttribute("role", "button"); a.tabIndex = 0; } // ссылка в пути или сбой: нажатие — запрос
+      else { a.removeAttribute("href"); a.setAttribute("aria-disabled", "true"); a.removeAttribute("role"); a.tabIndex = -1; }
+      a.className = "o" + (off ? " off" : "") + (wait ? " wait" : "");
+      a.setAttribute("aria-busy", !on && !off ? "true" : "false");
     });
   }
-  function invClick(e) { // ссылка протухла (приложение спало) или два сбоя — не открывать, запросить заново; откроет следующее нажатие
+  function invClick(e) { // ссылки еще нет, она протухла (приложение спало) или два сбоя — не открывать: кружок и запрос; откроет следующее нажатие
     var k = this.getAttribute("data-inv");
     if (invOk(k) && navigator.onLine !== false) return;
     e.preventDefault();
-    if (inv.fl[k] || navigator.onLine === false) return;
-    var d = invList(bkFind(bk.cur)).filter(function (x) { return String(x.id) === k; })[0];
-    if (d) { delete inv.u[k]; delete inv.dead[k]; invGet(d.id, false); }
+    if (navigator.onLine === false) return;
+    inv.tap[k] = true;
+    var d = inv.fl[k] ? null : invList(bkFind(bk.cur)).filter(function (x) { return String(x.id) === k; })[0];
+    if (d) { delete inv.u[k]; delete inv.dead[k]; invGet(d.id, false); } else invPaint();
   }
   function invFresh() { // лист снова на экране: протухшие ссылки — в загрузку и заново
     var t = bk.cur ? bkFind(bk.cur) : null; if (!t || bel.sheet.hidden) return;
@@ -2031,20 +2037,20 @@ button.txd-row:active { background: var(--chip); }
     clearTimeout(inv.tm[k]); delete inv.tm[k]; delete inv.dead[k]; inv.fl[k] = true; invPaint();
     var fail = function () {
       if (g !== inv.gen) return;
-      delete inv.fl[k]; delete inv.u[k];
+      delete inv.fl[k]; if (!invOk(k)) delete inv.u[k]; // сбой обновления: еще живая ссылка остается рабочей
       if (!again) inv.tm[k] = setTimeout(function () { delete inv.tm[k]; invGet(id, true); }, INV_RETRY);
-      else inv.dead[k] = true;
+      else { inv.dead[k] = true; delete inv.tap[k]; }
       invPaint();
     };
     api("invoice_url", { id: id }).then(function (j) {
       if (g !== inv.gen) return;
       var u = j && typeof j.url === "string" && /^https:\/\//i.test(j.url) ? j.url : "";
       if (!u) { fail(); return; }
-      delete inv.fl[k]; inv.u[k] = u; inv.exp[k] = Date.now() + INV_TTL; invPaint();
+      delete inv.fl[k]; delete inv.tap[k]; inv.u[k] = u; inv.exp[k] = Date.now() + INV_LIVE; invPaint();
       inv.tm[k] = setTimeout(function () { delete inv.tm[k]; invGet(id, false); }, INV_TTL);
     }, fail);
   }
-  function invStop() { inv.gen++; clearTimeout(inv.dl); for (var k in inv.tm) clearTimeout(inv.tm[k]); inv.u = {}; inv.exp = {}; inv.tm = {}; inv.fl = {}; inv.dead = {}; inv.html = {}; inv.dl = null; mlClose(); } // лист закрыт или другая операция
+  function invStop() { inv.gen++; clearTimeout(inv.dl); for (var k in inv.tm) clearTimeout(inv.tm[k]); inv.u = {}; inv.exp = {}; inv.tm = {}; inv.fl = {}; inv.dead = {}; inv.tap = {}; inv.html = {}; inv.dl = null; mlClose(); } // лист закрыт или другая операция
   // просмотр письма «как пришло» (его слово 24.11.2026): чужой HTML — только в <iframe sandbox srcdoc> без скриптов, форм и выхода
   // наверх, с запретом сети, кроме картинок, стилей и шрифтов по https; в документ приложения письмо не попадает. Ширина — по экрану,
   // письмо подгоняется стилем (картинки и таблицы не шире рамки): адаптивные письма верстаются как в почте, таблицы на 600 px читаются
