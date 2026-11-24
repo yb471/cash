@@ -214,7 +214,8 @@ body.tab-bank #bankPage { display: flex; }
 .bk-cat svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .bk-cat b { position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box; border-radius: 9px; background: var(--accent); color: #fff; box-shadow: 0 0 0 2px var(--bg); font-size: 11px; line-height: 18px; font-weight: 700; text-align: center; } .bk-cat b:empty { display: none; }
 .sheet-head button.bk-cat-reset { margin-left: auto; margin-right: 6px; width: auto; height: 36px; border-radius: 0; background: transparent; color: var(--accent); font-size: calc(15 * var(--u)); font-weight: 600; padding: 0 4px; } .sheet-head button.bk-cat-reset[hidden] { display: none; }
-.bk-cats { padding: 0 8px calc(14px + env(safe-area-inset-bottom, 0px)); max-height: 72vh; overflow-y: auto; -webkit-overflow-scrolling: touch; } .bk-cats .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .bk-cats .k { flex: none; color: var(--muted); font-size: calc(13 * var(--u)); font-weight: 400; font-variant-numeric: tabular-nums; }
+.bk-cat-foot { padding: 10px 16px calc(16px + env(safe-area-inset-bottom, 0px)); } .bk-cat-foot button { width: 100%; height: 48px; border: 0; border-radius: 14px; background: var(--accent); color: #fff; font: inherit; font-weight: 600; font-size: calc(16 * var(--u)); }
+.bk-cats { padding: 0 8px 4px; max-height: 62vh; overflow-y: auto; -webkit-overflow-scrolling: touch; } .bk-cats .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .bk-cats .k { flex: none; color: var(--muted); font-size: calc(13 * var(--u)); font-weight: 400; font-variant-numeric: tabular-nums; }
 .bk-sent { list-style: none; height: 1px; }
 .bk-per { padding: 4px 14px 18px; }
 .bk-per .yrs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
@@ -848,6 +849,7 @@ button.txd-row:active { background: var(--chip); }
   <div class="sheet-body" role="dialog" aria-label="Категории">
     <div class="sheet-head"><span>Категории</span><button class="bk-cat-reset" id="bkCatReset" type="button" hidden>Сбросить</button><button id="bkCatClose" type="button" aria-label="Закрыть">✕</button></div>
     <ul class="sheet-list bk-cats" id="bkCatList"></ul>
+    <div class="bk-cat-foot"><button id="bkCatApply" type="button">Применить</button></div>
   </div>
 </div>
 <div class="sheet" id="bkBankSheet" hidden>
@@ -876,7 +878,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "211"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "212"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -2315,22 +2317,26 @@ button.txd-row:active { background: var(--chip); }
   bel.all.addEventListener("click", function () { bk.filter = "all"; prefs.bkFilter = "all"; ls("cash_prefs", prefs); bkRender(); window.scrollTo(0, 0); });
   bk.q = ""; bk.period = prefs.bkPeriod !== undefined ? prefs.bkPeriod : { y: new Date().getFullYear(), m: null };
   // фильтр по категориям (bk.cats): выбор живет до закрытия приложения (не запоминается — иначе забытый фильтр прячет операции)
+  // выбор в листе — черновик (bk.catDraft): список под листом меняется только по кнопке «Применить», она же закрывает лист (его слово
+  // 24.11.2026: «Не хватает кнопки по которой делается финальный выбор и закрывается окно»; версия 212; в 211 выбор применялся
+  // сразу); ✕, фон и свайп закрывают без изменений
   function bkCatRender() {
-    var list = $("bkCatList"), names = (bk.data && bk.data.categories) || [], cnt = {};
+    var list = $("bkCatList"), names = (bk.data && bk.data.categories) || [], cnt = {}, pick = bk.catDraft || [];
     bkFound(undefined, true)[bk.filter === "review" ? "review" : "all"].forEach(function (t) { bkCatsOf(t).forEach(function (c) { cnt[c] = (cnt[c] || 0) + 1; }); }); // сколько операций вкладки в каждой — без самого фильтра
-    list.textContent = ""; $("bkCatReset").hidden = !bk.cats.length;
+    list.textContent = ""; $("bkCatReset").hidden = !pick.length;
     names.forEach(function (name) {
-      var cs = catSplit(name), li = node("li"), b = node("button", bk.cats.indexOf(name) >= 0 ? "on" : ""); b.type = "button"; b.setAttribute("aria-pressed", bk.cats.indexOf(name) >= 0 ? "true" : "false");
+      var cs = catSplit(name), li = node("li"), b = node("button", pick.indexOf(name) >= 0 ? "on" : ""); b.type = "button"; b.setAttribute("aria-pressed", pick.indexOf(name) >= 0 ? "true" : "false");
       b.appendChild(node("span", "em", cs.em)); b.appendChild(node("span", "nm", cs.nm)); b.appendChild(node("span", "k", cnt[name] ? String(cnt[name]) : ""));
       b.addEventListener("click", function () {
-        var i = bk.cats.indexOf(name); if (i >= 0) bk.cats.splice(i, 1); else bk.cats.push(name);
-        bkRender(); bkCatRender(); // список под листом обновляется сразу, лист открыт — выбрать можно несколько
+        var k = pick.indexOf(name), top = list.scrollTop; if (k >= 0) pick.splice(k, 1); else pick.push(name);
+        bkCatRender(); list.scrollTop = top; // лист открыт — выбрать можно несколько
       });
       li.appendChild(b); list.appendChild(li);
     });
   }
-  $("bkCat").addEventListener("click", function () { bkCatRender(); $("bkCatList").scrollTop = 0; $("bkCatSheet").hidden = false; });
-  $("bkCatReset").addEventListener("click", function () { bk.cats = []; bkRender(); bkCatRender(); window.scrollTo(0, 0); });
+  $("bkCat").addEventListener("click", function () { bk.catDraft = bk.cats.slice(); bkCatRender(); $("bkCatList").scrollTop = 0; $("bkCatSheet").hidden = false; });
+  $("bkCatReset").addEventListener("click", function () { bk.catDraft = []; bkCatRender(); });
+  $("bkCatApply").addEventListener("click", function () { bk.cats = (bk.catDraft || []).slice(); $("bkCatSheet").hidden = true; bkRender(); window.scrollTo(0, 0); });
   $("bkCatClose").addEventListener("click", function () { $("bkCatSheet").hidden = true; });
   $("bkCatBack").addEventListener("click", function () { $("bkCatSheet").hidden = true; });
   var qTimer = 0;
