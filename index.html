@@ -337,8 +337,7 @@ body.locked .bk-undo { display: none; }
 .tx-mini .ava { width: 34px; height: 34px; font-size: calc(13 * var(--u)); }
 /* логотип продавца (его «да» 08.11.2026): картинка от функции cash поверх букв; не загрузилась — остаются буквы */
 .ava { position: relative; overflow: hidden; }
-.ava img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #FFFFFF; opacity: 0; transition: opacity .15s ease-out; }
-.ava.lg img { opacity: 1; } .ava.now img { transition: none; } /* уже показанный логотип — сразу, без проявления (его слово 13.11.2026) */
+.ava img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #FFFFFF; } /* картинка ставится только уже загруженной — без проявления */
 .ava.lg { box-shadow: 0 0 0 1px var(--line); }
 /* шапка: логотип на две строки; имя и сумма — первая строка, «день, дата · тип» — вся ширина под ними (длинная сумма не сжимает дату) */
 .tx-who { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "ava n amt" "ava m m"; column-gap: 12px; align-items: start; padding-top: 2px; }
@@ -912,7 +911,7 @@ button.txd-row:active { background: var(--chip); }
 (function () {
   "use strict";
   var FN = "https://pjuwipjyxzxlmhebzdct.supabase.co/functions/v1/cash";
-  var APP_VERSION = "215"; // совпадает с номером кэша в sw.js — видно в меню «…»
+  var APP_VERSION = "216"; // совпадает с номером кэша в sw.js — видно в меню «…»
   var TEMPLATES = ["Чаевые", "Дал Насте", "Pfand", "Парковка"]; // шаблоны комментария под полем (его слово 27.10.2026; 02.11.2026 — без «Взял у Family Cash», плюс Pfand и Парковка): касание подставляет текст
   var CURS = ["EUR", "USD"], SYM = { EUR: "€", USD: "$" };
   var $ = function (id) { return document.getElementById(id); };
@@ -1727,7 +1726,7 @@ button.txd-row:active { background: var(--chip); }
     })
       .catch(function (e) { bk.aiStarting = false; bkAiRender(); bkStatus(explain(e), "err"); });
   }
-  function bkApply(j) { connected(true); bk.cats = bk.cats.filter(function (c) { return (j.categories || []).indexOf(c) >= 0; }); bk.data = j; bk.loaded = true; ls("bank_cache", j); prefs.bank = j.bank; ls("cash_prefs", prefs); bkRender(); if (!bel.sheet.hidden && bk.cur) txFill(); }
+  function bkApply(j) { connected(true); bk.cats = bk.cats.filter(function (c) { return (j.categories || []).indexOf(c) >= 0; }); bk.data = j; bk.loaded = true; bkLogoWarm(bkLogoList(j)); ls("bank_cache", j); prefs.bank = j.bank; ls("cash_prefs", prefs); bkRender(); if (!bel.sheet.hidden && bk.cur) txFill(); }
   function bkLoad() {
     if (!token()) { bkRender(); return Promise.resolve(false); }
     return api("bank_list", { bank: prefs.bank, from: BK_FROM }).then(function (j) { bkApply(j); bkStatus("", ""); if (bk.queue.length) bkSend(); return true; })
@@ -1849,29 +1848,67 @@ button.txd-row:active { background: var(--chip); }
     try { if (window.Intl && Intl.Segmenter && s) return new Intl.Segmenter("ru", { granularity: "grapheme" }).segment(s).containing(0).segment; } catch (e) { /* старый Safari */ }
     return s;
   }
-  // логотипы, которые телефон уже показывал (его слово 13.11.2026: «вижу, как подгружаются»): при перерисовке списка — сразу,
-  // без букв и проявления; помнит и после перезапуска (картинки — из HTTP-кэша, функция отдает их на 30 дней)
-  var bkLogoOk = {}, bkLogoT = null;
-  (ls("bk_logos") || []).forEach(function (k) { bkLogoOk[k] = 1; });
-  function bkLogoSeen(k) { if (bkLogoOk[k]) return; bkLogoOk[k] = 1; clearTimeout(bkLogoT); bkLogoT = setTimeout(function () { ls("bk_logos", Object.keys(bkLogoOk).slice(-600)); }, 1000); }
-  function txAva(node, name, logo) { // буквы на мягком цвете, цвет по имени — всегда один и тот же; есть логотип — он поверх букв
-    var key = name + "|" + (logo || "");
+  // Логотипы без видимой загрузки (его слова 13.11.2026: «вижу, как подгружаются» и 25.11.2026: «Вижу как они подгружаются, а
+  // видеть не хочу»): значки всех продавцов списка грузятся заранее — при запуске из сохраненного списка и после каждой выгрузки
+  // (картинки — из HTTP-кэша, функция отдает их на 30 дней) — и держатся в памяти. Строка получает логотип, только если он уже
+  // загружен: тогда он встает в том же кадре. Не загружен — буквы; догрузился — встает в строки за пределами экрана, а видимые
+  // получают его при следующей перерисовке: на глазах ничего не меняется
+  var bkLogo = {}, bkLogoQ = [], bkLogoRun = 0, BK_LOGO_PAR = 8; // logo_id → { im, ok: null — в пути, true, false }
+  function bkLogoUrl(k) { return FN + "?logo=" + encodeURIComponent(k); }
+  function bkLogoWarm(list, first) { // list — logo_id в порядке показа; first — нужен строке на экране: в начало очереди
+    (list || []).forEach(function (k) {
+      if (typeof k !== "string" || !k) return;
+      if (!bkLogo[k]) { bkLogo[k] = { im: null, ok: null }; if (first) bkLogoQ.unshift(k); else bkLogoQ.push(k); }
+      else if (first) { var i = bkLogoQ.indexOf(k); if (i > 0) { bkLogoQ.splice(i, 1); bkLogoQ.unshift(k); } }
+    });
+    bkLogoPump();
+  }
+  function bkLogoPump() {
+    while (bkLogoRun < BK_LOGO_PAR && bkLogoQ.length) bkLogoGet(bkLogoQ.shift());
+  }
+  function bkLogoGet(k) {
+    var e = bkLogo[k], im = new Image(); e.im = im; e.ok = null; bkLogoRun++; // ссылка на картинку держит ее (сжатую) в памяти; раскодируется при показе
+    var done = function (ok) { e.ok = ok; bkLogoRun--; if (ok) bkLogoLate(); bkLogoPump(); };
+    im.decoding = "async"; im.referrerPolicy = "no-referrer";
+    im.onload = function () { done(true); };
+    im.onerror = function () { done(false); };
+    im.src = bkLogoUrl(k);
+  }
+  function bkLogoPut(node, logo) { // только загруженный: картинка уже в памяти документа — рисуется сразу
+    var im = document.createElement("img"); im.alt = ""; im.decoding = "sync"; im.referrerPolicy = "no-referrer";
+    im.onerror = function () { im.remove(); node.classList.remove("lg"); node.dataset.k = ""; if (bkLogo[logo]) bkLogo[logo].ok = false; }; // картинка пропала — буквы
+    im.src = bkLogoUrl(logo); node.removeAttribute("data-lw");
+    if (im.complete && im.naturalWidth > 0) { node.appendChild(im); node.classList.add("lg"); return; }
+    // браузер не отдал картинку из памяти сразу (страховка для Safari): буквы остаются, пока она не готова, — без белого кружка
+    im.style.visibility = "hidden"; im.onload = function () { im.style.visibility = ""; node.classList.add("lg"); }; node.appendChild(im);
+  }
+  function bkLogoLate() { // догрузились после отрисовки: только тем, кого сейчас не видно (и при прокрутке — тем, кто ушел с экрана)
+    Array.prototype.forEach.call(document.querySelectorAll(".ava[data-lw]"), function (node) {
+      var k = node.getAttribute("data-lw"); if (!bkLogo[k] || bkLogo[k].ok !== true) return;
+      var r = node.getBoundingClientRect(), seen = r.width > 0 && r.bottom > 0 && r.top < window.innerHeight;
+      if (!seen) { bkLogoPut(node, k); node.dataset.k += "|1"; }
+    });
+  }
+  var bkLogoScr = null;
+  window.addEventListener("scroll", function () { if (bkLogoScr) return; bkLogoScr = setTimeout(function () { bkLogoScr = null; bkLogoLate(); }, 150); }, { passive: true });
+  function bkLogoList(j) { var out = []; ((j && j.items) || []).forEach(function (t) { if (t && t.logo) out.push(t.logo); }); return out; }
+  window.addEventListener("online", function () { for (var k in bkLogo) if (bkLogo[k].ok === false) { bkLogo[k].ok = null; bkLogoQ.push(k); } bkLogoPump(); }); // без сети не загрузились — еще раз
+  function txAva(node, name, logo) { // буквы на мягком цвете, цвет по имени — всегда один и тот же; есть загруженный логотип — он поверх букв
+    var ready = !!logo && !!bkLogo[logo] && bkLogo[logo].ok === true, key = name + "|" + (logo || "") + (ready ? "|1" : "");
     if (node.dataset.k === key) return; // тот же продавец (перерисовка листа) — не трогать, без мигания
     node.dataset.k = key;
     var w = String(name).replace(/[^\p{L}\p{N} ]/gu, " ").trim().split(/\s+/), h = 0, i;
     for (i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % 9973;
     node.textContent = ((w[0] || "?").charAt(0) + (w[1] ? w[1].charAt(0) : "")).toUpperCase();
     node.style.setProperty("--h", AVA[h % AVA.length]);
-    node.classList.remove("lg", "now");
+    node.classList.remove("lg"); node.removeAttribute("data-lw");
     if (!logo) return;
-    var im = document.createElement("img"), known = !!bkLogoOk[logo]; // уже показывался — из кэша, сразу на место букв
-    if (known) node.classList.add("lg", "now");
-    im.alt = ""; im.decoding = known ? "sync" : "async"; im.referrerPolicy = "no-referrer";
-    im.onload = function () { if (node.dataset.k === key) node.classList.add("lg"); bkLogoSeen(logo); };
-    im.onerror = function () { im.remove(); if (node.dataset.k === key) node.classList.remove("lg", "now"); delete bkLogoOk[logo]; };
-    im.src = FN + "?logo=" + encodeURIComponent(logo);
-    node.appendChild(im);
+    if (ready) { bkLogoPut(node, logo); return; }
+    node.setAttribute("data-lw", logo); bkLogoWarm([logo], true);
   }
+  // при запуске — после события load: картинки в пути его задерживают
+  if (document.readyState === "complete") bkLogoWarm(bkLogoList(bk.data)); else window.addEventListener("load", function () { bkLogoWarm(bkLogoList(bk.data)); });
+  try { localStorage.removeItem("bk_logos"); } catch (e) { /* список показанных больше не нужен */ }
   var KIND = { CARD_PAYMENT: "Оплата картой", TRANSFER: "Перевод", TOPUP: "Пополнение", CARD_REFUND: "Возврат", EXCHANGE: "Обмен валюты",
     CARD_CHARGEBACK: "Возврат по спору", REV_PAYMENT: "Перевод", ATM: "Снятие наличных" };
   function txKind(t) { var k = KIND[t.kind] || ""; return k === "Перевод" && t.amount > 0 ? "Входящий перевод" : k; }
